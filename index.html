@@ -135,13 +135,18 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
 
-        /* Metrics Dash Component */
         .live-counter-card {
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
             border: 1px solid var(--border-color);
@@ -202,18 +207,16 @@
 </head>
 <body>
 
-<!-- Navigation matching image_a43e3d.png perfectly -->
 <nav class="tab-navigation">
     <div class="tab active" onclick="switchTab(event, 'callsSection')">Call Follow Up</div>
     <div class="tab" onclick="switchTab(event, 'photosAddedSection')">Photos Added</div>
-    <div class="tab" onclick="switchTab(event, 'photoshootSection')">Photoshoot Tracker</div>
+    <div class="tab" onclick="switchTab(event, 'approvalsSection')">Photo/Video Approvals</div>
     <div class="tab" onclick="switchTab(event, 'caseTrackerSection')">Case Tracker</div>
 </nav>
 
 <div class="container">
     <div class="form-card">
         
-        <!-- ================= TAB 1: CALLS SECTION ================= -->
         <div id="callsSection" class="form-section active">
             <header>
                 <h1>Call Follow Up Terminal</h1>
@@ -259,7 +262,6 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= TAB 2: PHOTOS ADDED TRACKER ================= -->
         <div id="photosAddedSection" class="form-section">
             <header>
                 <h1>Photos Added Pipeline</h1>
@@ -291,12 +293,32 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= FUTURE TAB PLACEHOLDERS ================= -->
-        <div id="photoshootSection" class="form-section">
+        <div id="approvalsSection" class="form-section">
             <header>
-                <h1>Photoshoot Tracker</h1>
-                <p>Structure and fields coming up next</p>
+                <h1>Photo / Video Asset Approvals</h1>
+                <p>Log verified design package signs-offs directly from merchants</p>
             </header>
+            <form onsubmit="handleFormSubmit(event, 'contentApprovals')">
+                <div class="form-group">
+                    <label>Store Name</label>
+                    <input type="text" name="storeName" placeholder="Enter store name that approved content" required>
+                </div>
+                <div class="form-group">
+                    <label>Approval Type</label>
+                    <select name="approvalType" required>
+                        <option value="" disabled selected>Choose signed asset type...</option>
+                        <option value="Photos Approved">Photos Approved</option>
+                        <option value="Videos Approved">Videos Approved</option>
+                        <option value="Both Approved">Both Approved (Photos & Videos)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Optional Notes / Comments</label>
+                    <textarea name="approvalNotes" placeholder="Type any specific feedback or verification comments here (Optional)..."></textarea>
+                </div>
+                <button type="submit">Log Asset Approval</button>
+            </form>
+            <div class="status-msg"></div>
         </div>
 
         <div id="caseTrackerSection" class="form-section">
@@ -373,7 +395,10 @@
         })
         .finally(() => {
             btn.disabled = false;
-            btn.textContent = actionType === 'calls' ? "Log Call Entry" : "Log Photos Added";
+            // Dynamic text restoration logic
+            if (actionType === 'calls') btn.textContent = "Log Call Entry";
+            else if (actionType === 'photosAdded') btn.textContent = "Log Photos Added";
+            else btn.textContent = "Log Asset Approval";
         });
     }
 </script>
