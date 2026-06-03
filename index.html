@@ -117,7 +117,7 @@
             letter-spacing: 0.05em;
         }
 
-        input[type="text"], input[type="number"], select, textarea {
+        input[type="text"], input[type="number"], input[type="date"], input[type="time"], select, textarea {
             width: 100%;
             padding: 14px;
             background-color: var(--input-bg);
@@ -207,17 +207,20 @@
 </head>
 <body>
 
+<!-- Dynamic Navigation Bar Router -->
 <nav class="tab-navigation">
     <div class="tab active" onclick="switchTab(event, 'callsSection')">Call Follow Up</div>
     <div class="tab" onclick="switchTab(event, 'photosAddedSection')">Photos Added</div>
     <div class="tab" onclick="switchTab(event, 'videosUploadedSection')">Videos Uploaded</div>
     <div class="tab" onclick="switchTab(event, 'approvalsSection')">Photo/Video Approvals</div>
+    <div class="tab" onclick="switchTab(event, 'photoshootSection')">Photoshoot Tracker</div>
     <div class="tab" onclick="switchTab(event, 'caseTrackerSection')">Case Tracker</div>
 </nav>
 
 <div class="container">
     <div class="form-card">
         
+        <!-- ================= TAB 1: CALLS SECTION ================= -->
         <div id="callsSection" class="form-section active">
             <header>
                 <h1>Call Follow Up Terminal</h1>
@@ -263,6 +266,7 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- ================= TAB 2: PHOTOS ADDED TRACKER ================= -->
         <div id="photosAddedSection" class="form-section">
             <header>
                 <h1>Photos Added Pipeline</h1>
@@ -294,6 +298,7 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- ================= TAB 3: VIDEOS UPLOADED TRACKER ================= -->
         <div id="videosUploadedSection" class="form-section">
             <header>
                 <h1>Videos Uploaded Pipeline</h1>
@@ -309,6 +314,7 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- ================= TAB 4: PHOTO/VIDEO APPROVALS ================= -->
         <div id="approvalsSection" class="form-section">
             <header>
                 <h1>Photo / Video Asset Approvals</h1>
@@ -337,6 +343,46 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- ================= TAB 5: PHOTOSHOOT TRACKER ================= -->
+        <div id="photoshootSection" class="form-section">
+            <header>
+                <h1>Photoshoot Investment Tracker</h1>
+                <p>Schedule marketing sessions and log rolling location fulfillment tasks</p>
+            </header>
+            <form onsubmit="handleFormSubmit(event, 'photoshootTracker')">
+                <div class="form-group">
+                    <label>Store Name</label>
+                    <input type="text" name="storeName" placeholder="Enter target photoshoot branch store name" required>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Photoshoot Scheduled Date</label>
+                        <input type="date" name="shootDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Photoshoot Scheduled Time</label>
+                        <input type="time" name="shootTime" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="shootStatus" required>
+                        <option value="" disabled selected>Select execution status...</option>
+                        <option value="Completed">Completed</option>
+                        <option value="In progress">In progress</option>
+                        <option value="Blocked">Blocked</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notes (Optional)</label>
+                    <textarea name="shootNotes" placeholder="Log reasons for re-requests, booking numbers, or partner blockers..."></textarea>
+                </div>
+                <button type="submit">Log Photoshoot Entry</button>
+            </form>
+            <div class="status-msg"></div>
+        </div>
+
+        <!-- ================= FUTURE TAB PLACEHOLDERS ================= -->
         <div id="caseTrackerSection" class="form-section">
             <header>
                 <h1>Case Tracker</h1>
@@ -414,7 +460,8 @@
             if (actionType === 'calls') btn.textContent = "Log Call Entry";
             else if (actionType === 'photosAdded') btn.textContent = "Log Photos Added";
             else if (actionType === 'videosUploaded') btn.textContent = "Log Video Upload";
-            else btn.textContent = "Log Asset Approval";
+            else if (actionType === 'contentApprovals') btn.textContent = "Log Asset Approval";
+            else btn.textContent = "Log Photoshoot Entry";
         });
     }
 </script>
