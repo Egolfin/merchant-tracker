@@ -29,7 +29,7 @@
             min-height: 100vh;
         }
 
-        /* Top Navigation Tabs mimicking your spreadsheet structure */
+        /* Responsive Top Navigation Bars */
         .tab-navigation {
             width: 100%;
             background-color: var(--card-bg);
@@ -57,9 +57,9 @@
             background-color: rgba(59, 130, 246, 0.05);
         }
 
-        .tab.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
+        .tab:hover:not(.active) {
+            color: var(--text-main);
+            background-color: rgba(255, 255, 255, 0.02);
         }
 
         .container {
@@ -87,12 +87,21 @@
             font-size: 14px;
         }
 
+        /* Form Area Implementations */
         .form-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 36px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-section {
+            display: none; /* Hidden by default until activated */
+        }
+
+        .form-section.active {
+            display: block; /* Shown when corresponding tab is selected */
         }
 
         .form-group {
@@ -170,7 +179,7 @@
             cursor: not-allowed;
         }
 
-        #statusMessage {
+        .status-msg {
             margin-top: 20px;
             font-size: 14px;
             text-align: center;
@@ -183,87 +192,122 @@
 </head>
 <body>
 
-<!-- Navigation Bar mapping out your exact structure -->
 <nav class="tab-navigation">
-    <div class="tab active">Q4 Call Follow Up</div>
-    <div class="tab disabled">Photo & Description Tracker (Locked)</div>
-    <div class="tab disabled">Pending Photos (Locked)</div>
-    <div class="tab disabled">Photoshoot Tracker (Locked)</div>
-    <div class="tab disabled">Case Tracker (Locked)</div>
+    <div class="tab active" onclick="switchTab(event, 'callsSection')">Call Follow Up</div>
+    <div class="tab" onclick="switchTab(event, 'photoTrackerSection')">Photo & Description Tracker</div>
+    <div class="tab" onclick="switchTab(event, 'pendingPhotosSection')">Pending Photos</div>
+    <div class="tab" onclick="switchTab(event, 'photoshootSection')">Photoshoot Tracker</div>
+    <div class="tab" onclick="switchTab(event, 'caseTrackerSection')">Case Tracker</div>
 </nav>
 
 <div class="container">
-    <header>
-        <h1>Q4 Call Follow Up</h1>
-        <p>Log client interactions cleanly and accurately</p>
-    </header>
-
     <div class="form-card">
-        <form id="callTrackerForm">
-            <!-- Store Name -->
-            <div class="form-group">
-                <label for="storeName">Store Name</label>
-                <input type="text" id="storeName" name="storeName" placeholder="Enter store or merchant name" required>
-            </div>
-
-            <div class="grid-2">
-                <!-- Call Goals Dropdown -->
+        
+        <div id="callsSection" class="form-section active">
+            <header>
+                <h1>Call Follow Up Terminal</h1>
+                <p>Log client interactions cleanly into automated quarterly targets</p>
+            </header>
+            <form onsubmit="handleFormSubmit(event, 'calls')">
                 <div class="form-group">
-                    <label for="callGoal">Call Goal</label>
-                    <select id="callGoal" name="callGoal" required>
-                        <option value="" disabled selected>Select a goal...</option>
-                        <option value="Decision Maker Call">Decision Maker Call</option>
-                        <option value="Gate keeper call">Gate keeper call</option>
-                        <option value="Google Meet Meeting">Google Meet Meeting</option>
-                    </select>
+                    <label>Store Name</label>
+                    <input type="text" name="storeName" placeholder="Enter store or merchant name" required>
                 </div>
-
-                <!-- Call Results Dropdown -->
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Call Goal</label>
+                        <select name="callGoal" required>
+                            <option value="" disabled selected>Select a goal...</option>
+                            <option value="Decision Maker Call">Decision Maker Call</option>
+                            <option value="Gate keeper call">Gate keeper call</option>
+                            <option value="Google Meet Meeting">Google Meet Meeting</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Call Result</label>
+                        <select name="callResult" required>
+                            <option value="" disabled selected>Select a result...</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Appointment set">Appointment set</option>
+                            <option value="Pitching">Pitching</option>
+                            <option value="No answer">No answer</option>
+                            <option value="Left VM">Left VM</option>
+                            <option value="Hung up">Hung up</option>
+                            <option value="Requested callback">Requested callback</option>
+                            <option value="DM Identified">DM Identified</option>
+                            <option value="Incorrect number">Incorrect number</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="form-group">
-                    <label for="callResult">Call Result</label>
-                    <select id="callResult" name="callResult" required>
-                        <option value="" disabled selected>Select a result...</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Appointment set">Appointment set</option>
-                        <option value="Pitching">Pitching</option>
-                        <option value="No answer">No answer</option>
-                        <option value="Left VM">Left VM</option>
-                        <option value="Hung up">Hung up</option>
-                        <option value="Requested callback">Requested callback</option>
-                        <option value="DM Identified">DM Identified</option>
-                        <option value="Incorrect number">Incorrect number</option>
-                    </select>
+                    <label>Call Notes</label>
+                    <textarea name="callNotes" placeholder="Type historical log details here..."></textarea>
                 </div>
-            </div>
+                <button type="submit">Log Call Entry</button>
+            </form>
+            <div class="status-msg"></div>
+        </div>
 
-            <!-- Call Notes -->
-            <div class="form-group">
-                <label for="callNotes">Call Notes</label>
-                <textarea id="callNotes" name="callNotes" placeholder="Type detailed log details here..."></textarea>
-            </div>
+        <div id="photoTrackerSection" class="form-section">
+            <header>
+                <h1>Photo & Description Tracker</h1>
+                <p>Form specifications coming up next</p>
+            </header>
+        </div>
 
-            <button type="submit" id="submitBtn">Log Call Entry</button>
-        </form>
-        <div id="statusMessage"></div>
+        <div id="pendingPhotosSection" class="form-section">
+            <header>
+                <h1>Pending Photos</h1>
+                <p>Form specifications coming up next</p>
+            </header>
+        </div>
+
+        <div id="photoshootSection" class="form-section">
+            <header>
+                <h1>Photoshoot Tracker</h1>
+                <p>Form specifications coming up next</p>
+            </header>
+        </div>
+
+        <div id="caseTrackerSection" class="form-section">
+            <header>
+                <h1>Case Tracker</h1>
+                <p>Form specifications coming up next</p>
+            </header>
+        </div>
+
     </div>
 </div>
 
 <script>
-    // Link your active DoorDash Apps Script Web App URL here
     const WEB_APP_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbwh7GddixjGsa8F1WHE45UZ7JmR4wZBAHrEcks8XUan-2PnwI0G-pnbQ5vX62OKtggAJQ/exec";
 
-    document.getElementById('callTrackerForm').addEventListener('submit', function(e) {
-        e.preventDefault();
+    // Frontend Tab Swapping Engine
+    function switchTab(event, sectionId) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
         
-        const btn = document.getElementById('submitBtn');
-        const status = document.getElementById('statusMessage');
+        event.currentTarget.classList.add('active');
+        document.getElementById(sectionId).add('active');
+        document.getElementById(sectionId).classList.add('active');
+    }
+
+    // Unified Secure API Submission Handler
+    function handleFormSubmit(e, actionType) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = form.querySelector('button[type="submit"]');
+        const status = form.nextElementSibling;
         
         btn.disabled = true;
         btn.textContent = "Logging to Master Sheet...";
         status.style.display = "none";
 
-        const formData = new FormData(this);
+        const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
+        
+        // Let our background script know which panel this submission belongs to
+        data.formSource = actionType;
 
         fetch(WEB_APP_URL, {
             method: 'POST',
@@ -276,22 +320,22 @@
             status.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
             status.style.color = "#10b981";
             status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
-            status.textContent = "✓ Call logged successfully in database!";
-            document.getElementById('callTrackerForm').reset();
+            status.textContent = "✓ Entry logged successfully into Google Sheets!";
+            form.reset();
         })
         .catch(err => {
             status.style.display = "block";
             status.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
             status.style.color = "#ef4444";
             status.style.border = "1px solid rgba(239, 68, 68, 0.2)";
-            status.textContent = "✕ Network error. Please check backend link.";
+            status.textContent = "✕ Connection error. Please verify Apps Script configuration.";
             console.error(err);
         })
         .finally(() => {
             btn.disabled = false;
-            btn.textContent = "Log Call Entry";
+            btn.textContent = "Log Entry";
         });
-    });
+    }
 </script>
 
 </body>
