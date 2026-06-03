@@ -328,7 +328,7 @@
         .badge.case { background: rgba(239, 68, 68, 0.15); color: #f87171; }
         .badge.opp { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
 
-        /* ================= MODAL INTERFACE EXTENSIONS ================= */
+        /* ================= MODAL INTERFACE OVERLAY FILTERS ================= */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -420,7 +420,6 @@
 
         .metric-pill strong { color: var(--text-muted); font-weight: 500; font-size: 11px; display:block; text-transform: uppercase; margin-bottom: 2px;}
         
-        /* Mutation Controls Bar Layout */
         .mutation-btn-group {
             display: flex;
             justify-content: flex-end;
@@ -529,13 +528,252 @@
             </div>
         </div>
         
-        <div id="callsSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Call Follow Up</h1></header><form onsubmit="handleFormSubmit(event, 'calls')"><div class="form-group"><label>Store Name</label><input type="text" name="storeName" required></div><div class="grid-2"><div class="form-group"><label>Goal</label><select name="callGoal" required><option value="Decision Maker Call">Decision Maker Call</option><option value="Gate keeper call">Gate keeper call</option><option value="Google Meet Meeting">Google Meet Meeting</option></select></div><div class="form-group"><label>Result</label><select name="callResult" required><option value="Completed">Completed</option><option value="Appointment set">Appointment set</option><option value="Pitching">Pitching</option><option value="No answer">No answer</option><option value="Left VM">Left VM</option><option value="Hung up">Hung up</option><option value="Requested callback">Requested callback</option><option value="DM Identified">DM Identified</option><option value="Incorrect number">Incorrect number</option></select></div></div><div class="grid-2"><div class="form-group"><label>Date (Optional)</label><input type="date" name="followUpDate"></div><div class="form-group"><label>Time (Optional)</label><input type="time" name="followUpTime"></div></div><div class="form-group"><label>Call Notes</label><textarea name="callNotes"></textarea></div><button type="submit">Log Call Entry</button></form><div class="status-msg"></div></div>
-        <div id="photosAddedSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Photos Added</h1></header><form onsubmit="handleFormSubmit(event, 'photosAdded')"><div class="form-group"><label>Store Name</label><input type="text" name="storeName" required></div><div class="grid-2"><div class="form-group"><label>Prev Missing</label><input type="number" name="prevMissing" required></div><div class="form-group"><label>Curr Missing</label><input type="number" name="currMissing" required></div></div><button type="submit">Log Photos Added</button></form><div class="status-msg"></div></div>
-        <div id="videosUploadedSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Videos Uploaded</h1></header><form onsubmit="handleFormSubmit(event, 'videosUploaded')"><div class="form-group"><label>Business Name</label><input type="text" name="businessName" required></div><button type="submit">Log Video Upload</button></form><div class="status-msg"></div></div>
-        <div id="approvalsSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Approvals</h1></header><form onsubmit="handleFormSubmit(event, 'contentApprovals')"><div class="form-group"><label>Store Name</label><input type="text" name="storeName" required></div><div class="form-group"><label>Type</label><select name="approvalType" required><option value="Photos Approved">Photos Approved</option><option value="Videos Approved">Videos Approved</option><option value="Both Approved">Both Approved</option></select></div><div class="form-group"><label>Notes</label><textarea name="approvalNotes"></textarea></div><button type="submit">Log Asset Approval</button></form><div class="status-msg"></div></div>
-        <div id="photoshootSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Photoshoot</h1></header><form onsubmit="handleFormSubmit(event, 'photoshootTracker')"><div class="form-group"><label>Store Name</label><input type="text" name="storeName" required></div><div class="grid-2"><div class="form-group"><label>Date</label><input type="date" name="shootDate" required></div><div class="form-group"><label>Time</label><input type="time" name="shootTime" required></div></div><div class="form-group"><label>Status</label><select name="shootStatus" required><option value="Completed">Completed</option><option value="In progress">In progress</option><option value="Blocked">Blocked</option></select></div><div class="form-group"><label>Notes</label><textarea name="shootNotes"></textarea></div><button type="submit">Log Photoshoot Entry</button></form><div class="status-msg"></div></div>
-        <div id="caseTrackerSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Case Tracker</h1></header><form onsubmit="handleFormSubmit(event, 'caseTracker')"><div class="grid-2"><div class="form-group"><label>Business Name</label><input type="text" name="businessName" required></div><div class="form-group"><label>Case #</label><input type="text" name="caseNumber" required></div></div><div class="grid-2"><div class="form-group"><label>Type</label><select name="caseType" required><option value="AM Case">AM Case</option><option value="Photo Case">Photo Case</option><option value="Menu">Menu</option></select></div><div class="form-group"><label>Resolved?</label><select name="caseResolved" required><option value="In progress">In progress</option><option value="Resolved">Resolved</option><option value="Solved w/ no resolution">Solved w/ no resolution</option></select></div></div><div class="form-group"><label>Notes</label><textarea name="caseNotes"></textarea></div><button type="submit">Log Case Ticket</button></form><div class="status-msg"></div></div>
-        <div id="opportunitiesSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Opportunities</h1></header><form onsubmit="handleFormSubmit(event, 'opportunities')"><div class="grid-2"><div class="form-group"><label>Store Name</label><input type="text" name="storeName" required></div><div class="form-group"><label>Type</label><select name="oppType" required><option value="Ad">Ad</option><option value="Promo">Promo</option></select></div></div><div class="form-group"><label>Co-Funded?</label><select name="isCoFunded" onchange="toggleCoFundedFields(this.value)"><option value="No">No</option><option value="Yes">Yes</option></select></div><div class="conditional-fields" id="coFundedBlock"><div class="grid-2"><div class="form-group"><label>Split %</label><input type="text" name="coFundedSplit" placeholder="70/30"></div><div class="form-group"><label>Budget</label><input type="text" name="oppBudget"></div></div></div><div class="form-group"><label>Salesforce Link</label><input type="url" name="salesforceLink" required></div><button type="submit">Log Opportunity</button></form><div class="status-msg"></div></div>
+        <div id="callsSection" class="form-section">
+            <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
+                <h1>Call Follow Up</h1>
+            </header>
+            <form onsubmit="handleFormSubmit(event, 'calls')">
+                <div class="form-group">
+                    <label>Store Name</label>
+                    <input type="text" name="storeName" required>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Goal</label>
+                        <select name="callGoal" required>
+                            <option value="Decision Maker Call">Decision Maker Call</option>
+                            <option value="Gate keeper call">Gate keeper call</option>
+                            <option value="Google Meet Meeting">Google Meet Meeting</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Result</label>
+                        <select name="callResult" required>
+                            <option value="Completed">Completed</option>
+                            <option value="Appointment set">Appointment set</option>
+                            <option value="Pitching">Pitching</option>
+                            <option value="No answer">No answer</option>
+                            <option value="Left VM">Left VM</option>
+                            <option value="Hung up">Hung up</option>
+                            <option value="Requested callback">Requested callback</option>
+                            <option value="DM Identified">DM Identified</option>
+                            <option value="Incorrect number">Incorrect number</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Date (Optional)</label>
+                        <input type="date" name="followUpDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Time (Optional)</label>
+                        <input type="time" name="followUpTime">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Call Notes</label>
+                    <textarea name="callNotes"></textarea>
+                </div>
+                <button type="submit">Log Call Entry</button>
+            </form>
+            <div class="status-msg"></div>
+        </div>
+
+        <div id="photosAddedSection" class="form-section">
+            <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
+                <h1>Photos Added</h1>
+            </header>
+            <form onsubmit="handleFormSubmit(event, 'photosAdded')">
+                <div class="form-group">
+                    <label>Store Name</label>
+                    <input type="text" name="storeName" required>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Prev Missing</label>
+                        <input type="number" name="prevMissing" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Curr Missing</label>
+                        <input type="number" name="currMissing" required>
+                    </div>
+                </div>
+                <button type="submit">Log Photos Added</button>
+            </form>
+            <div class="status-msg"></div>
+        </div>
+
+        <div id="videosUploadedSection" class="form-section">
+            <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
+                <h1>Videos Uploaded</h1>
+            </header>
+            <form onsubmit="handleFormSubmit(event, 'videosUploaded')">
+                <div class="form-group">
+                    <label>Business Name</label>
+                    <input type="text" name="businessName" required>
+                </div>
+                <button type="submit">Log Video Upload</button>
+            </form>
+            <div class="status-msg"></div>
+        </div>
+
+        <div id="approvalsSection" class="form-section">
+            <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
+                <h1>Approvals</h1>
+            </header>
+            <form onsubmit="handleFormSubmit(event, 'contentApprovals')">
+                <div class="form-group">
+                    <label>Store Name</label>
+                    <input type="text" name="storeName" required>
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select name="approvalType" required>
+                        <option value="Photos Approved">Photos Approved</option>
+                        <option value="Videos Approved">Videos Approved</option>
+                        <option value="Both Approved">Both Approved</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea name="approvalNotes"></textarea>
+                </div>
+                <button type="submit">Log Asset Approval</button>
+            </form>
+            <div class="status-msg"></div>
+        </div>
+
+        <div id="photoshootSection" class="form-section">
+            <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
+                <h1>Photoshoot</h1>
+            </header>
+            <form onsubmit="handleFormSubmit(event, 'photoshootTracker')">
+                <div class="form-group">
+                    <label>Store Name</label>
+                    <input type="text" name="storeName" required>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" name="shootDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Time</label>
+                        <input type="time" name="shootTime" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="shootStatus" required>
+                        <option value="Completed">Completed</option>
+                        <option value="In progress">In progress</option>
+                        <option value="Blocked">Blocked</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea name="shootNotes"></textarea>
+                </div>
+                <button type="submit">Log Photoshoot Entry</button>
+            </form>
+            <div class="status-msg"></div>
+        </div>
+
+        <div id="caseTrackerSection" class="form-section">
+            <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
+                <h1>Case Tracker</h1>
+            </header>
+            <form onsubmit="handleFormSubmit(event, 'caseTracker')">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Business Name</label>
+                        <input type="text" name="businessName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Case #</label>
+                        <input type="text" name="caseNumber" required>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select name="caseType" required>
+                            <option value="AM Case">AM Case</option>
+                            <option value="Photo Case">Photo Case</option>
+                            <option value="Menu">Menu</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Resolved?</label>
+                        <select name="caseResolved" required>
+                            <option value="In progress">In progress</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Solved w/ no resolution">Solved w/ no resolution</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea name="caseNotes"></textarea>
+                </div>
+                <button type="submit">Log Case Ticket</button>
+            </form>
+            <div class="status-msg"></div>
+        </div>
+
+        <div id="opportunitiesSection" class="form-section">
+            <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
+                <h1>Opportunities</h1>
+            </header>
+            <form onsubmit="handleFormSubmit(event, 'opportunities')">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Store Name</label>
+                        <input type="text" name="storeName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select name="oppType" required>
+                            <option value="Ad">Ad</option>
+                            <option value="Promo">Promo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Co-Funded?</label>
+                    <select name="isCoFunded" onchange="toggleCoFundedFields(this.value)">
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+                <div class="conditional-fields" id="coFundedBlock">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Split %</label>
+                            <input type="text" name="coFundedSplit" placeholder="70/30">
+                        </div>
+                        <div class="form-group">
+                            <label>Budget</label>
+                            <input type="text" name="oppBudget">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Salesforce Link</label>
+                    <input type="url" name="salesforceLink" required>
+                </div>
+                <button type="submit">Log Opportunity</button>
+            </form>
+            <div class="status-msg"></div>
+        </div>
 
     </div>
 </div>
@@ -568,16 +806,17 @@
             </div>
         </div>
 
-        <div class="modal-body" id="modalBody">
-            </div>
+        <div class="modal-body" id="modalBody"></div>
     </div>
 </div>
 
 <script>
-    // Paste your exact published apps script execute deployment URL path context link directly below:
     const WEB_APP_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbwh7GddixjGsa8F1WHE45UZ7JmR4wZBAHrEcks8XUan-2PnwI0G-pnbQ5vX62OKtggAJQ/exec";
     
     let currentModalCategory = "";
+    
+    const sessionMetrics = { calls: 0, photosAdded: 0, videosUploaded: 0, contentApprovals: 0, photoshootTracker: 0, caseTracker: 0, opportunities: 0 };
+    const localSessionHistory = { calls: [], photosAdded: [], videosUploaded: [], contentApprovals: [], photoshootTracker: [], caseTracker: [], opportunities: [] };
     let globalHistoricalDatabase = {}; 
 
     const sheetTabMapping = {
@@ -644,7 +883,6 @@
         let casesCount = (globalHistoricalDatabase["Case Tracker"] || []).length;
         let oppsCount = (globalHistoricalDatabase["Opportunities"] || []).length;
 
-        // Photo added calculation accumulator loop context
         let netPhotos = 0;
         (globalHistoricalDatabase["Photos Added"] || []).forEach(row => {
             netPhotos += (parseInt(row["Photos Added"]) || 0);
@@ -671,14 +909,13 @@
             records.forEach(r => {
                 mergedList.push({
                     category: catKey,
-                    store: r["Store Name"] || r["Business Name"] || "Merchant Record",
-                    time: r["Timestamp"] || new Date().toISOString(),
+                    store: r["Store Name"] || r["Store"] || r["Business Name"] || "Merchant Record",
+                    time: r["Timestamp"] || r["Date Logged"] || r["Date"] || new Date().toISOString(),
                     id: r["ID"] || ""
                 });
             });
         });
 
-        // Sort descending
         mergedList.sort((a, b) => new Date(b.time) - new Date(a.time));
         const limitedList = mergedList.slice(0, 8);
 
@@ -727,10 +964,16 @@
 
         const targetTab = sheetTabMapping[currentModalCategory];
         let records = globalHistoricalDatabase[targetTab] || [];
+        let isHistorical = true;
+
+        if (records.length === 0) {
+            records = localSessionHistory[currentModalCategory] || [];
+            isHistorical = false;
+        }
 
         let filtered = records.filter(item => {
-            const storeName = (item["Store Name"] || item["Business Name"] || "").toString().toLowerCase();
-            const dateStr = item["Timestamp"] || "";
+            const storeName = (item["Store Name"] || item["Store"] || item["Business Name"] || item["storeName"] || item["businessName"] || "").toString().toLowerCase();
+            const dateStr = item["Timestamp"] || item["Date Logged"] || item["Date"] || item["loggedAt"] || "";
             
             if (searchTerm && !storeName.includes(searchTerm)) return false;
             if (dateStr) {
@@ -742,31 +985,29 @@
         });
 
         if (filtered.length === 0) {
-            body.innerHTML = `<div class="empty-state" style="border:none;"><h3>No records match criteria</h3><p>Verify spelling index parameters or date range rules.</p></div>`;
+            body.innerHTML = `<div class="empty-state" style="border:none;"><h3>No records match criteria</h3><p>Verify parameters or ensure your sheet contains logged data lines.</p></div>`;
             return;
         }
 
         filtered.forEach(item => {
             const rowDiv = document.createElement('div');
             rowDiv.className = 'modal-data-row';
-            rowDiv.id = `row-wrapper-${item["ID"]}`;
+            rowDiv.id = `row-wrapper-${item["ID"] || 'temp'}`;
             
-            const rawTime = item["Timestamp"] ? new Date(item["Timestamp"]).toLocaleDateString() + " " + new Date(item["Timestamp"]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "N/A";
-            const name = item["Store Name"] || item["Business Name"] || "Merchant Record";
+            const rawTime = item["Timestamp"] || item["Date Logged"] || item["Date"] || item["loggedAt"] ? new Date(item["Timestamp"] || item["Date Logged"] || item["Date"] || item["loggedAt"]).toLocaleDateString() + " " + new Date(item["Timestamp"] || item["Date Logged"] || item["Date"] || item["loggedAt"]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "N/A";
+            const name = item["Store Name"] || item["Store"] || item["Business Name"] || item["storeName"] || item["businessName"] || "Merchant Record";
 
-            // Draw standard read-only core display container block
             let gridHtml = `<div class="metric-item-pill-grid" id="view-pillbox-${item["ID"]}">`;
             Object.keys(item).forEach(key => {
-                if(!["ID", "Timestamp"].includes(key)) {
+                if(!["ID", "Timestamp", "loggedAt", "formSource"].includes(key)) {
                     gridHtml += `<div class="metric-pill"><strong>${key}</strong><span>${item[key]}</span></div>`;
                 }
             });
             gridHtml += `</div>`;
 
-            // Inject inline edit mutation engine forms elements dynamically hidden on load
             let editFormHtml = `<div class="inline-editing-form" id="edit-formbox-${item["ID"]}" style="display:none; margin-top:10px;">`;
             Object.keys(item).forEach(key => {
-                if(!["ID", "Timestamp"].includes(key)) {
+                if(!["ID", "Timestamp", "loggedAt", "formSource"].includes(key)) {
                     editFormHtml += `
                         <div style="margin-bottom:10px;">
                             <label style="font-size:10px; color:var(--accent-color);">${key}</label>
@@ -782,7 +1023,7 @@
             </div>`;
 
             rowDiv.innerHTML = `
-                <span class="row-meta-tag">${item["ID"]} — ${rawTime}</span>
+                <span class="row-meta-tag">${item["ID"] || 'PENDING'} — ${rawTime} ${!isHistorical ? '[Local Backup Session]' : '[Sheet Database]'}</span>
                 <strong style="font-size:16px;">${name}</strong>
                 ${gridHtml}
                 ${editFormHtml}
@@ -811,14 +1052,7 @@
         });
 
         const targetTab = sheetTabMapping[currentModalCategory];
-        
-        // Execute operational payload packet pipeline
-        const payload = {
-            operationType: "edit",
-            targetTab: targetTab,
-            recordId: recordId,
-            updatedFields: updatedFields
-        };
+        const payload = { operationType: "edit", targetTab: targetTab, recordId: recordId, updatedFields: updatedFields };
 
         const targetRow = document.getElementById(`row-wrapper-${recordId}`);
         targetRow.style.opacity = "0.4";
@@ -830,13 +1064,10 @@
             body: JSON.stringify(payload)
         })
         .then(() => {
-            // Hot refresh active operational dataset instantly to display edits live!
             let localTargetArray = globalHistoricalDatabase[targetTab] || [];
             let itemIdx = localTargetArray.findIndex(r => r["ID"] === recordId);
             if(itemIdx !== -1) {
-                Object.keys(updatedFields).forEach(k => {
-                    localTargetArray[itemIdx][k] = updatedFields[k];
-                });
+                Object.keys(updatedFields).forEach(k => { localTargetArray[itemIdx][k] = updatedFields[k]; });
             }
             targetRow.style.opacity = "1";
             toggleInlineEditLayout(recordId, false);
@@ -844,21 +1075,17 @@
             recalculateDashboardCounters();
         })
         .catch(err => {
-            alert("Network modification timeout context. Check connection parameters.");
+            alert("Network timeout. Revision failed.");
             targetRow.style.opacity = "1";
             console.error(err);
         });
     }
 
     function executeRowDeletionMutation(recordId) {
-        if (!confirm(`⚠️ Critical Action Warning:\nAre you absolutely certain you want to permanently erase record ${recordId} from your Google Sheet master files database? This cannot be undone.`)) return;
+        if (!confirm(`⚠️ Confirm Deletion:\nAre you sure you want to permanently erase record ${recordId} from Google Sheets?`)) return;
 
         const targetTab = sheetTabMapping[currentModalCategory];
-        const payload = {
-            operationType: "delete",
-            targetTab: targetTab,
-            recordId: recordId
-        };
+        const payload = { operationType: "delete", targetTab: targetTab, recordId: recordId };
 
         const targetRow = document.getElementById(`row-wrapper-${recordId}`);
         targetRow.style.opacity = "0.3";
@@ -870,17 +1097,15 @@
             body: JSON.stringify(payload)
         })
         .then(() => {
-            // Cut row from internal cache structure arrays cleanly
             let localTargetArray = globalHistoricalDatabase[targetTab] || [];
             globalHistoricalDatabase[targetTab] = localTargetArray.filter(r => r["ID"] !== recordId);
-            
             targetRow.remove();
             applyActiveModalFilters();
             recalculateDashboardCounters();
             buildActivityStreamFromHistory();
         })
         .catch(err => {
-            alert("Erase mutation pipeline block caught. Sync failure.");
+            alert("Erase failed. Sync error.");
             targetRow.style.opacity = "1";
             console.error(err);
         });
@@ -913,10 +1138,12 @@
             status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
             status.textContent = "✓ Recorded perfectly! Row added to Google Sheets database.";
             
+            const sessionPayload = { ...data, loggedAt: new Date().toISOString() };
+            localSessionHistory[actionType].push(sessionPayload);
+
             form.reset();
             if(actionType === "opportunities") toggleCoFundedFields("No");
             
-            // Hot reload complete dashboard metrics in background immediately
             setTimeout(syncGlobalHistory, 1200);
         })
         .catch(err => {
@@ -924,7 +1151,7 @@
             status.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
             status.style.color = "#ef4444";
             status.style.border = "1px solid rgba(239, 68, 68, 0.2)";
-            status.textContent = "✕ Network handshake error. Entry submission blocked.";
+            status.textContent = "✕ Handshake error. Entry submission blocked.";
             console.error(err);
         })
         .finally(() => {
@@ -940,8 +1167,6 @@
     }
 
     function closeDataModal(e) { document.getElementById('dataModal').style.display = 'none'; }
-
-    // Automated full historical system capture on layout initialization
     window.addEventListener('load', () => { syncGlobalHistory(); });
 </script>
 </body>
