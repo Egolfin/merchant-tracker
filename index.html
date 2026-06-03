@@ -15,6 +15,8 @@
             --text-muted: #9ca3af;
             --border-color: #2d3139;
             --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
         }
 
         body {
@@ -37,6 +39,9 @@
             overflow-x: auto;
             padding: 0 20px;
             box-sizing: border-box;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
         .tab {
@@ -63,7 +68,7 @@
 
         .container {
             width: 100%;
-            max-width: 680px;
+            max-width: 850px;
             padding: 40px 20px;
             box-sizing: border-box;
         }
@@ -107,7 +112,7 @@
         }
 
         .conditional-fields {
-            display: none; /* Hidden by default */
+            display: none;
             border-left: 3px solid var(--accent-color);
             padding-left: 20px;
             margin-bottom: 24px;
@@ -159,23 +164,7 @@
             gap: 20px;
         }
 
-        .live-counter-card {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
-            border: 1px solid var(--border-color);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            text-align: center;
-        }
-
-        .counter-val {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--success-color);
-            margin-top: 4px;
-        }
-
-        @media (max-width: 480px) {
+        @media (max-width: 600px) {
             .grid-2 {
                 grid-template-columns: 1fr;
                 gap: 0;
@@ -215,12 +204,147 @@
             border-radius: 8px;
             display: none;
         }
+
+        /* ================= DASHBOARD STYLES ================= */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .dash-card {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dash-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--accent-color);
+        }
+
+        .dash-card.success::before { background-color: var(--success-color); }
+        .dash-card.warning::before { background-color: var(--warning-color); }
+        .dash-card.danger::before { background-color: var(--danger-color); }
+
+        .dash-card-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .dash-card-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 12px 0 4px 0;
+            color: var(--text-main);
+        }
+
+        .dash-card-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Creative Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            color: var(--text-muted);
+            margin-top: 16px;
+        }
+
+        .empty-state-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 6px 0;
+            color: var(--text-main);
+            font-size: 16px;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 13px;
+        }
+
+        /* Live Data Streams */
+        .recent-activity-section {
+            margin-top: 36px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .activity-log-item {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .activity-details span {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .badge {
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .badge.call { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+        .badge.photo { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+        .badge.video { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+        .badge.case { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+        .badge.opp { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
     </style>
 </head>
 <body>
 
 <nav class="tab-navigation">
-    <div class="tab active" onclick="switchTab(event, 'callsSection')">Call Follow Up</div>
+    <div class="tab active" onclick="switchTab(event, 'homeSection')">🏠 Home Dashboard</div>
+    <div class="tab" onclick="switchTab(event, 'callsSection')">Call Follow Up</div>
     <div class="tab" onclick="switchTab(event, 'photosAddedSection')">Photos Added</div>
     <div class="tab" onclick="switchTab(event, 'videosUploadedSection')">Videos Uploaded</div>
     <div class="tab" onclick="switchTab(event, 'approvalsSection')">Photo/Video Approvals</div>
@@ -232,8 +356,69 @@
 <div class="container">
     <div class="form-card">
         
-        <!-- ================= TAB 1: CALLS SECTION ================= -->
-        <div id="callsSection" class="form-section active">
+        <div id="homeSection" class="form-section active">
+            <header>
+                <h1>Operational Command Center</h1>
+                <p>Live account management performance metrics for this tracking session</p>
+            </header>
+
+            <div class="dashboard-grid">
+                <div class="dash-card">
+                    <div class="dash-card-title">Interactions</div>
+                    <div class="dash-card-value" id="dashCallsCount">0</div>
+                    <div class="dash-card-meta">Logged calls this session</div>
+                </div>
+                <div class="dash-card success">
+                    <div class="dash-card-title">Photos Added</div>
+                    <div class="dash-card-value" id="dashPhotosCount">0</div>
+                    <div class="dash-card-meta">Total visual menu assets injected</div>
+                </div>
+                <div class="dash-card warning">
+                    <div class="dash-card-title">Videos Uploaded</div>
+                    <div class="dash-card-value" id="dashVideosCount">0</div>
+                    <div class="dash-card-meta">Parent brand productions mapped</div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dash-card success">
+                    <div class="dash-card-title">Asset Sign-Offs</div>
+                    <div class="dash-card-value" id="dashApprovalsCount">0</div>
+                    <div class="dash-card-meta">Merchant content approvals</div>
+                </div>
+                <div class="dash-card warning">
+                    <div class="dash-card-title">Photoshoots</div>
+                    <div class="dash-card-value" id="dashShootsCount">0</div>
+                    <div class="dash-card-meta">Professional sessions scheduled</div>
+                </div>
+                <div class="dash-card danger">
+                    <div class="dash-card-title">Active Cases</div>
+                    <div class="dash-card-value" id="dashCasesCount">0</div>
+                    <div class="dash-card-meta">72hr calendar tickets triggered</div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid" style="grid-template-columns: 1fr;">
+                <div class="dash-card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(59, 130, 246, 0.03) 100%);">
+                    <div class="dash-card-title" style="color: #a78bfa;">Pipeline Conversions</div>
+                    <div class="dash-card-value" id="dashOppsCount" style="color: #a78bfa;">0</div>
+                    <div class="dash-card-meta">Salesforce Ads & Promos closed successfully</div>
+                </div>
+            </div>
+
+            <div class="recent-activity-section">
+                <div class="section-title">⏱️ Recent Activity Stream</div>
+                <div id="activityStreamContainer">
+                    <div class="empty-state" id="dashboardEmptyState">
+                        <div class="empty-state-icon">📡</div>
+                        <h3>No information added yet</h3>
+                        <p>Submissions will display in a structured live analytics stream as you log data across your workspace tabs.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="callsSection" class="form-section">
             <header>
                 <h1>Call Follow Up Terminal</h1>
                 <p>Log client interactions cleanly into automated quarterly targets</p>
@@ -288,16 +473,11 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= TAB 2: PHOTOS ADDED TRACKER ================= -->
         <div id="photosAddedSection" class="form-section">
             <header>
                 <h1>Photos Added Pipeline</h1>
                 <p>Log restaurant assets and dynamically update production performance counters</p>
             </header>
-            <div class="live-counter-card">
-                <label style="margin:0; font-size:11px;">Total Photos Added This Session</label>
-                <div class="counter-val" id="totalSessionAdded">0</div>
-            </div>
             <form onsubmit="handleFormSubmit(event, 'photosAdded')">
                 <div class="form-group">
                     <label>Store Name</label>
@@ -306,11 +486,11 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Photos Missing Before (Previous)</label>
-                        <input type="number" id="prevMissing" name="prevMissing" min="0" placeholder="e.g., 12" required>
+                        <input type="number" name="prevMissing" min="0" placeholder="e.g., 12" required>
                     </div>
                     <div class="form-group">
                         <label>Photos Missing After (Current)</label>
-                        <input type="number" id="currMissing" name="currMissing" min="0" placeholder="e.g., 2" required>
+                        <input type="number" name="currMissing" min="0" placeholder="e.g., 2" required>
                     </div>
                 </div>
                 <button type="submit">Log Photos Added</button>
@@ -318,7 +498,6 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= TAB 3: VIDEOS UPLOADED TRACKER ================= -->
         <div id="videosUploadedSection" class="form-section">
             <header>
                 <h1>Videos Uploaded Pipeline</h1>
@@ -334,7 +513,6 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= TAB 4: PHOTO/VIDEO APPROVALS ================= -->
         <div id="approvalsSection" class="form-section">
             <header>
                 <h1>Photo / Video Asset Approvals</h1>
@@ -363,7 +541,6 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= TAB 5: PHOTOSHOOT TRACKER ================= -->
         <div id="photoshootSection" class="form-section">
             <header>
                 <h1>Photoshoot Investment Tracker</h1>
@@ -402,7 +579,6 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= TAB 6: CASE TRACKER ================= -->
         <div id="caseTrackerSection" class="form-section">
             <header>
                 <h1>Corporate Case Terminal</h1>
@@ -447,7 +623,6 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= TAB 7: OPPORTUNITIES TERMINAL ================= -->
         <div id="opportunitiesSection" class="form-section">
             <header>
                 <h1>Salesforce Opportunities Terminal</h1>
@@ -457,18 +632,17 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Store Name</label>
-                        <input type="text" name="storeName" placeholder="Enter participating storefront name" required>
+                        <input type="text" name="storeName" placeholder="Enter storefront name" required>
                     </div>
                     <div class="form-group">
                         <label>Opportunity Type</label>
                         <select name="oppType" required>
-                            <option value="" disabled selected>Select execution model...</option>
+                            <option value="" disabled selected>Select model...</option>
                             <option value="Ad">Ad (Sponsored Listing)</option>
                             <option value="Promo">Promo (Promotions)</option>
                         </select>
                     </div>
                 </div>
-                
                 <div class="form-group">
                     <label>Is it Co-Funded?</label>
                     <select name="isCoFunded" id="coFundedSelect" onchange="toggleCoFundedFields(this.value)" required>
@@ -476,8 +650,6 @@
                         <option value="Yes">Yes</option>
                     </select>
                 </div>
-
-                <!-- Conditional Expansion Block -->
                 <div class="conditional-fields" id="coFundedBlock">
                     <div class="grid-2">
                         <div class="form-group">
@@ -490,12 +662,10 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label>Salesforce Opportunity Link</label>
                     <input type="url" name="salesforceLink" placeholder="https://na85.salesforce.com/..." required>
                 </div>
-
                 <button type="submit">Log Opportunity</button>
             </form>
             <div class="status-msg"></div>
@@ -506,7 +676,17 @@
 
 <script>
     const WEB_APP_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbwh7GddixjGsa8F1WHE45UZ7JmR4wZBAHrEcks8XUan-2PnwI0G-pnbQ5vX62OKtggAJQ/exec";
-    let totalPhotosAddedAccumulator = 0;
+    
+    // Live Client State Storage Controllers
+    const sessionMetrics = {
+        calls: 0,
+        photosAdded: 0,
+        videosUploaded: 0,
+        contentApprovals: 0,
+        photoshootTracker: 0,
+        caseTracker: 0,
+        opportunities: 0
+    };
 
     function switchTab(event, sectionId) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -515,21 +695,48 @@
         document.getElementById(sectionId).classList.add('active');
     }
 
-    // Dynamic UI Show/Hide Logic for Co-Funded inputs
     function toggleCoFundedFields(value) {
         const block = document.getElementById('coFundedBlock');
         const inputs = block.querySelectorAll('input');
-        
         if (value === "Yes") {
             block.style.display = "block";
             inputs.forEach(input => input.required = true);
         } else {
             block.style.display = "none";
-            inputs.forEach(input => {
-                input.required = false;
-                input.value = ""; // Resets the data if toggled away
-            });
+            inputs.forEach(input => { input.required = false; input.value = ""; });
         }
+    }
+
+    // Dynamic Live Dashboard Stream Aggregator Engine
+    function pushToActivityStream(type, targetName, metadata) {
+        const streamContainer = document.getElementById('activityStreamContainer');
+        const emptyState = document.getElementById('dashboardEmptyState');
+        
+        // Remove empty state on first entry push
+        if (emptyState) emptyState.remove();
+
+        const timestampStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const activityItem = document.createElement('div');
+        activityItem.className = 'activity-log-item';
+
+        let badgeClass = type;
+        let typeLabel = type;
+        if(type === 'photosAdded') { badgeClass = 'photo'; typeLabel = 'Photos'; }
+        if(type === 'videosUploaded') { badgeClass = 'video'; typeLabel = 'Video'; }
+        if(type === 'contentApprovals') { badgeClass = 'opp'; typeLabel = 'Approval'; }
+        if(type === 'photoshootTracker') { badgeClass = 'photo'; typeLabel = 'Shoot'; }
+        if(type === 'caseTracker') { badgeClass = 'case'; typeLabel = 'Case'; }
+
+        activityItem.innerHTML = `
+            <div class="activity-details">
+                <span class="badge ${badgeClass}">${typeLabel}</span> 
+                Logged successfully for <span>${targetName}</span> ${metadata ? `(${metadata})` : ''}
+            </div>
+            <div class="activity-time">${timestampStr}</div>
+        `;
+
+        // Inserts newest item at the very top of the live stream
+        streamContainer.insertBefore(activityItem, streamContainer.firstChild);
     }
 
     function handleFormSubmit(e, actionType) {
@@ -539,17 +746,25 @@
         const status = form.nextElementSibling;
         
         btn.disabled = true;
-        btn.textContent = "Processing System Logic...";
+        btn.textContent = "Syncing Terminal Matrix...";
         status.style.display = "none";
 
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
         data.formSource = actionType;
 
-        let newlyAdded = 0;
+        let trackingLabelName = data.storeName || data.businessName || "Merchant Asset";
+        let metaDetails = "";
+
+        // Calculate custom photo differences on-the-fly
+        let computedPhotos = 0;
         if(actionType === "photosAdded") {
-            newlyAdded = (parseInt(data.prevMissing) || 0) - (parseInt(data.currMissing) || 0);
+            computedPhotos = (parseInt(data.prevMissing) || 0) - (parseInt(data.currMissing) || 0);
+            metaDetails = `+${computedPhotos} assets added`;
         }
+        if(actionType === "calls") metaDetails = data.callResult;
+        if(actionType === "caseTracker") metaDetails = `Case #${data.caseNumber}`;
+        if(actionType === "opportunities") metaDetails = data.oppType;
 
         fetch(WEB_APP_URL, {
             method: 'POST',
@@ -564,13 +779,27 @@
             status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
             status.textContent = "✓ Entry logged successfully! Master database synced.";
             
-            if(actionType === "photosAdded" && newlyAdded > 0) {
-                totalPhotosAddedAccumulator += newlyAdded;
-                document.getElementById('totalSessionAdded').textContent = totalPhotosAddedAccumulator;
+            // Increment UI Session Array Counter Logic
+            if(actionType === "photosAdded") {
+                sessionMetrics.photosAdded += computedPhotos;
+            } else {
+                sessionMetrics[actionType]++;
             }
-            
+
+            // Update DOM Counter Values instantly
+            document.getElementById('dashCallsCount').textContent = sessionMetrics.calls;
+            document.getElementById('dashPhotosCount').textContent = sessionMetrics.photosAdded;
+            document.getElementById('dashVideosCount').textContent = sessionMetrics.videosUploaded;
+            document.getElementById('dashApprovalsCount').textContent = sessionMetrics.contentApprovals;
+            document.getElementById('dashShootsCount').textContent = sessionMetrics.photoshootTracker;
+            document.getElementById('dashCasesCount').textContent = sessionMetrics.caseTracker;
+            document.getElementById('dashOppsCount').textContent = sessionMetrics.opportunities;
+
+            // Push item data line to live stream component
+            pushToActivityStream(actionType, trackingLabelName, metaDetails);
+
             form.reset();
-            if(actionType === "opportunities") toggleCoFundedFields("No"); // Safe reset conditional block view
+            if(actionType === "opportunities") toggleCoFundedFields("No");
         })
         .catch(err => {
             status.style.display = "block";
