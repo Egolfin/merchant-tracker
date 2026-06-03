@@ -210,6 +210,7 @@
 <nav class="tab-navigation">
     <div class="tab active" onclick="switchTab(event, 'callsSection')">Call Follow Up</div>
     <div class="tab" onclick="switchTab(event, 'photosAddedSection')">Photos Added</div>
+    <div class="tab" onclick="switchTab(event, 'videosUploadedSection')">Videos Uploaded</div>
     <div class="tab" onclick="switchTab(event, 'approvalsSection')">Photo/Video Approvals</div>
     <div class="tab" onclick="switchTab(event, 'caseTrackerSection')">Case Tracker</div>
 </nav>
@@ -289,6 +290,21 @@
                     </div>
                 </div>
                 <button type="submit">Log Photos Added</button>
+            </form>
+            <div class="status-msg"></div>
+        </div>
+
+        <div id="videosUploadedSection" class="form-section">
+            <header>
+                <h1>Videos Uploaded Pipeline</h1>
+                <p>Track unique digital media uploads at a corporate business tier level</p>
+            </header>
+            <form onsubmit="handleFormSubmit(event, 'videosUploaded')">
+                <div class="form-group">
+                    <label>Business Name</label>
+                    <input type="text" name="businessName" placeholder="Enter parent business organization name" required>
+                </div>
+                <button type="submit">Log Video Upload</button>
             </form>
             <div class="status-msg"></div>
         </div>
@@ -395,9 +411,9 @@
         })
         .finally(() => {
             btn.disabled = false;
-            // Dynamic text restoration logic
             if (actionType === 'calls') btn.textContent = "Log Call Entry";
             else if (actionType === 'photosAdded') btn.textContent = "Log Photos Added";
+            else if (actionType === 'videosUploaded') btn.textContent = "Log Video Upload";
             else btn.textContent = "Log Asset Approval";
         });
     }
