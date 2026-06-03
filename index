@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant Portal v2.0</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #3b82f6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --success-color: #10b981;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+        }
+
+        header {
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 700;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.02em;
+        }
+
+        p {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* Navigation Tabs Layout mimicking image_d71c60.png structure */
+        .tab-navigation {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background-color: var(--accent-color);
+            color: #ffffff;
+        }
+
+        .tab-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .form-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        button.submit-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+        }
+
+        button.submit-btn:hover {
+            opacity: 0.9;
+        }
+
+        #statusMessage {
+            margin-top: 20px;
+            font-size: 14px;
+            text-align: center;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Merchant Dashboard</h1>
+        <p>Remastered Dynamic Tracking Terminal</p>
+    </header>
+
+    <!-- Tab Bar Navigation from image_d71c60.png (Setting up placeholders for next steps) -->
+    <div class="tab-navigation">
+        <button class="tab-btn active" id="tab-calls">Calls Panel</button>
+        <button class="tab-btn" id="tab-photos" disabled>Photo Tracker</button>
+        <button class="tab-btn" id="tab-pending" disabled>Pending Photos</button>
+        <button class="tab-btn" id="tab-photoshoot" disabled>Photoshoot</button>
+        <button class="tab-btn" id="tab-cases" disabled>Case Tracker</button>
+        <button class="tab-btn" id="tab-opportunities" disabled>Opportunities</button>
+    </div>
+
+    <!-- Active Form Container -->
+    <div class="form-card" id="formContainer">
+        <form id="callsForm">
+            <!-- Hidden input to let Google Sheets know which tab/sheet this data belongs to -->
+            <input type="hidden" name="targetSheet" value="Calls">
+
+            <div class="form-group">
+                <label for="storeName">Store Name</label>
+                <input type="text" id="storeName" name="storeName" placeholder="e.g., Downtown Bistro & Cafe" required>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="callGoal">Call Goal</label>
+                    <select id="callGoal" name="callGoal" required>
+                        <option value="" disabled selected>Select Goal...</option>
+                        <option value="Decision Maker Call">Decision Maker Call</option>
+                        <option value="Gate keeper call">Gate keeper call</option>
+                        <option value="Google Meet Meeting">Google Meet Meeting</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="callResult">Call Result</label>
+                    <select id="callResult" name="callResult" required>
+                        <option value="" disabled selected>Select Result...</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Appointment set">Appointment set</option>
+                        <option value="Pitching">Pitching</option>
+                        <option value="No answer">No answer</option>
+                        <option value="Left VM">Left VM</option>
+                        <option value="Hung up">Hung up</option>
+                        <option value="Requested callback">Requested callback</option>
+                        <option value="DM Identified">DM Identified</option>
+                        <option value="Incorrect number">Incorrect number</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="callNotes">Call Notes</label>
+                <textarea id="callNotes" name="callNotes" placeholder="Type key interaction details here..."></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Log Call Entry</button>
+        </form>
+        <div id="statusMessage"></div>
+    </div>
+</div>
+
+<script>
+    // Paste your Google Apps Script Web App URL inside the quotes below
+    const WEB_APP_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+    document.getElementById('callsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('submitBtn');
+        const status = document.getElementById('statusMessage');
+        
+        btn.disabled = true;
+        btn.textContent = "Logging to Master Sheet...";
+        status.textContent = "";
+
+        // Collect form data and automatically inject the local logged timestamp
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+        data.timestamp = new Date().toLocaleString(); // Capture date and time the call was logged
+
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(() => {
+            status.style.color = var(--success-color);
+            status.innerHTML = "&#10004; Call logged successfully!";
+            document.getElementById('callsForm').reset();
+        })
+        .catch(err => {
+            status.style.color = "#ef4444";
+            status.innerHTML = "&#10008; Error syncing with Google Sheets.";
+            console.error(err);
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = "Log Call Entry";
+        });
+    });
+</script>
+
+</body>
+</html>
