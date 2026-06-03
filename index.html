@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Merchant Portal v2.0</title>
+    <title>Merchant Portal v3.0 - Live Sync Edition</title>
     
     <link rel="icon" type="image/png" href="https://i.imgur.com/VcJTtbD.png">
     
@@ -328,7 +328,7 @@
         .badge.case { background: rgba(239, 68, 68, 0.15); color: #f87171; }
         .badge.opp { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
 
-        /* ================= REGULATORY INTERACTIVE FILTER SUBMIT MODAL ================= */
+        /* ================= MODAL INTERFACE EXTENSIONS ================= */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -350,7 +350,7 @@
             border: 1px solid var(--border-color);
             border-radius: 16px;
             width: 100%;
-            max-width: 720px;
+            max-width: 750px;
             max-height: 85vh;
             display: flex;
             flex-direction: column;
@@ -358,7 +358,7 @@
             animation: modalSlideUp 0.2s ease-out;
         }
 
-        @shadow @keyframes modalSlideUp {
+        @keyframes modalSlideUp {
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
@@ -375,31 +375,16 @@
         .modal-close-btn { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; padding: 0; margin: 0; width: auto; }
         .modal-close-btn:hover { color: var(--text-main); }
 
-        /* Highly Styled Manual Submit Filter Dock */
         .filter-control-panel {
             background-color: var(--input-bg);
             border-bottom: 1px solid var(--border-color);
             padding: 20px 24px;
         }
 
-        .filter-control-panel input {
-            padding: 10px;
-            font-size: 14px;
-        }
+        .filter-control-panel input { padding: 10px; font-size: 14px; }
+        .filter-action-btn { padding: 11px 14px; font-size: 13px; font-weight: 600; margin-top: 0; border-radius: 6px; }
 
-        .filter-action-btn {
-            padding: 11px 14px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-top: 0;
-            border-radius: 6px;
-        }
-
-        .modal-body {
-            padding: 24px;
-            overflow-y: auto;
-            flex: 1;
-        }
+        .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
 
         .modal-data-row {
             background-color: var(--input-bg);
@@ -408,10 +393,11 @@
             padding: 18px;
             margin-bottom: 14px;
             font-size: 14px;
+            position: relative;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
-        .modal-data-row span {
+        .modal-data-row .row-meta-tag {
             color: var(--accent-color);
             font-size: 11px;
             font-weight: 600;
@@ -424,19 +410,43 @@
         .metric-item-pill-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 8px;
+            gap: 12px;
             margin-top: 10px;
-            background-color: rgba(255,255,255,0.02);
-            padding: 10px;
+            background-color: rgba(255,255,255,0.01);
+            padding: 12px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
         }
 
-        .metric-pill {
-            font-size: 13px;
-            color: var(--text-main);
+        .metric-pill strong { color: var(--text-muted); font-weight: 500; font-size: 11px; display:block; text-transform: uppercase; margin-bottom: 2px;}
+        
+        /* Mutation Controls Bar Layout */
+        .mutation-btn-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 14px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
         }
-        .metric-pill strong { color: var(--text-muted); font-weight: 500; font-size: 11px; display:block; text-transform: uppercase;}
+
+        .mutation-inline-btn {
+            width: auto;
+            margin-top: 0;
+            padding: 6px 14px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+        .mutation-inline-btn.edit-trigger { background-color: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); }
+        .mutation-inline-btn.edit-trigger:hover { background-color: #2a2f3b; }
+        .mutation-inline-btn.delete-trigger { background-color: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .mutation-inline-btn.delete-trigger:hover { background-color: var(--danger-color); color: white; }
+
+        .inline-editing-form input, .inline-editing-form select, .inline-editing-form textarea {
+            padding: 8px;
+            font-size: 13px;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -455,12 +465,11 @@
 <div class="container">
     <div class="form-card">
         
-        <!-- ================= HOME DASHBOARD SECTION ================= -->
         <div id="homeSection" class="form-section active">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
                 <h1>Operational Command Center</h1>
-                <p>Live account management performance metrics for this tracking session (Click cards to view information)</p>
+                <p>Live Sheets Core Database Feed (Click cards to query, edit, or erase entries)</p>
                 <button id="syncDatabaseBtn" onclick="syncGlobalHistory()" style="width:auto; padding: 8px 16px; font-size:12px; margin-top:12px; background-color: var(--input-bg); border: 1px solid var(--border-color);">🔄 Fetch Historical Logs</button>
             </header>
 
@@ -468,17 +477,17 @@
                 <div class="dash-card" onclick="openDataModal('calls')">
                     <div class="dash-card-title">Interactions</div>
                     <div class="dash-card-value" id="dashCallsCount">0</div>
-                    <div class="dash-card-meta">Logged calls this session ↗</div>
+                    <div class="dash-card-meta">Logged calls in sheet ↗</div>
                 </div>
                 <div class="dash-card success" onclick="openDataModal('photosAdded')">
                     <div class="dash-card-title">Photos Added</div>
                     <div class="dash-card-value" id="dashPhotosCount">0</div>
-                    <div class="dash-card-meta">Total visual menu assets injected ↗</div>
+                    <div class="dash-card-meta">Net visible items injected ↗</div>
                 </div>
                 <div class="dash-card warning" onclick="openDataModal('videosUploaded')">
                     <div class="dash-card-title">Videos Uploaded</div>
                     <div class="dash-card-value" id="dashVideosCount">0</div>
-                    <div class="dash-card-meta">Parent brand productions mapped ↗</div>
+                    <div class="dash-card-meta">Parent brand productions ↗</div>
                 </div>
             </div>
 
@@ -486,17 +495,17 @@
                 <div class="dash-card success" onclick="openDataModal('contentApprovals')">
                     <div class="dash-card-title">Asset Sign-Offs</div>
                     <div class="dash-card-value" id="dashApprovalsCount">0</div>
-                    <div class="dash-card-meta">Merchant content approvals ↗</div>
+                    <div class="dash-card-meta">Merchant menu sign-offs ↗</div>
                 </div>
                 <div class="dash-card warning" onclick="openDataModal('photoshootTracker')">
                     <div class="dash-card-title">Photoshoots</div>
                     <div class="dash-card-value" id="dashShootsCount">0</div>
-                    <div class="dash-card-meta">Professional sessions scheduled ↗</div>
+                    <div class="dash-card-meta">Sessions listed in database ↗</div>
                 </div>
                 <div class="dash-card danger" onclick="openDataModal('caseTracker')">
                     <div class="dash-card-title">Active Cases</div>
                     <div class="dash-card-value" id="dashCasesCount">0</div>
-                    <div class="dash-card-meta">72hr calendar tickets triggered ↗</div>
+                    <div class="dash-card-meta">Tickets tracked in pipeline ↗</div>
                 </div>
             </div>
 
@@ -504,23 +513,22 @@
                 <div class="dash-card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(59, 130, 246, 0.03) 100%);" onclick="openDataModal('opportunities')">
                     <div class="dash-card-title" style="color: #a78bfa;">Pipeline Conversions</div>
                     <div class="dash-card-value" id="dashOppsCount" style="color: #a78bfa;">0</div>
-                    <div class="dash-card-meta">Salesforce Ads & Promos closed successfully ↗</div>
+                    <div class="dash-card-meta">Salesforce promotions closed ↗</div>
                 </div>
             </div>
 
             <div class="recent-activity-section">
-                <div class="section-title">⏱️ Recent Activity Stream</div>
+                <div class="section-title">⏱️ Live Operational Activity Stream</div>
                 <div id="activityStreamContainer">
                     <div class="empty-state" id="dashboardEmptyState">
                         <div class="empty-state-icon">📡</div>
-                        <h3>No information added yet</h3>
-                        <p>Submissions will display in a structured live analytics stream as you log data across your workspace tabs.</p>
+                        <h3>Awaiting connection matrix...</h3>
+                        <p>Database logs will map automatically as soon as synchronization is complete.</p>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Interactive Operational Application Forms Forms Panels -->
         <div id="callsSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Call Follow Up</h1></header><form onsubmit="handleFormSubmit(event, 'calls')"><div class="form-group"><label>Store Name</label><input type="text" name="storeName" required></div><div class="grid-2"><div class="form-group"><label>Goal</label><select name="callGoal" required><option value="Decision Maker Call">Decision Maker Call</option><option value="Gate keeper call">Gate keeper call</option><option value="Google Meet Meeting">Google Meet Meeting</option></select></div><div class="form-group"><label>Result</label><select name="callResult" required><option value="Completed">Completed</option><option value="Appointment set">Appointment set</option><option value="Pitching">Pitching</option><option value="No answer">No answer</option><option value="Left VM">Left VM</option><option value="Hung up">Hung up</option><option value="Requested callback">Requested callback</option><option value="DM Identified">DM Identified</option><option value="Incorrect number">Incorrect number</option></select></div></div><div class="grid-2"><div class="form-group"><label>Date (Optional)</label><input type="date" name="followUpDate"></div><div class="form-group"><label>Time (Optional)</label><input type="time" name="followUpTime"></div></div><div class="form-group"><label>Call Notes</label><textarea name="callNotes"></textarea></div><button type="submit">Log Call Entry</button></form><div class="status-msg"></div></div>
         <div id="photosAddedSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Photos Added</h1></header><form onsubmit="handleFormSubmit(event, 'photosAdded')"><div class="form-group"><label>Store Name</label><input type="text" name="storeName" required></div><div class="grid-2"><div class="form-group"><label>Prev Missing</label><input type="number" name="prevMissing" required></div><div class="form-group"><label>Curr Missing</label><input type="number" name="currMissing" required></div></div><button type="submit">Log Photos Added</button></form><div class="status-msg"></div></div>
         <div id="videosUploadedSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Videos Uploaded</h1></header><form onsubmit="handleFormSubmit(event, 'videosUploaded')"><div class="form-group"><label>Business Name</label><input type="text" name="businessName" required></div><button type="submit">Log Video Upload</button></form><div class="status-msg"></div></div>
@@ -532,53 +540,55 @@
     </div>
 </div>
 
-<!-- ================= PREMIUM DATA MODAL PANEL OVERLAY WITH SUBMIT FILTER CORES ================= -->
 <div id="dataModal" class="modal-overlay" onclick="closeDataModal(event)">
     <div class="modal-window" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <h2 class="modal-title" id="modalTitle">Database Information</h2>
+            <h2 class="modal-title" id="modalTitle">Database Engine Log Query</h2>
             <button class="modal-close-btn" onclick="document.getElementById('dataModal').style.display='none'">×</button>
         </div>
         
-        <!-- Manual Filter Grid Bar with explicit execution actions buttons -->
         <div class="filter-control-panel">
             <div class="grid-3">
                 <div>
-                    <label style="font-size:10px; margin-bottom:4px;">Merchant / Store Search</label>
-                    <input type="text" id="filterStoreSearch" placeholder="Search by name...">
+                    <label style="font-size:10px; margin-bottom:4px;">Merchant Name Search</label>
+                    <input type="text" id="filterStoreSearch" placeholder="Search by text index...">
                 </div>
                 <div>
-                    <label style="font-size:10px; margin-bottom:4px;">Start Date</label>
+                    <label style="font-size:10px; margin-bottom:4px;">Start Date Range</label>
                     <input type="date" id="filterStartDate">
                 </div>
                 <div>
-                    <label style="font-size:10px; margin-bottom:4px;">End Date</label>
+                    <label style="font-size:10px; margin-bottom:4px;">End Date Range</label>
                     <input type="date" id="filterEndDate">
                 </div>
             </div>
             <div class="grid-2" style="margin-top: 14px; gap: 10px;">
-                <button class="filter-action-btn" onclick="applyActiveModalFilters()" style="background-color: var(--accent-color);">🔍 Apply Filter Run</button>
-                <button class="filter-action-btn" onclick="resetModalFilters()" style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main);">Reset Fields</button>
+                <button class="filter-action-btn" onclick="applyActiveModalFilters()" style="background-color: var(--accent-color);">🔍 Apply Filter Execution</button>
+                <button class="filter-action-btn" onclick="resetModalFilters()" style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main);">Reset Parameters</button>
             </div>
         </div>
 
         <div class="modal-body" id="modalBody">
-            <!-- Items structure rows render dynamically via frontend engine -->
-        </div>
+            </div>
     </div>
 </div>
 
 <script>
+    // Paste your exact published apps script execute deployment URL path context link directly below:
     const WEB_APP_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbwh7GddixjGsa8F1WHE45UZ7JmR4wZBAHrEcks8XUan-2PnwI0G-pnbQ5vX62OKtggAJQ/exec";
     
     let currentModalCategory = "";
-    let totalPhotosAddedAccumulator = 0;
-    
-    const sessionMetrics = { calls: 0, photosAdded: 0, videosUploaded: 0, contentApprovals: 0, photoshootTracker: 0, caseTracker: 0, opportunities: 0 };
-    
-    // Core data history cache containers
-    const localSessionHistory = { calls: [], photosAdded: [], videosUploaded: [], contentApprovals: [], photoshootTracker: [], caseTracker: [], opportunities: [] };
     let globalHistoricalDatabase = {}; 
+
+    const sheetTabMapping = {
+        calls: "Calls Master",
+        photosAdded: "Photos Added",
+        videosUploaded: "Videos Uploaded",
+        contentApprovals: "Photo-Video Approvals",
+        photoshootTracker: "Photoshoot Tracker",
+        caseTracker: "Case Tracker",
+        opportunities: "Opportunities"
+    };
 
     function switchTab(event, sectionId) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -596,15 +606,20 @@
 
     function syncGlobalHistory() {
         const syncBtn = document.getElementById('syncDatabaseBtn');
-        syncBtn.textContent = "Connecting to Sheets Database...";
+        syncBtn.textContent = "Connecting to Sheets Engine Data Stream...";
         syncBtn.disabled = true;
 
         const callbackName = 'doorDashCallback_' + Math.round(100000 * Math.random());
         
         window[callbackName] = function(data) {
             globalHistoricalDatabase = data;
-            syncBtn.textContent = "✓ Sheet Database Connected Successfully";
+            syncBtn.textContent = "✓ Master Sheets Linked Real-Time";
             syncBtn.style.color = "var(--success-color)";
+            syncBtn.disabled = false;
+            
+            recalculateDashboardCounters();
+            buildActivityStreamFromHistory();
+            
             delete window[callbackName];
             document.getElementById('syncScriptTag')?.remove();
         };
@@ -613,30 +628,86 @@
         script.id = 'syncScriptTag';
         script.src = WEB_APP_URL + (WEB_APP_URL.includes('?') ? '&' : '?') + 'callback=' + callbackName;
         script.onerror = function() {
-            syncBtn.textContent = "✕ Connection Timed Out. Try again.";
+            syncBtn.textContent = "✕ Database Sync Timed Out. Retrying...";
             syncBtn.disabled = false;
         };
         document.body.appendChild(script);
     }
 
+    function recalculateDashboardCounters() {
+        if (!globalHistoricalDatabase) return;
+        
+        let callsCount = (globalHistoricalDatabase["Calls Master"] || []).length;
+        let videosCount = (globalHistoricalDatabase["Videos Uploaded"] || []).length;
+        let approvalsCount = (globalHistoricalDatabase["Photo-Video Approvals"] || []).length;
+        let shootsCount = (globalHistoricalDatabase["Photoshoot Tracker"] || []).length;
+        let casesCount = (globalHistoricalDatabase["Case Tracker"] || []).length;
+        let oppsCount = (globalHistoricalDatabase["Opportunities"] || []).length;
+
+        // Photo added calculation accumulator loop context
+        let netPhotos = 0;
+        (globalHistoricalDatabase["Photos Added"] || []).forEach(row => {
+            netPhotos += (parseInt(row["Photos Added"]) || 0);
+        });
+
+        document.getElementById('dashCallsCount').textContent = callsCount;
+        document.getElementById('dashPhotosCount').textContent = netPhotos;
+        document.getElementById('dashVideosCount').textContent = videosCount;
+        document.getElementById('dashApprovalsCount').textContent = approvalsCount;
+        document.getElementById('dashShootsCount').textContent = shootsCount;
+        document.getElementById('dashCasesCount').textContent = casesCount;
+        document.getElementById('dashOppsCount').textContent = oppsCount;
+    }
+
+    function buildActivityStreamFromHistory() {
+        const streamContainer = document.getElementById('activityStreamContainer');
+        streamContainer.innerHTML = "";
+        
+        let mergedList = [];
+
+        Object.keys(sheetTabMapping).forEach(catKey => {
+            const tabName = sheetTabMapping[catKey];
+            const records = globalHistoricalDatabase[tabName] || [];
+            records.forEach(r => {
+                mergedList.push({
+                    category: catKey,
+                    store: r["Store Name"] || r["Business Name"] || "Merchant Record",
+                    time: r["Timestamp"] || new Date().toISOString(),
+                    id: r["ID"] || ""
+                });
+            });
+        });
+
+        // Sort descending
+        mergedList.sort((a, b) => new Date(b.time) - new Date(a.time));
+        const limitedList = mergedList.slice(0, 8);
+
+        if(limitedList.length === 0) {
+            streamContainer.innerHTML = `
+                <div class="empty-state" id="dashboardEmptyState">
+                    <div class="empty-state-icon">📡</div>
+                    <h3>Sheet database is empty</h3>
+                    <p>No transactions parsed yet. Fill out data forms to write items live into the workbook lines.</p>
+                </div>`;
+            return;
+        }
+
+        limitedList.forEach(item => {
+            const activityItem = document.createElement('div');
+            activityItem.className = 'activity-log-item';
+            const displayTime = new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            let displayBadge = item.category === 'photosAdded' ? 'photo' : item.category === 'videosUploaded' ? 'video' : item.category === 'contentApprovals' ? 'opp' : item.category === 'caseTracker' ? 'case' : 'call';
+            
+            activityItem.innerHTML = `<div class="activity-details"><span class="badge ${displayBadge}">${item.id || item.category}</span> Verified tracking for <span>${item.store}</span></div><div class="activity-time">${displayTime}</div>`;
+            streamContainer.appendChild(activityItem);
+        });
+    }
+
     function openDataModal(category) {
         currentModalCategory = category;
-        const modal = document.getElementById('dataModal');
-        const title = document.getElementById('modalTitle');
-        
-        const labels = {
-            calls: "Interactions History",
-            photosAdded: "Injected Photos Log",
-            videosUploaded: "Videos Uploaded Log",
-            contentApprovals: "Asset Sign-Off Profiles",
-            photoshootTracker: "Scheduled Photoshoots",
-            caseTracker: "Active Case Tickets",
-            opportunities: "Salesforce Pipelines"
-        };
-
-        title.textContent = labels[category] || "Filter Log View";
-        resetModalFilters(); // Loads pristine lists
-        modal.style.display = "flex";
+        document.getElementById('dataModal').style.display = "flex";
+        resetModalFilters();
     }
 
     function resetModalFilters() {
@@ -651,141 +722,168 @@
         body.innerHTML = "";
 
         const searchTerm = document.getElementById('filterStoreSearch').value.toLowerCase();
-        const startDateVal = document.getElementById('filterStartDate').value;
-        const endDateVal = document.getElementById('filterEndDate').value;
+        const startVal = document.getElementById('filterStartDate').value;
+        const endVal = document.getElementById('filterEndDate').value;
 
-        // Fallback: If network connection is timed out, pull directly from active session memory!
-        let records = [];
-        let isHistorical = false;
+        const targetTab = sheetTabMapping[currentModalCategory];
+        let records = globalHistoricalDatabase[targetTab] || [];
 
-        if (globalHistoricalDatabase && Object.keys(globalHistoricalDatabase).length > 0) {
-            isHistorical = true;
-            if (currentModalCategory === 'calls') {
-                Object.keys(globalHistoricalDatabase).forEach(key => {
-                    if (key.indexOf("Q") === 0) records = records.concat(globalHistoricalDatabase[key]);
-                });
-            } else {
-                const sheetMapping = {
-                    photosAdded: "Photos Added",
-                    videosUploaded: "Videos Uploaded",
-                    contentApprovals: "Photo-Video Approvals",
-                    photoshootTracker: "Photoshoot Tracker",
-                    caseTracker: "Case Tracker",
-                    opportunities: "Opportunities"
-                };
-                records = globalHistoricalDatabase[sheetMapping[currentModalCategory]] || [];
-            }
-        }
-
-        // If sheet is blocked, display matching entries from current operational session memory context
-        if (records.length === 0) {
-            records = localSessionHistory[currentModalCategory] || [];
-            isHistorical = false;
-        }
-
-        let filteredRecords = records.filter(item => {
-            const storeName = (item["Store Name"] || item["Store"] || item["Business Name"] || item["storeName"] || item["businessName"] || "").toString().toLowerCase();
-            const dateString = item["Timestamp"] || item["Date Logged"] || item["Date"] || item["loggedAt"] || "";
+        let filtered = records.filter(item => {
+            const storeName = (item["Store Name"] || item["Business Name"] || "").toString().toLowerCase();
+            const dateStr = item["Timestamp"] || "";
             
             if (searchTerm && !storeName.includes(searchTerm)) return false;
-
-            if (dateString) {
-                const recordTime = new Date(dateString).getTime();
-                if (startDateVal && recordTime < new Date(startDateVal + "T00:00:00").getTime()) return false;
-                if (endDateVal && recordTime > new Date(endDateVal + "T23:59:59").getTime()) return false;
+            if (dateStr) {
+                const ms = new Date(dateStr).getTime();
+                if (startVal && ms < new Date(startVal + "T00:00:00").getTime()) return false;
+                if (endVal && ms > new Date(endVal + "T23:59:59").getTime()) return false;
             }
             return true;
         });
 
-        if (filteredRecords.length === 0) {
-            body.innerHTML = `
-                <div class="empty-state" style="margin:0; border:none;">
-                    <div class="empty-state-icon">🔍</div>
-                    <h3>No information found</h3>
-                    <p>No matching inputs match these parameters. Make sure your dates are accurate or check your network connectivity indicator bar.</p>
-                </div>`;
+        if (filtered.length === 0) {
+            body.innerHTML = `<div class="empty-state" style="border:none;"><h3>No records match criteria</h3><p>Verify spelling index parameters or date range rules.</p></div>`;
             return;
         }
 
-        // Output complete explicit parameters layout inside card views
-        filteredRecords.forEach(item => {
-            const dataRow = document.createElement('div');
-            dataRow.className = 'modal-data-row';
+        filtered.forEach(item => {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'modal-data-row';
+            rowDiv.id = `row-wrapper-${item["ID"]}`;
             
-            const rawDate = item["Timestamp"] || item["Date Logged"] || item["Date"] || item["loggedAt"] || "N/A";
-            const formattedDate = rawDate !== "N/A" ? new Date(rawDate).toLocaleDateString() + " " + new Date(rawDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "N/A";
-            const displayName = item["Store Name"] || item["Store"] || item["Business Name"] || item["storeName"] || item["businessName"] || "Merchant Profile";
-            
-            let explicitDetailsHtml = `<div class="metric-item-pill-grid">`;
-            
-            // Explicit programmatic structural layouts matching individual dashboard types
-            if (currentModalCategory === 'opportunities') {
-                explicitDetailsHtml += `
-                    <div class="metric-pill"><strong>Opp Type</strong>${item["Opportunity Type"] || item["oppType"] || 'N/A'}</div>
-                    <div class="metric-pill"><strong>Co-Funded?</strong>${item["Co-Funded?"] || item["isCoFunded"] || 'No'}</div>
-                    <div class="metric-pill"><strong>Split Ratio</strong>${item["Co-Funded %"] || item["coFundedSplit"] || 'N/A'}</div>
-                    <div class="metric-pill"><strong>Budget Cap</strong>${item["Budget"] || item["oppBudget"] || 'N/A'}</div>
-                    <div class="metric-pill" style="grid-column: 1 / -1; word-break: break-all;"><strong>Salesforce Tracker Link</strong><a href="${item["Salesforce Opportunity Link"] || item["salesforceLink"] || '#'}" target="_blank" style="color: var(--accent-color); text-decoration: none;">Link URL ↗</a></div>`;
-            } else if (currentModalCategory === 'calls') {
-                explicitDetailsHtml += `
-                    <div class="metric-pill"><strong>Call Goal</strong>${item["Call Goal"] || item["callGoal"] || 'N/A'}</div>
-                    <div class="metric-pill"><strong>Call Result</strong>${item["Call Result"] || item["callResult"] || 'N/A'}</div>
-                    <div class="metric-pill"><strong>Follow Up Date</strong>${item["Scheduled Follow-Up Date"] || item["followUpDate"] || 'None'}</div>
-                    <div class="metric-pill"><strong>Follow Up Time</strong>${item["Scheduled Follow-Up Time"] || item["followUpTime"] || 'None'}</div>
-                    <div class="metric-pill" style="grid-column: 1 / -1;"><strong>Call Notes / Summary</strong>${item["Call Notes"] || item["callNotes"] || 'No summaries saved.'}</div>`;
-            } else if (currentModalCategory === 'photosAdded') {
-                explicitDetailsHtml += `
-                    <div class="metric-pill"><strong>Previous Missing</strong>${item["Previous Missing Photos"] || item["prevMissing"] || '0'}</div>
-                    <div class="metric-pill"><strong>Current Missing</strong>${item["Current Missing Photos"] || item["currMissing"] || '0'}</div>
-                    <div class="metric-pill" style="color: var(--success-color); font-weight: bold;"><strong>Net Photos Added</strong>+${item["Photos Added"] || (parseInt(item["prevMissing"]) - parseInt(item["currMissing"])) || '0'}</div>`;
-            } else if (currentModalCategory === 'caseTracker') {
-                explicitDetailsHtml += `
-                    <div class="metric-pill"><strong>Ticket Case #</strong>${item["Case #"] || item["caseNumber"] || 'N/A'}</div>
-                    <div class="metric-pill"><strong>Classification</strong>${item["Type"] || item["caseType"] || 'N/A'}</div>
-                    <div class="metric-pill"><strong>Resolution State</strong>${item["Resolved?"] || item["caseResolved"] || 'In progress'}</div>
-                    <div class="metric-pill" style="grid-column: 1 / -1;"><strong>72hr Target Limit</strong>${item["72hr Due Date"] || 'Calculated N/A'}</div>
-                    <div class="metric-pill" style="grid-column: 1 / -1;"><strong>Case Notes</strong>${item["Notes"] || item["caseNotes"] || 'None'}</div>`;
-            } else if (currentModalCategory === 'photoshootTracker') {
-                explicitDetailsHtml += `
-                    <div class="metric-pill"><strong>Shoot Date</strong>${item["Scheduled Date"] || item["shootDate"] || 'N/A'}</div>
-                    <div class="metric-pill"><strong>Shoot Time</strong>${item["Scheduled Time"] || item["shootTime"] || 'N/A'}</div>
-                    <div class="metric-pill"><strong>Fulfillment Status</strong>${item["Status"] || item["shootStatus"] || 'N/A'}</div>
-                    <div class="metric-pill" style="grid-column: 1 / -1;"><strong>Shoot Notes</strong>${item["Notes"] || item["shootNotes"] || 'None'}</div>`;
-            } else {
-                Object.keys(item).forEach(key => {
-                    if (!["Timestamp", "Date Logged", "Date", "Store Name", "Store", "Business Name", "formSource", "loggedAt"].includes(key)) {
-                        explicitDetailsHtml += `<div class="metric-pill"><strong>${key}</strong>${item[key]}</div>`;
-                    }
-                });
-            }
+            const rawTime = item["Timestamp"] ? new Date(item["Timestamp"]).toLocaleDateString() + " " + new Date(item["Timestamp"]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "N/A";
+            const name = item["Store Name"] || item["Business Name"] || "Merchant Record";
 
-            explicitDetailsHtml += `</div>`;
-            dataRow.innerHTML = `<span>${formattedDate} ${!isHistorical ? '[Active Session Local Live Line]' : '[Database Verified Row]'}</span><strong>${displayName}</strong>${explicitDetailsHtml}`;
-            body.appendChild(dataRow);
+            // Draw standard read-only core display container block
+            let gridHtml = `<div class="metric-item-pill-grid" id="view-pillbox-${item["ID"]}">`;
+            Object.keys(item).forEach(key => {
+                if(!["ID", "Timestamp"].includes(key)) {
+                    gridHtml += `<div class="metric-pill"><strong>${key}</strong><span>${item[key]}</span></div>`;
+                }
+            });
+            gridHtml += `</div>`;
+
+            // Inject inline edit mutation engine forms elements dynamically hidden on load
+            let editFormHtml = `<div class="inline-editing-form" id="edit-formbox-${item["ID"]}" style="display:none; margin-top:10px;">`;
+            Object.keys(item).forEach(key => {
+                if(!["ID", "Timestamp"].includes(key)) {
+                    editFormHtml += `
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:10px; color:var(--accent-color);">${key}</label>
+                            <input type="text" data-field-key="${key}" value="${item[key]}" style="padding:8px; background:var(--bg-color);">
+                        </div>`;
+                }
+            });
+            editFormHtml += `
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px;">
+                    <button onclick="submitInlineEditMutation('${item["ID"]}')" style="padding:8px; font-size:12px; margin-top:0; background:var(--success-color);">💾 Save Revision</button>
+                    <button onclick="toggleInlineEditLayout('${item["ID"]}', false)" style="padding:8px; font-size:12px; margin-top:0; background:var(--border-color); color:var(--text-main);">Cancel</button>
+                </div>
+            </div>`;
+
+            rowDiv.innerHTML = `
+                <span class="row-meta-tag">${item["ID"]} — ${rawTime}</span>
+                <strong style="font-size:16px;">${name}</strong>
+                ${gridHtml}
+                ${editFormHtml}
+                <div class="mutation-btn-group" id="btn-group-${item["ID"]}">
+                    <button class="mutation-inline-btn edit-trigger" onclick="toggleInlineEditLayout('${item["ID"]}', true)">✏️ Edit Row</button>
+                    <button class="mutation-inline-btn delete-trigger" onclick="executeRowDeletionMutation('${item["ID"]}')">🗑️ Erase Record</button>
+                </div>`;
+                
+            body.appendChild(rowDiv);
         });
     }
 
-    function closeDataModal(e) { document.getElementById('dataModal').style.display = 'none'; }
+    function toggleInlineEditLayout(id, showForm) {
+        document.getElementById(`view-pillbox-${id}`).style.display = showForm ? "none" : "grid";
+        document.getElementById(`edit-formbox-${id}`).style.display = showForm ? "block" : "none";
+        document.getElementById(`btn-group-${id}`).style.display = showForm ? "none" : "flex";
+    }
 
-    function pushToActivityStream(type, targetName, metadata) {
-        const streamContainer = document.getElementById('activityStreamContainer');
-        const emptyState = document.getElementById('dashboardEmptyState');
-        if (emptyState) emptyState.remove();
+    function submitInlineEditMutation(recordId) {
+        const formBox = document.getElementById(`edit-formbox-${recordId}`);
+        const inputs = formBox.querySelectorAll('input[data-field-key]');
+        const updatedFields = {};
+        
+        inputs.forEach(input => {
+            updatedFields[input.getAttribute('data-field-key')] = input.value;
+        });
 
-        const timestampStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const activityItem = document.createElement('div');
-        activityItem.className = 'activity-log-item';
+        const targetTab = sheetTabMapping[currentModalCategory];
+        
+        // Execute operational payload packet pipeline
+        const payload = {
+            operationType: "edit",
+            targetTab: targetTab,
+            recordId: recordId,
+            updatedFields: updatedFields
+        };
 
-        let badgeClass = type;
-        let typeLabel = type;
-        if(type === 'photosAdded') { badgeClass = 'photo'; typeLabel = 'Photos'; }
-        if(type === 'videosUploaded') { badgeClass = 'video'; typeLabel = 'Video'; }
-        if(type === 'contentApprovals') { badgeClass = 'opp'; typeLabel = 'Approval'; }
-        if(type === 'photoshootTracker') { badgeClass = 'photo'; typeLabel = 'Shoot'; }
-        if(type === 'caseTracker') { badgeClass = 'case'; typeLabel = 'Case'; }
+        const targetRow = document.getElementById(`row-wrapper-${recordId}`);
+        targetRow.style.opacity = "0.4";
 
-        activityItem.innerHTML = `<div class="activity-details"><span class="badge ${badgeClass}">${typeLabel}</span> Logged successfully for <span>${targetName}</span> ${metadata ? `(${metadata})` : ''}</div><div class="activity-time">${timestampStr}</div>`;
-        streamContainer.insertBefore(activityItem, streamContainer.firstChild);
+        fetch(WEB_APP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            // Hot refresh active operational dataset instantly to display edits live!
+            let localTargetArray = globalHistoricalDatabase[targetTab] || [];
+            let itemIdx = localTargetArray.findIndex(r => r["ID"] === recordId);
+            if(itemIdx !== -1) {
+                Object.keys(updatedFields).forEach(k => {
+                    localTargetArray[itemIdx][k] = updatedFields[k];
+                });
+            }
+            targetRow.style.opacity = "1";
+            toggleInlineEditLayout(recordId, false);
+            applyActiveModalFilters();
+            recalculateDashboardCounters();
+        })
+        .catch(err => {
+            alert("Network modification timeout context. Check connection parameters.");
+            targetRow.style.opacity = "1";
+            console.error(err);
+        });
+    }
+
+    function executeRowDeletionMutation(recordId) {
+        if (!confirm(`⚠️ Critical Action Warning:\nAre you absolutely certain you want to permanently erase record ${recordId} from your Google Sheet master files database? This cannot be undone.`)) return;
+
+        const targetTab = sheetTabMapping[currentModalCategory];
+        const payload = {
+            operationType: "delete",
+            targetTab: targetTab,
+            recordId: recordId
+        };
+
+        const targetRow = document.getElementById(`row-wrapper-${recordId}`);
+        targetRow.style.opacity = "0.3";
+
+        fetch(WEB_APP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            // Cut row from internal cache structure arrays cleanly
+            let localTargetArray = globalHistoricalDatabase[targetTab] || [];
+            globalHistoricalDatabase[targetTab] = localTargetArray.filter(r => r["ID"] !== recordId);
+            
+            targetRow.remove();
+            applyActiveModalFilters();
+            recalculateDashboardCounters();
+            buildActivityStreamFromHistory();
+        })
+        .catch(err => {
+            alert("Erase mutation pipeline block caught. Sync failure.");
+            targetRow.style.opacity = "1";
+            console.error(err);
+        });
     }
 
     function handleFormSubmit(e, actionType) {
@@ -795,27 +893,12 @@
         const status = form.nextElementSibling;
         
         btn.disabled = true;
-        btn.textContent = "Syncing Terminal Matrix...";
+        btn.textContent = "Writing Row to Live Sheets...";
         status.style.display = "none";
 
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
         data.formSource = actionType;
-
-        let trackingLabelName = data.storeName || data.businessName || "Merchant Asset";
-        let metaDetails = "";
-        let computedPhotos = 0;
-
-        if(actionType === "photosAdded") {
-            computedPhotos = (parseInt(data.prevMissing) || 0) - (parseInt(data.currMissing) || 0);
-            metaDetails = `+${computedPhotos} assets added`;
-        }
-        if(actionType === "calls") metaDetails = `${data.callGoal} ➔ ${data.callResult}`;
-        if(actionType === "videosUploaded") metaDetails = "Video Production Live";
-        if(actionType === "contentApprovals") metaDetails = data.approvalType;
-        if(actionType === "photoshootTracker") metaDetails = `Scheduled: ${data.shootDate} [${data.shootStatus}]`;
-        if(actionType === "caseTracker") metaDetails = `${data.caseType} [Case #${data.caseNumber}]`;
-        if(actionType === "opportunities") metaDetails = data.oppType;
 
         fetch(WEB_APP_URL, {
             method: 'POST',
@@ -828,36 +911,20 @@
             status.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
             status.style.color = "#10b981";
             status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
-            status.textContent = "✓ Entry logged successfully! Master database synced.";
+            status.textContent = "✓ Recorded perfectly! Row added to Google Sheets database.";
             
-            // Explicitly push copy object into back-up local runtime arrays
-            const sessionPayload = { ...data, loggedAt: new Date().toISOString() };
-            localSessionHistory[actionType].push(sessionPayload);
-
-            if(actionType === "photosAdded") sessionMetrics.photosAdded += computedPhotos;
-            else sessionMetrics[actionType]++;
-
-            document.getElementById('dashCallsCount').textContent = sessionMetrics.calls;
-            document.getElementById('dashPhotosCount').textContent = sessionMetrics.photosAdded;
-            document.getElementById('dashVideosCount').textContent = sessionMetrics.videosUploaded;
-            document.getElementById('dashApprovalsCount').textContent = sessionMetrics.contentApprovals;
-            document.getElementById('dashShootsCount').textContent = sessionMetrics.photoshootTracker;
-            document.getElementById('dashCasesCount').textContent = sessionMetrics.caseTracker;
-            document.getElementById('dashOppsCount').textContent = sessionMetrics.opportunities;
-
-            pushToActivityStream(actionType, trackingLabelName, metaDetails);
             form.reset();
             if(actionType === "opportunities") toggleCoFundedFields("No");
             
-            // Attempt back-end update cycle silently
-            fetch(WEB_APP_URL).then(res => res.json()).then(newData => globalHistoricalDatabase = newData).catch(() => {});
+            // Hot reload complete dashboard metrics in background immediately
+            setTimeout(syncGlobalHistory, 1200);
         })
         .catch(err => {
             status.style.display = "block";
             status.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
             status.style.color = "#ef4444";
             status.style.border = "1px solid rgba(239, 68, 68, 0.2)";
-            status.textContent = "✕ Interface network error. Sync failed.";
+            status.textContent = "✕ Network handshake error. Entry submission blocked.";
             console.error(err);
         })
         .finally(() => {
@@ -872,6 +939,9 @@
         });
     }
 
+    function closeDataModal(e) { document.getElementById('dataModal').style.display = 'none'; }
+
+    // Automated full historical system capture on layout initialization
     window.addEventListener('load', () => { syncGlobalHistory(); });
 </script>
 </body>
