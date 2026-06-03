@@ -6,12 +6,14 @@
     <title>Merchant Portal v2.0</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
+            --bg-color: #0f1115;
+            --card-bg: #161920;
+            --input-bg: #1e222b;
             --accent-color: #3b82f6;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
+            --accent-hover: #2563eb;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #2d3139;
             --success-color: #10b981;
         }
 
@@ -20,72 +22,77 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
-            padding: 40px 20px;
+            padding: 0;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation Tabs mimicking your spreadsheet structure */
+        .tab-navigation {
+            width: 100%;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            overflow-x: auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+
+        .tab {
+            padding: 16px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .tab.active {
+            color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        .tab.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
         }
 
         .container {
             width: 100%;
-            max-width: 700px;
+            max-width: 680px;
+            padding: 40px 20px;
+            box-sizing: border-box;
         }
 
         header {
-            margin-bottom: 24px;
+            margin-bottom: 32px;
+            text-align: center;
         }
 
         h1 {
             font-size: 26px;
-            font-weight: 700;
-            margin: 0 0 6px 0;
+            font-weight: 600;
+            margin: 0 0 8px 0;
             letter-spacing: -0.02em;
         }
 
-        p {
+        header p {
             color: var(--text-muted);
             margin: 0;
             font-size: 14px;
         }
 
-        /* Navigation Tabs Layout mimicking image_d71c60.png structure */
-        .tab-navigation {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-            overflow-x: auto;
-        }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: 6px;
-            white-space: nowrap;
-            transition: all 0.2s ease;
-        }
-
-        .tab-btn.active {
-            background-color: var(--accent-color);
-            color: #ffffff;
-        }
-
-        .tab-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
         .form-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 32px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            padding: 36px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
         }
 
         .form-group {
@@ -104,24 +111,26 @@
 
         input[type="text"], select, textarea {
             width: 100%;
-            padding: 12px 14px;
-            background-color: var(--bg-color);
+            padding: 14px;
+            background-color: var(--input-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             color: var(--text-main);
             font-size: 15px;
             box-sizing: border-box;
-            transition: border-color 0.2s ease;
+            transition: all 0.2s ease;
         }
 
         input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
         textarea {
             resize: vertical;
             min-height: 120px;
+            font-family: inherit;
         }
 
         .grid-2 {
@@ -130,9 +139,16 @@
             gap: 20px;
         }
 
-        button.submit-btn {
+        @media (max-width: 480px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
+
+        button {
             width: 100%;
-            padding: 14px;
+            padding: 16px;
             background-color: var(--accent-color);
             border: none;
             border-radius: 8px;
@@ -140,12 +156,18 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.2s ease;
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+            transition: background-color 0.2s ease;
+            margin-top: 10px;
         }
 
-        button.submit-btn:hover {
-            opacity: 0.9;
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        button:disabled {
+            background-color: var(--border-color);
+            color: var(--text-muted);
+            cursor: not-allowed;
         }
 
         #statusMessage {
@@ -153,43 +175,40 @@
             font-size: 14px;
             text-align: center;
             font-weight: 500;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
         }
     </style>
 </head>
 <body>
 
+<nav class="tab-navigation">
+    <div class="tab active">Q4 Call Follow Up</div>
+    <div class="tab disabled">Photo & Description Tracker (Locked)</div>
+    <div class="tab disabled">Pending Photos (Locked)</div>
+    <div class="tab disabled">Photoshoot Tracker (Locked)</div>
+    <div class="tab disabled">Case Tracker (Locked)</div>
+</nav>
+
 <div class="container">
     <header>
-        <h1>Merchant Dashboard</h1>
-        <p>Remastered Dynamic Tracking Terminal</p>
+        <h1>Q4 Call Follow Up</h1>
+        <p>Log client interactions cleanly and accurately</p>
     </header>
 
-    <!-- Tab Bar Navigation from image_d71c60.png (Setting up placeholders for next steps) -->
-    <div class="tab-navigation">
-        <button class="tab-btn active" id="tab-calls">Calls Panel</button>
-        <button class="tab-btn" id="tab-photos" disabled>Photo Tracker</button>
-        <button class="tab-btn" id="tab-pending" disabled>Pending Photos</button>
-        <button class="tab-btn" id="tab-photoshoot" disabled>Photoshoot</button>
-        <button class="tab-btn" id="tab-cases" disabled>Case Tracker</button>
-        <button class="tab-btn" id="tab-opportunities" disabled>Opportunities</button>
-    </div>
-
-    <!-- Active Form Container -->
-    <div class="form-card" id="formContainer">
-        <form id="callsForm">
-            <!-- Hidden input to let Google Sheets know which tab/sheet this data belongs to -->
-            <input type="hidden" name="targetSheet" value="Calls">
-
+    <div class="form-card">
+        <form id="callTrackerForm">
             <div class="form-group">
                 <label for="storeName">Store Name</label>
-                <input type="text" id="storeName" name="storeName" placeholder="e.g., Downtown Bistro & Cafe" required>
+                <input type="text" id="storeName" name="storeName" placeholder="Enter store or merchant name" required>
             </div>
 
             <div class="grid-2">
                 <div class="form-group">
                     <label for="callGoal">Call Goal</label>
                     <select id="callGoal" name="callGoal" required>
-                        <option value="" disabled selected>Select Goal...</option>
+                        <option value="" disabled selected>Select a goal...</option>
                         <option value="Decision Maker Call">Decision Maker Call</option>
                         <option value="Gate keeper call">Gate keeper call</option>
                         <option value="Google Meet Meeting">Google Meet Meeting</option>
@@ -199,7 +218,7 @@
                 <div class="form-group">
                     <label for="callResult">Call Result</label>
                     <select id="callResult" name="callResult" required>
-                        <option value="" disabled selected>Select Result...</option>
+                        <option value="" disabled selected>Select a result...</option>
                         <option value="Completed">Completed</option>
                         <option value="Appointment set">Appointment set</option>
                         <option value="Pitching">Pitching</option>
@@ -215,20 +234,20 @@
 
             <div class="form-group">
                 <label for="callNotes">Call Notes</label>
-                <textarea id="callNotes" name="callNotes" placeholder="Type key interaction details here..."></textarea>
+                <textarea id="callNotes" name="callNotes" placeholder="Type detailed log details here..."></textarea>
             </div>
 
-            <button type="submit" class="submit-btn" id="submitBtn">Log Call Entry</button>
+            <button type="submit" id="submitBtn">Log Call Entry</button>
         </form>
         <div id="statusMessage"></div>
     </div>
 </div>
 
 <script>
-    // Paste your Google Apps Script Web App URL inside the quotes below
-    const WEB_APP_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+    // Link your Google Web App script URL here once we deploy the backend
+    const WEB_APP_URL = "YOUR_NEW_APPS_SCRIPT_URL_HERE";
 
-    document.getElementById('callsForm').addEventListener('submit', function(e) {
+    document.getElementById('callTrackerForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
         const btn = document.getElementById('submitBtn');
@@ -236,12 +255,10 @@
         
         btn.disabled = true;
         btn.textContent = "Logging to Master Sheet...";
-        status.textContent = "";
+        status.style.display = "none";
 
-        // Collect form data and automatically inject the local logged timestamp
         const formData = new FormData(this);
         const data = Object.fromEntries(formData.entries());
-        data.timestamp = new Date().toLocaleString(); // Capture date and time the call was logged
 
         fetch(WEB_APP_URL, {
             method: 'POST',
@@ -250,13 +267,19 @@
             body: JSON.stringify(data)
         })
         .then(() => {
+            status.style.display = "block";
+            status.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
             status.style.color = var(--success-color);
-            status.innerHTML = "&#10004; Call logged successfully!";
-            document.getElementById('callsForm').reset();
+            status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
+            status.textContent = "✓ Call logged successfully in database!";
+            document.getElementById('callTrackerForm').reset();
         })
         .catch(err => {
+            status.style.display = "block";
+            status.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
             status.style.color = "#ef4444";
-            status.innerHTML = "&#10008; Error syncing with Google Sheets.";
+            status.style.border = "1px solid rgba(239, 68, 68, 0.2)";
+            status.textContent = "✕ Network error. Please check backend link.";
             console.error(err);
         })
         .finally(() => {
