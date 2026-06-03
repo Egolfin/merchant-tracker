@@ -183,6 +183,7 @@
 </head>
 <body>
 
+<!-- Navigation Bar mapping out your exact structure -->
 <nav class="tab-navigation">
     <div class="tab active">Q4 Call Follow Up</div>
     <div class="tab disabled">Photo & Description Tracker (Locked)</div>
@@ -199,12 +200,14 @@
 
     <div class="form-card">
         <form id="callTrackerForm">
+            <!-- Store Name -->
             <div class="form-group">
                 <label for="storeName">Store Name</label>
                 <input type="text" id="storeName" name="storeName" placeholder="Enter store or merchant name" required>
             </div>
 
             <div class="grid-2">
+                <!-- Call Goals Dropdown -->
                 <div class="form-group">
                     <label for="callGoal">Call Goal</label>
                     <select id="callGoal" name="callGoal" required>
@@ -215,6 +218,7 @@
                     </select>
                 </div>
 
+                <!-- Call Results Dropdown -->
                 <div class="form-group">
                     <label for="callResult">Call Result</label>
                     <select id="callResult" name="callResult" required>
@@ -232,6 +236,7 @@
                 </div>
             </div>
 
+            <!-- Call Notes -->
             <div class="form-group">
                 <label for="callNotes">Call Notes</label>
                 <textarea id="callNotes" name="callNotes" placeholder="Type detailed log details here..."></textarea>
@@ -244,7 +249,7 @@
 </div>
 
 <script>
-    // Link your Google Web App script URL here once we deploy the backend
+    // Link your active DoorDash Apps Script Web App URL here
     const WEB_APP_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbwh7GddixjGsa8F1WHE45UZ7JmR4wZBAHrEcks8XUan-2PnwI0G-pnbQ5vX62OKtggAJQ/exec";
 
     document.getElementById('callTrackerForm').addEventListener('submit', function(e) {
@@ -269,7 +274,7 @@
         .then(() => {
             status.style.display = "block";
             status.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
-            status.style.color = var(--success-color);
+            status.style.color = "#10b981";
             status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
             status.textContent = "✓ Call logged successfully in database!";
             document.getElementById('callTrackerForm').reset();
