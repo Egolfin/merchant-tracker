@@ -87,7 +87,6 @@
             font-size: 14px;
         }
 
-        /* Form Layout Cards */
         .form-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -136,19 +135,13 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
         }
 
-        textarea {
-            resize: vertical;
-            min-height: 120px;
-            font-family: inherit;
-        }
-
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
 
-        /* Metrics Dash Display */
+        /* Metrics Dash Component */
         .live-counter-card {
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
             border: 1px solid var(--border-color);
@@ -209,10 +202,10 @@
 </head>
 <body>
 
+<!-- Navigation matching image_a43e3d.png perfectly -->
 <nav class="tab-navigation">
     <div class="tab active" onclick="switchTab(event, 'callsSection')">Call Follow Up</div>
-    <div class="tab" onclick="switchTab(event, 'photoTrackerSection')">Photo & Description Tracker</div>
-    <div class="tab" onclick="switchTab(event, 'pendingPhotosSection')">Photos Added</div>
+    <div class="tab" onclick="switchTab(event, 'photosAddedSection')">Photos Added</div>
     <div class="tab" onclick="switchTab(event, 'photoshootSection')">Photoshoot Tracker</div>
     <div class="tab" onclick="switchTab(event, 'caseTrackerSection')">Case Tracker</div>
 </nav>
@@ -220,6 +213,7 @@
 <div class="container">
     <div class="form-card">
         
+        <!-- ================= TAB 1: CALLS SECTION ================= -->
         <div id="callsSection" class="form-section active">
             <header>
                 <h1>Call Follow Up Terminal</h1>
@@ -265,70 +259,31 @@
             <div class="status-msg"></div>
         </div>
 
-        <div id="photoTrackerSection" class="form-section">
-            <header>
-                <h1>Photo & Description Audit Terminal</h1>
-                <p>Track merchant menu content, asset sources, and design compliance profiles</p>
-            </header>
-            <form onsubmit="handleFormSubmit(event, 'photos')">
-                <div class="form-group">
-                    <label>Store Name / Merchant ID</label>
-                    <input type="text" name="storeName" placeholder="Enter merchant store name or unique identifier" required>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Audit Status</label>
-                        <select name="auditStatus" required>
-                            <option value="" disabled selected>Select alignment status...</option>
-                            <option value="Passed Audit">Passed Audit</option>
-                            <option value="Failed - Poor Quality">Failed - Poor Quality</option>
-                            <option value="Failed - Missing Menu Items">Failed - Missing Menu Items</option>
-                            <option value="Pending Merchant Assets">Pending Merchant Assets</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Photo Source</label>
-                        <select name="photoSource" required>
-                            <option value="" disabled selected>Select source pipeline...</option>
-                            <option value="Merchant Provided">Merchant Provided</option>
-                            <option value="Photoshoot Package">Photoshoot Package</option>
-                            <option value="Stock Images">Stock Images</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Internal Audit Notes / Feedback</label>
-                    <textarea name="photoNotes" placeholder="Log compliance issues, required revisions, or validation remarks..."></textarea>
-                </div>
-                <button type="submit">Log Photo Audit</button>
-            </form>
-            <div class="status-msg"></div>
-        </div>
-
-        <div id="pendingPhotosSection" class="form-section">
+        <!-- ================= TAB 2: PHOTOS ADDED TRACKER ================= -->
+        <div id="photosAddedSection" class="form-section">
             <header>
                 <h1>Photos Added Pipeline</h1>
-                <p>Log newly added digital restaurant assets and update dynamic counts</p>
+                <p>Log restaurant assets and dynamically update production performance counters</p>
             </header>
 
             <div class="live-counter-card">
-                <label style="margin:0; font-size:11px;">Session Added Assets Total (Calculated)</label>
+                <label style="margin:0; font-size:11px;">Total Photos Added This Session</label>
                 <div class="counter-val" id="totalSessionAdded">0</div>
             </div>
 
             <form onsubmit="handleFormSubmit(event, 'photosAdded')">
                 <div class="form-group">
                     <label>Store Name</label>
-                    <input type="text" name="storeName" placeholder="Enter target restaurant store name" required>
+                    <input type="text" name="storeName" placeholder="Enter restaurant store name" required>
                 </div>
                 <div class="grid-2">
                     <div class="form-group">
-                        <label>Previous Missing Photos</label>
-                        <input type="number" id="prevMissing" name="prevMissing" min="0" placeholder="e.g., 15" required>
+                        <label>Photos Missing Before (Previous)</label>
+                        <input type="number" id="prevMissing" name="prevMissing" min="0" placeholder="e.g., 12" required>
                     </div>
                     <div class="form-group">
-                        <label>Current Missing Photos</label>
-                        <input type="number" id="currMissing" name="currMissing" min="0" placeholder="e.g., 3" required>
+                        <label>Photos Missing After (Current)</label>
+                        <input type="number" id="currMissing" name="currMissing" min="0" placeholder="e.g., 2" required>
                     </div>
                 </div>
                 <button type="submit">Log Photos Added</button>
@@ -336,6 +291,7 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- ================= FUTURE TAB PLACEHOLDERS ================= -->
         <div id="photoshootSection" class="form-section">
             <header>
                 <h1>Photoshoot Tracker</h1>
@@ -356,10 +312,8 @@
 <script>
     const WEB_APP_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbwh7GddixjGsa8F1WHE45UZ7JmR4wZBAHrEcks8XUan-2PnwI0G-pnbQ5vX62OKtggAJQ/exec";
     
-    // Tracks current live counts directly inside browser session memory
     let totalPhotosAddedAccumulator = 0;
 
-    // Tab Switching Controller Engine
     function switchTab(event, sectionId) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
@@ -368,7 +322,6 @@
         document.getElementById(sectionId).classList.add('active');
     }
 
-    // Unified API Form Processor
     function handleFormSubmit(e, actionType) {
         e.preventDefault();
         const form = e.target;
@@ -383,7 +336,6 @@
         const data = Object.fromEntries(formData.entries());
         data.formSource = actionType;
 
-        // Perform automated dashboard math locally if logging photos added
         let newlyAdded = 0;
         if(actionType === "photosAdded") {
             const prev = parseInt(data.prevMissing) || 0;
@@ -404,7 +356,6 @@
             status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
             status.textContent = "✓ Entry logged successfully into Google Sheets!";
             
-            // Update the live metrics score visual immediately on success
             if(actionType === "photosAdded" && newlyAdded > 0) {
                 totalPhotosAddedAccumulator += newlyAdded;
                 document.getElementById('totalSessionAdded').textContent = totalPhotosAddedAccumulator;
@@ -422,7 +373,7 @@
         })
         .finally(() => {
             btn.disabled = false;
-            btn.textContent = "Log Entry";
+            btn.textContent = actionType === 'calls' ? "Log Call Entry" : "Log Photos Added";
         });
     }
 </script>
