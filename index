@@ -245,7 +245,7 @@
 
 <script>
     // Link your Google Web App script URL here once we deploy the backend
-    const WEB_APP_URL = "YOUR_NEW_APPS_SCRIPT_URL_HERE";
+    const WEB_APP_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbwh7GddixjGsa8F1WHE45UZ7JmR4wZBAHrEcks8XUan-2PnwI0G-pnbQ5vX62OKtggAJQ/exec";
 
     document.getElementById('callTrackerForm').addEventListener('submit', function(e) {
         e.preventDefault();
