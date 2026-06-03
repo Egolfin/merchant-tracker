@@ -29,7 +29,7 @@
             min-height: 100vh;
         }
 
-        /* Responsive Top Navigation Bars */
+        /* Responsive Top Navigation Bar */
         .tab-navigation {
             width: 100%;
             background-color: var(--card-bg);
@@ -87,7 +87,7 @@
             font-size: 14px;
         }
 
-        /* Form Area Implementations */
+        /* Form Layout Cards */
         .form-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -97,11 +97,11 @@
         }
 
         .form-section {
-            display: none; /* Hidden by default until activated */
+            display: none;
         }
 
         .form-section.active {
-            display: block; /* Shown when corresponding tab is selected */
+            display: block;
         }
 
         .form-group {
@@ -118,7 +118,7 @@
             letter-spacing: 0.05em;
         }
 
-        input[type="text"], select, textarea {
+        input[type="text"], input[type="number"], select, textarea {
             width: 100%;
             padding: 14px;
             background-color: var(--input-bg);
@@ -146,6 +146,23 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
+        }
+
+        /* Metrics Dash Display */
+        .live-counter-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .counter-val {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--success-color);
+            margin-top: 4px;
         }
 
         @media (max-width: 480px) {
@@ -195,7 +212,7 @@
 <nav class="tab-navigation">
     <div class="tab active" onclick="switchTab(event, 'callsSection')">Call Follow Up</div>
     <div class="tab" onclick="switchTab(event, 'photoTrackerSection')">Photo & Description Tracker</div>
-    <div class="tab" onclick="switchTab(event, 'pendingPhotosSection')">Pending Photos</div>
+    <div class="tab" onclick="switchTab(event, 'pendingPhotosSection')">Photos Added</div>
     <div class="tab" onclick="switchTab(event, 'photoshootSection')">Photoshoot Tracker</div>
     <div class="tab" onclick="switchTab(event, 'caseTrackerSection')">Case Tracker</div>
 </nav>
@@ -250,29 +267,86 @@
 
         <div id="photoTrackerSection" class="form-section">
             <header>
-                <h1>Photo & Description Tracker</h1>
-                <p>Form specifications coming up next</p>
+                <h1>Photo & Description Audit Terminal</h1>
+                <p>Track merchant menu content, asset sources, and design compliance profiles</p>
             </header>
+            <form onsubmit="handleFormSubmit(event, 'photos')">
+                <div class="form-group">
+                    <label>Store Name / Merchant ID</label>
+                    <input type="text" name="storeName" placeholder="Enter merchant store name or unique identifier" required>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Audit Status</label>
+                        <select name="auditStatus" required>
+                            <option value="" disabled selected>Select alignment status...</option>
+                            <option value="Passed Audit">Passed Audit</option>
+                            <option value="Failed - Poor Quality">Failed - Poor Quality</option>
+                            <option value="Failed - Missing Menu Items">Failed - Missing Menu Items</option>
+                            <option value="Pending Merchant Assets">Pending Merchant Assets</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Photo Source</label>
+                        <select name="photoSource" required>
+                            <option value="" disabled selected>Select source pipeline...</option>
+                            <option value="Merchant Provided">Merchant Provided</option>
+                            <option value="Photoshoot Package">Photoshoot Package</option>
+                            <option value="Stock Images">Stock Images</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Internal Audit Notes / Feedback</label>
+                    <textarea name="photoNotes" placeholder="Log compliance issues, required revisions, or validation remarks..."></textarea>
+                </div>
+                <button type="submit">Log Photo Audit</button>
+            </form>
+            <div class="status-msg"></div>
         </div>
 
         <div id="pendingPhotosSection" class="form-section">
             <header>
-                <h1>Pending Photos</h1>
-                <p>Form specifications coming up next</p>
+                <h1>Photos Added Pipeline</h1>
+                <p>Log newly added digital restaurant assets and update dynamic counts</p>
             </header>
+
+            <div class="live-counter-card">
+                <label style="margin:0; font-size:11px;">Session Added Assets Total (Calculated)</label>
+                <div class="counter-val" id="totalSessionAdded">0</div>
+            </div>
+
+            <form onsubmit="handleFormSubmit(event, 'photosAdded')">
+                <div class="form-group">
+                    <label>Store Name</label>
+                    <input type="text" name="storeName" placeholder="Enter target restaurant store name" required>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Previous Missing Photos</label>
+                        <input type="number" id="prevMissing" name="prevMissing" min="0" placeholder="e.g., 15" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Current Missing Photos</label>
+                        <input type="number" id="currMissing" name="currMissing" min="0" placeholder="e.g., 3" required>
+                    </div>
+                </div>
+                <button type="submit">Log Photos Added</button>
+            </form>
+            <div class="status-msg"></div>
         </div>
 
         <div id="photoshootSection" class="form-section">
             <header>
                 <h1>Photoshoot Tracker</h1>
-                <p>Form specifications coming up next</p>
+                <p>Structure and fields coming up next</p>
             </header>
         </div>
 
         <div id="caseTrackerSection" class="form-section">
             <header>
                 <h1>Case Tracker</h1>
-                <p>Form specifications coming up next</p>
+                <p>Structure and fields coming up next</p>
             </header>
         </div>
 
@@ -281,18 +355,20 @@
 
 <script>
     const WEB_APP_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbwh7GddixjGsa8F1WHE45UZ7JmR4wZBAHrEcks8XUan-2PnwI0G-pnbQ5vX62OKtggAJQ/exec";
+    
+    // Tracks current live counts directly inside browser session memory
+    let totalPhotosAddedAccumulator = 0;
 
-    // Frontend Tab Swapping Engine
+    // Tab Switching Controller Engine
     function switchTab(event, sectionId) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
         
         event.currentTarget.classList.add('active');
-        document.getElementById(sectionId).add('active');
         document.getElementById(sectionId).classList.add('active');
     }
 
-    // Unified Secure API Submission Handler
+    // Unified API Form Processor
     function handleFormSubmit(e, actionType) {
         e.preventDefault();
         const form = e.target;
@@ -300,14 +376,20 @@
         const status = form.nextElementSibling;
         
         btn.disabled = true;
-        btn.textContent = "Logging to Master Sheet...";
+        btn.textContent = "Processing Entry...";
         status.style.display = "none";
 
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
-        
-        // Let our background script know which panel this submission belongs to
         data.formSource = actionType;
+
+        // Perform automated dashboard math locally if logging photos added
+        let newlyAdded = 0;
+        if(actionType === "photosAdded") {
+            const prev = parseInt(data.prevMissing) || 0;
+            const curr = parseInt(data.currMissing) || 0;
+            newlyAdded = prev - curr;
+        }
 
         fetch(WEB_APP_URL, {
             method: 'POST',
@@ -321,6 +403,13 @@
             status.style.color = "#10b981";
             status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
             status.textContent = "✓ Entry logged successfully into Google Sheets!";
+            
+            // Update the live metrics score visual immediately on success
+            if(actionType === "photosAdded" && newlyAdded > 0) {
+                totalPhotosAddedAccumulator += newlyAdded;
+                document.getElementById('totalSessionAdded').textContent = totalPhotosAddedAccumulator;
+            }
+
             form.reset();
         })
         .catch(err => {
@@ -328,7 +417,7 @@
             status.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
             status.style.color = "#ef4444";
             status.style.border = "1px solid rgba(239, 68, 68, 0.2)";
-            status.textContent = "✕ Connection error. Please verify Apps Script configuration.";
+            status.textContent = "✕ Connectivity error. Transaction failed.";
             console.error(err);
         })
         .finally(() => {
