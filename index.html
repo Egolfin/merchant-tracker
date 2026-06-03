@@ -106,6 +106,19 @@
             margin-bottom: 24px;
         }
 
+        .conditional-fields {
+            display: none; /* Hidden by default */
+            border-left: 3px solid var(--accent-color);
+            padding-left: 20px;
+            margin-bottom: 24px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         label {
             display: block;
             font-size: 12px;
@@ -116,7 +129,7 @@
             letter-spacing: 0.05em;
         }
 
-        input[type="text"], input[type="number"], input[type="date"], input[type="time"], select, textarea {
+        input[type="text"], input[type="number"], input[type="date"], input[type="time"], input[type="url"], select, textarea {
             width: 100%;
             padding: 14px;
             background-color: var(--input-bg);
@@ -213,6 +226,7 @@
     <div class="tab" onclick="switchTab(event, 'approvalsSection')">Photo/Video Approvals</div>
     <div class="tab" onclick="switchTab(event, 'photoshootSection')">Photoshoot Tracker</div>
     <div class="tab" onclick="switchTab(event, 'caseTrackerSection')">Case Tracker</div>
+    <div class="tab" onclick="switchTab(event, 'opportunitiesSection')">Opportunities</div>
 </nav>
 
 <div class="container">
@@ -255,8 +269,6 @@
                         </select>
                     </div>
                 </div>
-                
-                <!-- New Row: Optional Follow-up Scheduling Windows -->
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Follow-Up Date (Optional)</label>
@@ -267,7 +279,6 @@
                         <input type="time" name="followUpTime">
                     </div>
                 </div>
-
                 <div class="form-group">
                     <label>Call Notes</label>
                     <textarea name="callNotes" placeholder="Type historical log details here..."></textarea>
@@ -436,6 +447,60 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- ================= TAB 7: OPPORTUNITIES TERMINAL ================= -->
+        <div id="opportunitiesSection" class="form-section">
+            <header>
+                <h1>Salesforce Opportunities Terminal</h1>
+                <p>Log marketing pipeline growth campaigns, ad purchases, and co-funded budget scopes</p>
+            </header>
+            <form onsubmit="handleFormSubmit(event, 'opportunities')">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Store Name</label>
+                        <input type="text" name="storeName" placeholder="Enter participating storefront name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Opportunity Type</label>
+                        <select name="oppType" required>
+                            <option value="" disabled selected>Select execution model...</option>
+                            <option value="Ad">Ad (Sponsored Listing)</option>
+                            <option value="Promo">Promo (Promotions)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Is it Co-Funded?</label>
+                    <select name="isCoFunded" id="coFundedSelect" onchange="toggleCoFundedFields(this.value)" required>
+                        <option value="No" selected>No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+
+                <!-- Conditional Expansion Block -->
+                <div class="conditional-fields" id="coFundedBlock">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Co-Funded Percentage Split</label>
+                            <input type="text" name="coFundedSplit" placeholder="e.g., 70/30">
+                        </div>
+                        <div class="form-group">
+                            <label>Campaign Budget</label>
+                            <input type="text" name="oppBudget" placeholder="e.g., $500/mo">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Salesforce Opportunity Link</label>
+                    <input type="url" name="salesforceLink" placeholder="https://na85.salesforce.com/..." required>
+                </div>
+
+                <button type="submit">Log Opportunity</button>
+            </form>
+            <div class="status-msg"></div>
+        </div>
+
     </div>
 </div>
 
@@ -448,6 +513,23 @@
         document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
         event.currentTarget.classList.add('active');
         document.getElementById(sectionId).classList.add('active');
+    }
+
+    // Dynamic UI Show/Hide Logic for Co-Funded inputs
+    function toggleCoFundedFields(value) {
+        const block = document.getElementById('coFundedBlock');
+        const inputs = block.querySelectorAll('input');
+        
+        if (value === "Yes") {
+            block.style.display = "block";
+            inputs.forEach(input => input.required = true);
+        } else {
+            block.style.display = "none";
+            inputs.forEach(input => {
+                input.required = false;
+                input.value = ""; // Resets the data if toggled away
+            });
+        }
     }
 
     function handleFormSubmit(e, actionType) {
@@ -480,13 +562,15 @@
             status.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
             status.style.color = "#10b981";
             status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
-            status.textContent = "✓ Entry logged successfully! Calendar timeline updated.";
+            status.textContent = "✓ Entry logged successfully! Master database synced.";
             
             if(actionType === "photosAdded" && newlyAdded > 0) {
                 totalPhotosAddedAccumulator += newlyAdded;
                 document.getElementById('totalSessionAdded').textContent = totalPhotosAddedAccumulator;
             }
+            
             form.reset();
+            if(actionType === "opportunities") toggleCoFundedFields("No"); // Safe reset conditional block view
         })
         .catch(err => {
             status.style.display = "block";
@@ -503,7 +587,8 @@
             else if (actionType === 'videosUploaded') btn.textContent = "Log Video Upload";
             else if (actionType === 'contentApprovals') btn.textContent = "Log Asset Approval";
             else if (actionType === 'photoshootTracker') btn.textContent = "Log Photoshoot Entry";
-            else btn.textContent = "Log Case Ticket";
+            else if (actionType === 'caseTracker') btn.textContent = "Log Case Ticket";
+            else btn.textContent = "Log Opportunity";
         });
     }
 </script>
