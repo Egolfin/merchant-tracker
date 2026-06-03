@@ -76,6 +76,18 @@
         header {
             margin-bottom: 32px;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Branding Logo Element Class */
+        .app-logo {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
         }
 
         h1 {
@@ -205,7 +217,6 @@
             display: none;
         }
 
-        /* ================= DASHBOARD STYLES ================= */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -259,7 +270,6 @@
             color: var(--text-muted);
         }
 
-        /* Creative Empty States */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -286,7 +296,6 @@
             font-size: 13px;
         }
 
-        /* Live Data Streams */
         .recent-activity-section {
             margin-top: 36px;
         }
@@ -356,8 +365,11 @@
 <div class="container">
     <div class="form-card">
         
+        <!-- ================= HOME DASHBOARD SECTION ================= -->
         <div id="homeSection" class="form-section active">
             <header>
+                <!-- Image URL Integrated directly from image_a2dca9.jpg reference -->
+                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
                 <h1>Operational Command Center</h1>
                 <p>Live account management performance metrics for this tracking session</p>
             </header>
@@ -418,8 +430,10 @@
             </div>
         </div>
         
+        <!-- ================= TAB 1: CALLS SECTION ================= -->
         <div id="callsSection" class="form-section">
             <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
                 <h1>Call Follow Up Terminal</h1>
                 <p>Log client interactions cleanly into automated quarterly targets</p>
             </header>
@@ -473,8 +487,10 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- ================= TAB 2: PHOTOS ADDED TRACKER ================= -->
         <div id="photosAddedSection" class="form-section">
             <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
                 <h1>Photos Added Pipeline</h1>
                 <p>Log restaurant assets and dynamically update production performance counters</p>
             </header>
@@ -498,8 +514,10 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- ================= TAB 3: VIDEOS UPLOADED TRACKER ================= -->
         <div id="videosUploadedSection" class="form-section">
             <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
                 <h1>Videos Uploaded Pipeline</h1>
                 <p>Track unique digital media uploads at a corporate business tier level</p>
             </header>
@@ -513,8 +531,10 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- ================= TAB 4: PHOTO/VIDEO APPROVALS ================= -->
         <div id="approvalsSection" class="form-section">
             <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
                 <h1>Photo / Video Asset Approvals</h1>
                 <p>Log verified design package signs-offs directly from merchants</p>
             </header>
@@ -541,8 +561,10 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- ================= TAB 5: PHOTOSHOOT TRACKER ================= -->
         <div id="photoshootSection" class="form-section">
             <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
                 <h1>Photoshoot Investment Tracker</h1>
                 <p>Schedule marketing sessions and log rolling location fulfillment tasks</p>
             </header>
@@ -579,8 +601,10 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- ================= TAB 6: CASE TRACKER ================= -->
         <div id="caseTrackerSection" class="form-section">
             <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
                 <h1>Corporate Case Terminal</h1>
                 <p>Log merchant cases instantly and trigger automated 72-hour calendar sweeps</p>
             </header>
@@ -623,8 +647,10 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- ================= TAB 7: OPPORTUNITIES TERMINAL ================= -->
         <div id="opportunitiesSection" class="form-section">
             <header>
+                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
                 <h1>Salesforce Opportunities Terminal</h1>
                 <p>Log marketing pipeline growth campaigns, ad purchases, and co-funded budget scopes</p>
             </header>
@@ -677,7 +703,6 @@
 <script>
     const WEB_APP_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbwh7GddixjGsa8F1WHE45UZ7JmR4wZBAHrEcks8XUan-2PnwI0G-pnbQ5vX62OKtggAJQ/exec";
     
-    // Live Client State Storage Controllers
     const sessionMetrics = {
         calls: 0,
         photosAdded: 0,
@@ -707,12 +732,10 @@
         }
     }
 
-    // Dynamic Live Dashboard Stream Aggregator Engine
     function pushToActivityStream(type, targetName, metadata) {
         const streamContainer = document.getElementById('activityStreamContainer');
         const emptyState = document.getElementById('dashboardEmptyState');
         
-        // Remove empty state on first entry push
         if (emptyState) emptyState.remove();
 
         const timestampStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -735,7 +758,6 @@
             <div class="activity-time">${timestampStr}</div>
         `;
 
-        // Inserts newest item at the very top of the live stream
         streamContainer.insertBefore(activityItem, streamContainer.firstChild);
     }
 
@@ -756,7 +778,6 @@
         let trackingLabelName = data.storeName || data.businessName || "Merchant Asset";
         let metaDetails = "";
 
-        // Calculate custom photo differences on-the-fly
         let computedPhotos = 0;
         if(actionType === "photosAdded") {
             computedPhotos = (parseInt(data.prevMissing) || 0) - (parseInt(data.currMissing) || 0);
@@ -779,14 +800,12 @@
             status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
             status.textContent = "✓ Entry logged successfully! Master database synced.";
             
-            // Increment UI Session Array Counter Logic
             if(actionType === "photosAdded") {
                 sessionMetrics.photosAdded += computedPhotos;
             } else {
                 sessionMetrics[actionType]++;
             }
 
-            // Update DOM Counter Values instantly
             document.getElementById('dashCallsCount').textContent = sessionMetrics.calls;
             document.getElementById('dashPhotosCount').textContent = sessionMetrics.photosAdded;
             document.getElementById('dashVideosCount').textContent = sessionMetrics.videosUploaded;
@@ -795,7 +814,6 @@
             document.getElementById('dashCasesCount').textContent = sessionMetrics.caseTracker;
             document.getElementById('dashOppsCount').textContent = sessionMetrics.opportunities;
 
-            // Push item data line to live stream component
             pushToActivityStream(actionType, trackingLabelName, metaDetails);
 
             form.reset();
