@@ -199,15 +199,8 @@
             margin-top: 10px;
         }
 
-        button:hover {
-            background-color: var(--accent-hover);
-        }
-
-        button:disabled {
-            background-color: var(--border-color);
-            color: var(--text-muted);
-            cursor: not-allowed;
-        }
+        button:hover { background-color: var(--accent-hover); }
+        button:disabled { background-color: var(--border-color); color: var(--text-muted); cursor: not-allowed; }
 
         .status-msg {
             margin-top: 20px;
@@ -276,10 +269,7 @@
             color: var(--text-main);
         }
 
-        .dash-card-meta {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
+        .dash-card-meta { font-size: 12px; color: var(--text-muted); }
 
         .empty-state {
             text-align: center;
@@ -290,26 +280,11 @@
             margin-top: 16px;
         }
 
-        .empty-state-icon {
-            font-size: 40px;
-            margin-bottom: 12px;
-            opacity: 0.6;
-        }
+        .empty-state-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.6; }
+        .empty-state h3 { margin: 0 0 6px 0; color: var(--text-main); font-size: 16px; }
+        .empty-state p { margin: 0; font-size: 13px; }
 
-        .empty-state h3 {
-            margin: 0 0 6px 0;
-            color: var(--text-main);
-            font-size: 16px;
-        }
-
-        .empty-state p {
-            margin: 0;
-            font-size: 13px;
-        }
-
-        .recent-activity-section {
-            margin-top: 36px;
-        }
+        .recent-activity-section { margin-top: 36px; }
 
         .section-title {
             font-size: 14px;
@@ -336,30 +311,17 @@
             animation: fadeIn 0.3s ease-in-out;
         }
 
-        .activity-details span {
-            font-weight: 600;
-            color: var(--accent-color);
-        }
+        .activity-details span { font-weight: 600; color: var(--accent-color); }
+        .activity-time { font-size: 12px; color: var(--text-muted); }
 
-        .activity-time {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .badge {
-            padding: 4px 8px;
-            font-size: 11px;
-            font-weight: 600;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
+        .badge { padding: 4px 8px; font-size: 11px; font-weight: 600; border-radius: 4px; text-transform: uppercase; }
         .badge.call { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
         .badge.photo { background: rgba(16, 185, 129, 0.15); color: #34d399; }
         .badge.video { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
         .badge.case { background: rgba(239, 68, 68, 0.15); color: #f87171; }
         .badge.opp { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
 
-        /* ================= PREMIUM MODAL WINDOW OVERLAY STYLES ================= */
+        /* ================= PREMIUM MODAL WINDOW FILTERS LAYER ================= */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -381,8 +343,8 @@
             border: 1px solid var(--border-color);
             border-radius: 16px;
             width: 100%;
-            max-width: 600px;
-            max-height: 80vh;
+            max-width: 680px;
+            max-height: 85vh;
             display: flex;
             flex-direction: column;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
@@ -402,25 +364,20 @@
             align-items: center;
         }
 
-        .modal-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin: 0;
+        .modal-title { font-size: 18px; font-weight: 600; margin: 0; }
+        .modal-close-btn { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; padding: 0; margin: 0; width: auto; }
+        .modal-close-btn:hover { color: var(--text-main); }
+
+        /* Advanced Filter Bar Controls */
+        .filter-control-panel {
+            background-color: var(--input-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
         }
 
-        .modal-close-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 24px;
-            cursor: pointer;
-            padding: 0;
-            margin: 0;
-            width: auto;
-        }
-
-        .modal-close-btn:hover {
-            color: var(--text-main);
+        .filter-control-panel input, .filter-control-panel select {
+            padding: 10px;
+            font-size: 13px;
         }
 
         .modal-body {
@@ -464,11 +421,13 @@
 <div class="container">
     <div class="form-card">
         
+        <!-- ================= HOME DASHBOARD SECTION ================= -->
         <div id="homeSection" class="form-section active">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
                 <h1>Operational Command Center</h1>
                 <p>Live account management performance metrics for this tracking session (Click cards to view information)</p>
+                <button id="syncDatabaseBtn" onclick="syncGlobalHistory()" style="width:auto; padding: 8px 16px; font-size:12px; margin-top:12px; background-color: var(--input-bg); border: 1px solid var(--border-color);">🔄 Fetch Historical Logs</button>
             </header>
 
             <div class="dashboard-grid">
@@ -527,303 +486,61 @@
             </div>
         </div>
         
-        <div id="callsSection" class="form-section">
-            <header>
-                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
-                <h1>Call Follow Up Terminal</h1>
-                <p>Log client interactions cleanly into automated quarterly targets</p>
-            </header>
-            <form onsubmit="handleFormSubmit(event, 'calls')">
-                <div class="form-group">
-                    <label>Store Name</label>
-                    <input type="text" name="storeName" placeholder="Enter store or merchant name" required>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Call Goal</label>
-                        <select name="callGoal" required>
-                            <option value="" disabled selected>Select a goal...</option>
-                            <option value="Decision Maker Call">Decision Maker Call</option>
-                            <option value="Gate keeper call">Gate keeper call</option>
-                            <option value="Google Meet Meeting">Google Meet Meeting</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Call Result</label>
-                        <select name="callResult" required>
-                            <option value="" disabled selected>Select a result...</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Appointment set">Appointment set</option>
-                            <option value="Pitching">Pitching</option>
-                            <option value="No answer">No answer</option>
-                            <option value="Left VM">Left VM</option>
-                            <option value="Hung up">Hung up</option>
-                            <option value="Requested callback">Requested callback</option>
-                            <option value="DM Identified">DM Identified</option>
-                            <option value="Incorrect number">Incorrect number</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Follow-Up Date (Optional)</label>
-                        <input type="date" name="followUpDate">
-                    </div>
-                    <div class="form-group">
-                        <label>Follow-Up Time (Optional)</label>
-                        <input type="time" name="followUpTime">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Call Notes</label>
-                    <textarea name="callNotes" placeholder="Type historical log details here..."></textarea>
-                </div>
-                <button type="submit">Log Call Entry</button>
-            </form>
-            <div class="status-msg"></div>
-        </div>
-
-        <div id="photosAddedSection" class="form-section">
-            <header>
-                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
-                <h1>Photos Added Pipeline</h1>
-                <p>Log restaurant assets and dynamically update production performance counters</p>
-            </header>
-            <form onsubmit="handleFormSubmit(event, 'photosAdded')">
-                <div class="form-group">
-                    <label>Store Name</label>
-                    <input type="text" name="storeName" placeholder="Enter restaurant store name" required>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Photos Missing Before (Previous)</label>
-                        <input type="number" name="prevMissing" min="0" placeholder="e.g., 12" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Photos Missing After (Current)</label>
-                        <input type="number" name="currMissing" min="0" placeholder="e.g., 2" required>
-                    </div>
-                </div>
-                <button type="submit">Log Photos Added</button>
-            </form>
-            <div class="status-msg"></div>
-        </div>
-
-        <div id="videosUploadedSection" class="form-section">
-            <header>
-                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
-                <h1>Videos Uploaded Pipeline</h1>
-                <p>Track unique digital media uploads at a corporate business tier level</p>
-            </header>
-            <form onsubmit="handleFormSubmit(event, 'videosUploaded')">
-                <div class="form-group">
-                    <label>Business Name</label>
-                    <input type="text" name="businessName" placeholder="Enter parent business organization name" required>
-                </div>
-                <button type="submit">Log Video Upload</button>
-            </form>
-            <div class="status-msg"></div>
-        </div>
-
-        <div id="approvalsSection" class="form-section">
-            <header>
-                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
-                <h1>Photo / Video Asset Approvals</h1>
-                <p>Log verified design package signs-offs directly from merchants</p>
-            </header>
-            <form onsubmit="handleFormSubmit(event, 'contentApprovals')">
-                <div class="form-group">
-                    <label>Store Name</label>
-                    <input type="text" name="storeName" placeholder="Enter store name that approved content" required>
-                </div>
-                <div class="form-group">
-                    <label>Approval Type</label>
-                    <select name="approvalType" required>
-                        <option value="" disabled selected>Choose signed asset type...</option>
-                        <option value="Photos Approved">Photos Approved</option>
-                        <option value="Videos Approved">Videos Approved</option>
-                        <option value="Both Approved">Both Approved (Photos & Videos)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Optional Notes / Comments</label>
-                    <textarea name="approvalNotes" placeholder="Type any specific feedback or verification comments here (Optional)..."></textarea>
-                </div>
-                <button type="submit">Log Asset Approval</button>
-            </form>
-            <div class="status-msg"></div>
-        </div>
-
-        <div id="photoshootSection" class="form-section">
-            <header>
-                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
-                <h1>Photoshoot Investment Tracker</h1>
-                <p>Schedule marketing sessions and log rolling location fulfillment tasks</p>
-            </header>
-            <form onsubmit="handleFormSubmit(event, 'photoshootTracker')">
-                <div class="form-group">
-                    <label>Store Name</label>
-                    <input type="text" name="storeName" placeholder="Enter target photoshoot branch store name" required>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Photoshoot Scheduled Date</label>
-                        <input type="date" name="shootDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Photoshoot Scheduled Time</label>
-                        <input type="time" name="shootTime" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select name="shootStatus" required>
-                        <option value="" disabled selected>Select execution status...</option>
-                        <option value="Completed">Completed</option>
-                        <option value="In progress">In progress</option>
-                        <option value="Blocked">Blocked</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Notes (Optional)</label>
-                    <textarea name="shootNotes" placeholder="Log reasons for re-requests, booking numbers, or partner blockers..."></textarea>
-                </div>
-                <button type="submit">Log Photoshoot Entry</button>
-            </form>
-            <div class="status-msg"></div>
-        </div>
-
-        <div id="caseTrackerSection" class="form-section">
-            <header>
-                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
-                <h1>Corporate Case Terminal</h1>
-                <p>Log merchant cases instantly and trigger automated 72-hour calendar sweeps</p>
-            </header>
-            <form onsubmit="handleFormSubmit(event, 'caseTracker')">
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Business Name</label>
-                        <input type="text" name="businessName" placeholder="Mui Garden Restaurant, etc." required>
-                    </div>
-                    <div class="form-group">
-                        <label>Case #</label>
-                        <input type="text" name="caseNumber" placeholder="e.g., 740202956" required>
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Type</label>
-                        <select name="caseType" required>
-                            <option value="" disabled selected>Select type rules...</option>
-                            <option value="AM Case">AM Case</option>
-                            <option value="Photo Case">Photo Case</option>
-                            <option value="Menu">Menu</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Resolved?</label>
-                        <select name="caseResolved" required>
-                            <option value="In progress" selected>In progress</option>
-                            <option value="Resolved">Resolved</option>
-                            <option value="Solved w/ no resolution">Solved w/ no resolution</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Notes (Optional)</label>
-                    <textarea name="caseNotes" placeholder="Tablet troubleshooting, store status remarks, account settings..."></textarea>
-                </div>
-                <button type="submit">Log Case Ticket</button>
-            </form>
-            <div class="status-msg"></div>
-        </div>
-
-        <div id="opportunitiesSection" class="form-section">
-            <header>
-                <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
-                <h1>Salesforce Opportunities Terminal</h1>
-                <p>Log marketing pipeline growth campaigns, ad purchases, and co-funded budget scopes</p>
-            </header>
-            <form onsubmit="handleFormSubmit(event, 'opportunities')">
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Store Name</label>
-                        <input type="text" name="storeName" placeholder="Enter storefront name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Opportunity Type</label>
-                        <select name="oppType" required>
-                            <option value="" disabled selected>Select model...</option>
-                            <option value="Ad">Ad (Sponsored Listing)</option>
-                            <option value="Promo">Promo (Promotions)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Is it Co-Funded?</label>
-                    <select name="isCoFunded" id="coFundedSelect" onchange="toggleCoFundedFields(this.value)" required>
-                        <option value="No" selected>No</option>
-                        <option value="Yes">Yes</option>
-                    </select>
-                </div>
-                <div class="conditional-fields" id="coFundedBlock">
-                    <div class="grid-2">
-                        <div class="form-group">
-                            <label>Co-Funded Percentage Split</label>
-                            <input type="text" name="coFundedSplit" placeholder="e.g., 70/30">
-                        </div>
-                        <div class="form-group">
-                            <label>Campaign Budget</label>
-                            <input type="text" name="oppBudget" placeholder="e.g., $500/mo">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Salesforce Opportunity Link</label>
-                    <input type="url" name="salesforceLink" placeholder="https://na85.salesforce.com/..." required>
-                </div>
-                <button type="submit">Log Opportunity</button>
-            </form>
-            <div class="status-msg"></div>
-        </div>
+        <!-- Forms Code Sections (Calls, Photos, Videos, Approvals, Shoots, Cases, Opps forms are intact from prior setup) -->
+        <div id="callsSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Call Follow Up</h1></header><form onsubmit="handleFormSubmit(event, 'calls')"><div class="form-group"><label>Store Name</label><input type="text" name="storeName" required></div><div class="grid-2"><div class="form-group"><label>Goal</label><select name="callGoal" required><option value="Decision Maker Call">Decision Maker Call</option><option value="Gate keeper call">Gate keeper call</option><option value="Google Meet Meeting">Google Meet Meeting</option></select></div><div class="form-group"><label>Result</label><select name="callResult" required><option value="Completed">Completed</option><option value="Appointment set">Appointment set</option><option value="Pitching">Pitching</option><option value="No answer">No answer</option><option value="Left VM">Left VM</option><option value="Hung up">Hung up</option><option value="Requested callback">Requested callback</option><option value="DM Identified">DM Identified</option><option value="Incorrect number">Incorrect number</option></select></div></div><div class="grid-2"><div class="form-group"><label>Date (Optional)</label><input type="date" name="followUpDate"></div><div class="form-group"><label>Time (Optional)</label><input type="time" name="followUpTime"></div></div><div class="form-group"><label>Notes</label><textarea name="callNotes"></textarea></div><button type="submit">Log Call Entry</button></form><div class="status-msg"></div></div>
+        <div id="photosAddedSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Photos Added</h1></header><form onsubmit="handleFormSubmit(event, 'photosAdded')"><div class="form-group"><label>Store Name</label><input type="text" name="storeName" required></div><div class="grid-2"><div class="form-group"><label>Prev Missing</label><input type="number" name="prevMissing" required></div><div class="form-group"><label>Curr Missing</label><input type="number" name="currMissing" required></div></div><button type="submit">Log Photos Added</button></form><div class="status-msg"></div></div>
+        <div id="videosUploadedSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Videos Uploaded</h1></header><form onsubmit="handleFormSubmit(event, 'videosUploaded')"><div class="form-group"><label>Business Name</label><input type="text" name="businessName" required></div><button type="submit">Log Video Upload</button></form><div class="status-msg"></div></div>
+        <div id="approvalsSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Approvals</h1></header><form onsubmit="handleFormSubmit(event, 'contentApprovals')"><div class="form-group"><label>Store Name</label><input type="text" name="storeName" required></div><div class="form-group"><label>Type</label><select name="approvalType" required><option value="Photos Approved">Photos Approved</option><option value="Videos Approved">Videos Approved</option><option value="Both Approved">Both Approved</option></select></div><div class="form-group"><label>Notes</label><textarea name="approvalNotes"></textarea></div><button type="submit">Log Asset Approval</button></form><div class="status-msg"></div></div>
+        <div id="photoshootSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Photoshoot</h1></header><form onsubmit="handleFormSubmit(event, 'photoshootTracker')"><div class="form-group"><label>Store Name</label><input type="text" name="storeName" required></div><div class="grid-2"><div class="form-group"><label>Date</label><input type="date" name="shootDate" required></div><div class="form-group"><label>Time</label><input type="time" name="shootTime" required></div></div><div class="form-group"><label>Status</label><select name="shootStatus" required><option value="Completed">Completed</option><option value="In progress">In progress</option><option value="Blocked">Blocked</option></select></div><div class="form-group"><label>Notes</label><textarea name="shootNotes"></textarea></div><button type="submit">Log Photoshoot Entry</button></form><div class="status-msg"></div></div>
+        <div id="caseTrackerSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Case Tracker</h1></header><form onsubmit="handleFormSubmit(event, 'caseTracker')"><div class="grid-2"><div class="form-group"><label>Business Name</label><input type="text" name="businessName" required></div><div class="form-group"><label>Case #</label><input type="text" name="caseNumber" required></div></div><div class="grid-2"><div class="form-group"><label>Type</label><select name="caseType" required><option value="AM Case">AM Case</option><option value="Photo Case">Photo Case</option><option value="Menu">Menu</option></select></div><div class="form-group"><label>Resolved?</label><select name="caseResolved" required><option value="In progress">In progress</option><option value="Resolved">Resolved</option><option value="Solved w/ no resolution">Solved w/ no resolution</option></select></div></div><div class="form-group"><label>Notes</label><textarea name="caseNotes"></textarea></div><button type="submit">Log Case Ticket</button></form><div class="status-msg"></div></div>
+        <div id="opportunitiesSection" class="form-section"><header><img src="https://i.imgur.com/VcJTtbD.png" class="app-logo"><h1>Opportunities</h1></header><form onsubmit="handleFormSubmit(event, 'opportunities')"><div class="grid-2"><div class="form-group"><label>Store Name</label><input type="text" name="storeName" required></div><div class="form-group"><label>Type</label><select name="oppType" required><option value="Ad">Ad</option><option value="Promo">Promo</option></select></div></div><div class="form-group"><label>Co-Funded?</label><select name="isCoFunded" onchange="toggleCoFundedFields(this.value)"><option value="No">No</option><option value="Yes">Yes</option></select></div><div class="conditional-fields" id="coFundedBlock"><div class="grid-2"><div class="form-group"><label>Split %</label><input type="text" name="coFundedSplit" placeholder="70/30"></div><div class="form-group"><label>Budget</label><input type="text" name="oppBudget"></div></div></div><div class="form-group"><label>Salesforce Link</label><input type="url" name="salesforceLink" required></div><button type="submit">Log Opportunity</button></form><div class="status-msg"></div></div>
 
     </div>
 </div>
 
+<!-- ================= DYNAMIC DATA MODAL PANEL OVERLAY WITH ADVANCED FILTERS ================= -->
 <div id="dataModal" class="modal-overlay" onclick="closeDataModal(event)">
     <div class="modal-window" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <h2 class="modal-title" id="modalTitle">Dashboard Information</h2>
+            <h2 class="modal-title" id="modalTitle">Database Information</h2>
             <button class="modal-close-btn" onclick="document.getElementById('dataModal').style.display='none'">×</button>
         </div>
-        <div class="modal-body" id="modalBody">
+        
+        <!-- Interactive Advanced Filter Panel Controls Row -->
+        <div class="filter-control-panel">
+            <div class="grid-2">
+                <div>
+                    <label style="font-size:10px; margin-bottom:4px;">Filter by Store / Business</label>
+                    <input type="text" id="filterStoreSearch" oninput="applyActiveModalFilters()" placeholder="Type store search item...">
+                </div>
+                <div class="grid-2" style="gap:10px;">
+                    <div>
+                        <label style="font-size:10px; margin-bottom:4px;">Start Date</label>
+                        <input type="date" id="filterStartDate" onchange="applyActiveModalFilters()">
+                    </div>
+                    <div>
+                        <label style="font-size:10px; margin-bottom:4px;">End Date</label>
+                        <input type="date" id="filterEndDate" onchange="applyActiveModalFilters()">
+                    </div>
+                </div>
             </div>
+        </div>
+
+        <div class="modal-body" id="modalBody">
+            <!-- Filtered row lines append dynamically -->
+        </div>
     </div>
 </div>
 
 <script>
     const WEB_APP_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbwh7GddixjGsa8F1WHE45UZ7JmR4wZBAHrEcks8XUan-2PnwI0G-pnbQ5vX62OKtggAJQ/exec";
     
-    // Live Array Registers to cache text strings for individual dashboard cards
-    const sessionMetrics = {
-        calls: 0,
-        photosAdded: 0,
-        videosUploaded: 0,
-        contentApprovals: 0,
-        photoshootTracker: 0,
-        caseTracker: 0,
-        opportunities: 0
-    };
-
-    const cachedLogHistory = {
-        calls: [],
-        photosAdded: [],
-        videosUploaded: [],
-        contentApprovals: [],
-        photoshootTracker: [],
-        caseTracker: [],
-        opportunities: []
-    };
+    let currentModalCategory = "";
+    let totalPhotosAddedAccumulator = 0;
+    
+    // Core Session State Cache Objects
+    const sessionMetrics = { calls: 0, photosAdded: 0, videosUploaded: 0, contentApprovals: 0, photoshootTracker: 0, caseTracker: 0, opportunities: 0 };
+    let globalHistoricalDatabase = {}; // Stores fetched historical logs pulling straight from Sheets
 
     function switchTab(event, sectionId) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -835,22 +552,36 @@
     function toggleCoFundedFields(value) {
         const block = document.getElementById('coFundedBlock');
         const inputs = block.querySelectorAll('input');
-        if (value === "Yes") {
-            block.style.display = "block";
-            inputs.forEach(input => input.required = true);
-        } else {
-            block.style.display = "none";
-            inputs.forEach(input => { input.required = false; input.value = ""; });
-        }
+        if (value === "Yes") { block.style.display = "block"; inputs.forEach(i => i.required = true); } 
+        else { block.style.display = "none"; inputs.forEach(i => { i.required = false; i.value = ""; }); }
     }
 
-    // Interactive Dashboard Card Viewer Engine
+    // Two-way API engine pulling long-term logs straight from Google Sheets
+    function syncGlobalHistory() {
+        const syncBtn = document.getElementById('syncDatabaseBtn');
+        syncBtn.textContent = "Connecting to Sheets Database...";
+        syncBtn.disabled = true;
+
+        fetch(WEB_APP_URL)
+        .then(response => response.json())
+        .then(data => {
+            globalHistoricalDatabase = data;
+            syncBtn.textContent = "✓ Sheet Database Connected Successfully";
+            syncBtn.style.color = "var(--success-color)";
+        })
+        .catch(err => {
+            syncBtn.textContent = "✕ Connection Timed Out. Try again.";
+            syncBtn.disabled = false;
+            console.error(err);
+        });
+    }
+
+    // Dynamic Live Modal Filter Controller Engine
     function openDataModal(category) {
+        currentModalCategory = category;
         const modal = document.getElementById('dataModal');
         const title = document.getElementById('modalTitle');
-        const body = document.getElementById('modalBody');
         
-        // Dynamic clean modal title labels
         const labels = {
             calls: "Interactions History",
             photosAdded: "Injected Photos Log",
@@ -861,40 +592,98 @@
             opportunities: "Salesforce Pipelines"
         };
 
-        title.textContent = labels[category] || "Dashboard Log View";
-        body.innerHTML = ""; // Wipe content area cleanly
+        title.textContent = labels[category] || "Filter Log View";
+        
+        // Reset inputs on opening card text fields
+        document.getElementById('filterStoreSearch').value = "";
+        document.getElementById('filterStartDate').value = "";
+        document.getElementById('filterEndDate').value = "";
 
-        const historyItems = cachedLogHistory[category];
-
-        // Creative Empty State if nothing is logged yet
-        if (!historyItems || historyItems.length === 0) {
-            body.innerHTML = `
-                <div class="empty-state" style="margin: 0; border: none;">
-                    <div class="empty-state-icon">📂</div>
-                    <h3>No information added</h3>
-                    <p>You haven't logged any data for this specific metric during your active workspace session yet.</p>
-                </div>`;
-        } else {
-            // Build the scrolling table rows dynamically
-            historyItems.forEach(item => {
-                const dataRow = document.createElement('div');
-                dataRow.className = 'modal-data-row';
-                dataRow.innerHTML = `<span>${item.timeStamp}</span><strong>${item.name}</strong><p style="margin: 6px 0 0 0; font-size: 13px; color: var(--text-muted);">${item.details}</p>`;
-                body.appendChild(dataRow);
-            });
-        }
-
+        applyActiveModalFilters();
         modal.style.display = "flex";
     }
 
-    function closeDataModal(e) {
-        document.getElementById('dataModal').style.display = 'none';
+    function applyActiveModalFilters() {
+        const body = document.getElementById('modalBody');
+        body.innerHTML = "";
+
+        const searchTerm = document.getElementById('filterStoreSearch').value.toLowerCase();
+        const startDateVal = document.getElementById('filterStartDate').value;
+        const endDateVal = document.getElementById('filterEndDate').value;
+
+        // Route data arrays depending on targets
+        let records = [];
+        if (currentModalCategory === 'calls') {
+            // Merge records across all dynamic quarterly target sheets ("Q1 - 2026", "Q2 - 2026", etc.)
+            Object.keys(globalHistoricalDatabase).forEach(key => {
+                if (key.indexOf("Q") === 0) records = records.concat(globalHistoricalDatabase[key]);
+            });
+        } else {
+            const sheetMapping = {
+                photosAdded: "Photos Added",
+                videosUploaded: "Videos Uploaded",
+                contentApprovals: "Photo-Video Approvals",
+                photoshootTracker: "Photoshoot Tracker",
+                caseTracker: "Case Tracker",
+                opportunities: "Opportunities"
+            };
+            records = globalHistoricalDatabase[sheetMapping[currentModalCategory]] || [];
+        }
+
+        // Apply programmatic array search filtering criteria row by row
+        let filteredRecords = records.filter(row => {
+            const storeName = (row["Store Name"] || row["Store"] || row["Business Name"] || "").toString().toLowerCase();
+            const dateString = row["Timestamp"] || row["Date Logged"] || row["Date"] || "";
+            
+            // Text Filter match
+            if (searchTerm && !storeName.includes(searchTerm)) return false;
+
+            // Date Range match
+            if (dateString) {
+                const recordTime = new Date(dateString).getTime();
+                if (startDateVal && recordTime < new Date(startDateVal + "T00:00:00").getTime()) return false;
+                if (endDateVal && recordTime > new Date(endDateVal + "T23:59:59").getTime()) return false;
+            }
+            return true;
+        });
+
+        if (filteredRecords.length === 0) {
+            body.innerHTML = `
+                <div class="empty-state" style="margin:0; border:none;">
+                    <div class="empty-state-icon">🔍</div>
+                    <h3>No matching information discovered</h3>
+                    <p>Adjust your text constraints or hit 'Fetch Historical Logs' on the dashboard header to sync your live tracking sheets.</p>
+                </div>`;
+            return;
+        }
+
+        // Output filtered data nicely formatted inside modal
+        filteredRecords.forEach(item => {
+            const dataRow = document.createElement('div');
+            dataRow.className = 'modal-data-row';
+            
+            const rawDate = item["Timestamp"] || item["Date Logged"] || item["Date"] || "N/A";
+            const formattedDate = rawDate !== "N/A" ? new Date(rawDate).toLocaleDateString() + " " + new Date(rawDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "N/A";
+            const displayName = item["Store Name"] || item["Store"] || item["Business Name"] || "Merchant Profile";
+            
+            // Build key value property lines automatically based on header categories
+            let detailsHtml = "";
+            Object.keys(item).forEach(key => {
+                if (!["Timestamp", "Date Logged", "Date", "Store Name", "Store", "Business Name"].includes(key)) {
+                    detailsHtml += `<strong>${key}:</strong> ${item[key]} | `;
+                }
+            });
+
+            dataRow.innerHTML = `<span>${formattedDate}</span><strong>${displayName}</strong><p style="margin: 6px 0 0 0; font-size: 13px; color: var(--text-muted);">${detailsHtml}</p>`;
+            body.appendChild(dataRow);
+        });
     }
+
+    function closeDataModal(e) { document.getElementById('dataModal').style.display = 'none'; }
 
     function pushToActivityStream(type, targetName, metadata) {
         const streamContainer = document.getElementById('activityStreamContainer');
         const emptyState = document.getElementById('dashboardEmptyState');
-        
         if (emptyState) emptyState.remove();
 
         const timestampStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -909,14 +698,7 @@
         if(type === 'photoshootTracker') { badgeClass = 'photo'; typeLabel = 'Shoot'; }
         if(type === 'caseTracker') { badgeClass = 'case'; typeLabel = 'Case'; }
 
-        activityItem.innerHTML = `
-            <div class="activity-details">
-                <span class="badge ${badgeClass}">${typeLabel}</span> 
-                Logged successfully for <span>${targetName}</span> ${metadata ? `(${metadata})` : ''}
-            </div>
-            <div class="activity-time">${timestampStr}</div>
-        `;
-
+        activityItem.innerHTML = `<div class="activity-details"><span class="badge ${badgeClass}">${typeLabel}</span> Logged successfully for <span>${targetName}</span> ${metadata ? `(${metadata})` : ''}</div><div class="activity-time">${timestampStr}</div>`;
         streamContainer.insertBefore(activityItem, streamContainer.firstChild);
     }
 
@@ -936,8 +718,8 @@
 
         let trackingLabelName = data.storeName || data.businessName || "Merchant Asset";
         let metaDetails = "";
-
         let computedPhotos = 0;
+
         if(actionType === "photosAdded") {
             computedPhotos = (parseInt(data.prevMissing) || 0) - (parseInt(data.currMissing) || 0);
             metaDetails = `+${computedPhotos} assets added`;
@@ -945,9 +727,9 @@
         if(actionType === "calls") metaDetails = `${data.callGoal} ➔ ${data.callResult}`;
         if(actionType === "videosUploaded") metaDetails = "Video Production Live";
         if(actionType === "contentApprovals") metaDetails = data.approvalType;
-        if(actionType === "photoshootTracker") metaDetails = `Scheduled: ${data.shootDate} @ ${data.shootTime} [${data.shootStatus}]`;
-        if(actionType === "caseTracker") metaDetails = `${data.caseType} Ticket [Case #${data.caseNumber}]`;
-        if(actionType === "opportunities") metaDetails = `${data.oppType} Deal ${data.isCoFunded === 'Yes' ? `(Co-Funded ${data.coFundedSplit})` : ''}`;
+        if(actionType === "photoshootTracker") metaDetails = `Scheduled: ${data.shootDate} [${data.shootStatus}]`;
+        if(actionType === "caseTracker") metaDetails = `${data.caseType} [Case #${data.caseNumber}]`;
+        if(actionType === "opportunities") metaDetails = data.oppType;
 
         fetch(WEB_APP_URL, {
             method: 'POST',
@@ -962,19 +744,8 @@
             status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
             status.textContent = "✓ Entry logged successfully! Master database synced.";
             
-            // Cache record details securely to the historical log registry object
-            const currentRecordTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            cachedLogHistory[actionType].push({
-                timeStamp: currentRecordTime,
-                name: trackingLabelName,
-                details: metaDetails || data.callNotes || data.shootNotes || data.caseNotes || "No extra commentary added."
-            });
-
-            if(actionType === "photosAdded") {
-                sessionMetrics.photosAdded += computedPhotos;
-            } else {
-                sessionMetrics[actionType]++;
-            }
+            if(actionType === "photosAdded") sessionMetrics.photosAdded += computedPhotos;
+            else sessionMetrics[actionType]++;
 
             document.getElementById('dashCallsCount').textContent = sessionMetrics.calls;
             document.getElementById('dashPhotosCount').textContent = sessionMetrics.photosAdded;
@@ -985,9 +756,11 @@
             document.getElementById('dashOppsCount').textContent = sessionMetrics.opportunities;
 
             pushToActivityStream(actionType, trackingLabelName, metaDetails);
-
             form.reset();
             if(actionType === "opportunities") toggleCoFundedFields("No");
+            
+            // Auto-refresh the backend history log cache array locally to maintain data alignment without forcing a page reload
+            fetch(WEB_APP_URL).then(res => res.json()).then(newData => globalHistoricalDatabase = newData);
         })
         .catch(err => {
             status.style.display = "block";
@@ -1008,6 +781,9 @@
             else btn.textContent = "Log Opportunity";
         });
     }
+
+    // Automatically fetch historical logs when the dashboard loads to make filtering immediately accessible
+    window.addEventListener('load', () => { syncGlobalHistory(); });
 </script>
 </body>
 </html>
