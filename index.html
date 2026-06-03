@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Merchant Portal v2.0</title>
     
-    <!-- Link to bring the custom logo live as the browser tab favicon -->
     <link rel="icon" type="image/png" href="https://i.imgur.com/VcJTtbD.png">
     
     <style>
@@ -220,6 +219,7 @@
             display: none;
         }
 
+        /* ================= DASHBOARD STYLES ================= */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -237,6 +237,14 @@
             justify-content: space-between;
             position: relative;
             overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .dash-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            background-color: #232833;
         }
 
         .dash-card::before {
@@ -350,6 +358,94 @@
         .badge.video { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
         .badge.case { background: rgba(239, 68, 68, 0.15); color: #f87171; }
         .badge.opp { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+
+        /* ================= PREMIUM MODAL WINDOW OVERLAY STYLES ================= */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-window {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            animation: modalSlideUp 0.2s ease-out;
+        }
+
+        @keyframes modalSlideUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            width: auto;
+        }
+
+        .modal-close-btn:hover {
+            color: var(--text-main);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-data-row {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .modal-data-row span {
+            color: var(--text-muted);
+            font-size: 12px;
+            display: block;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
     </style>
 </head>
 <body>
@@ -368,55 +464,54 @@
 <div class="container">
     <div class="form-card">
         
-        <!-- ================= HOME DASHBOARD SECTION ================= -->
         <div id="homeSection" class="form-section active">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
                 <h1>Operational Command Center</h1>
-                <p>Live account management performance metrics for this tracking session</p>
+                <p>Live account management performance metrics for this tracking session (Click cards to view information)</p>
             </header>
 
             <div class="dashboard-grid">
-                <div class="dash-card">
+                <div class="dash-card" onclick="openDataModal('calls')">
                     <div class="dash-card-title">Interactions</div>
                     <div class="dash-card-value" id="dashCallsCount">0</div>
-                    <div class="dash-card-meta">Logged calls this session</div>
+                    <div class="dash-card-meta">Logged calls this session ↗</div>
                 </div>
-                <div class="dash-card success">
+                <div class="dash-card success" onclick="openDataModal('photosAdded')">
                     <div class="dash-card-title">Photos Added</div>
                     <div class="dash-card-value" id="dashPhotosCount">0</div>
-                    <div class="dash-card-meta">Total visual menu assets injected</div>
+                    <div class="dash-card-meta">Total visual menu assets injected ↗</div>
                 </div>
-                <div class="dash-card warning">
+                <div class="dash-card warning" onclick="openDataModal('videosUploaded')">
                     <div class="dash-card-title">Videos Uploaded</div>
                     <div class="dash-card-value" id="dashVideosCount">0</div>
-                    <div class="dash-card-meta">Parent brand productions mapped</div>
+                    <div class="dash-card-meta">Parent brand productions mapped ↗</div>
                 </div>
             </div>
 
             <div class="dashboard-grid">
-                <div class="dash-card success">
+                <div class="dash-card success" onclick="openDataModal('contentApprovals')">
                     <div class="dash-card-title">Asset Sign-Offs</div>
                     <div class="dash-card-value" id="dashApprovalsCount">0</div>
-                    <div class="dash-card-meta">Merchant content approvals</div>
+                    <div class="dash-card-meta">Merchant content approvals ↗</div>
                 </div>
-                <div class="dash-card warning">
+                <div class="dash-card warning" onclick="openDataModal('photoshootTracker')">
                     <div class="dash-card-title">Photoshoots</div>
                     <div class="dash-card-value" id="dashShootsCount">0</div>
-                    <div class="dash-card-meta">Professional sessions scheduled</div>
+                    <div class="dash-card-meta">Professional sessions scheduled ↗</div>
                 </div>
-                <div class="dash-card danger">
+                <div class="dash-card danger" onclick="openDataModal('caseTracker')">
                     <div class="dash-card-title">Active Cases</div>
                     <div class="dash-card-value" id="dashCasesCount">0</div>
-                    <div class="dash-card-meta">72hr calendar tickets triggered</div>
+                    <div class="dash-card-meta">72hr calendar tickets triggered ↗</div>
                 </div>
             </div>
 
             <div class="dashboard-grid" style="grid-template-columns: 1fr;">
-                <div class="dash-card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(59, 130, 246, 0.03) 100%);">
+                <div class="dash-card" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(59, 130, 246, 0.03) 100%);" onclick="openDataModal('opportunities')">
                     <div class="dash-card-title" style="color: #a78bfa;">Pipeline Conversions</div>
                     <div class="dash-card-value" id="dashOppsCount" style="color: #a78bfa;">0</div>
-                    <div class="dash-card-meta">Salesforce Ads & Promos closed successfully</div>
+                    <div class="dash-card-meta">Salesforce Ads & Promos closed successfully ↗</div>
                 </div>
             </div>
 
@@ -432,7 +527,6 @@
             </div>
         </div>
         
-        <!-- ================= TAB 1: CALLS SECTION ================= -->
         <div id="callsSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
@@ -489,7 +583,6 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= TAB 2: PHOTOS ADDED TRACKER ================= -->
         <div id="photosAddedSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
@@ -516,7 +609,6 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= TAB 3: VIDEOS UPLOADED TRACKER ================= -->
         <div id="videosUploadedSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
@@ -533,7 +625,6 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= TAB 4: PHOTO/VIDEO APPROVALS ================= -->
         <div id="approvalsSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
@@ -563,7 +654,6 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= TAB 5: PHOTOSHOOT TRACKER ================= -->
         <div id="photoshootSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
@@ -603,7 +693,6 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= TAB 6: CASE TRACKER ================= -->
         <div id="caseTrackerSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
@@ -649,7 +738,6 @@
             <div class="status-msg"></div>
         </div>
 
-        <!-- ================= TAB 7: OPPORTUNITIES TERMINAL ================= -->
         <div id="opportunitiesSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
@@ -702,9 +790,21 @@
     </div>
 </div>
 
+<div id="dataModal" class="modal-overlay" onclick="closeDataModal(event)">
+    <div class="modal-window" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 class="modal-title" id="modalTitle">Dashboard Information</h2>
+            <button class="modal-close-btn" onclick="document.getElementById('dataModal').style.display='none'">×</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            </div>
+    </div>
+</div>
+
 <script>
     const WEB_APP_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbwh7GddixjGsa8F1WHE45UZ7JmR4wZBAHrEcks8XUan-2PnwI0G-pnbQ5vX62OKtggAJQ/exec";
     
+    // Live Array Registers to cache text strings for individual dashboard cards
     const sessionMetrics = {
         calls: 0,
         photosAdded: 0,
@@ -713,6 +813,16 @@
         photoshootTracker: 0,
         caseTracker: 0,
         opportunities: 0
+    };
+
+    const cachedLogHistory = {
+        calls: [],
+        photosAdded: [],
+        videosUploaded: [],
+        contentApprovals: [],
+        photoshootTracker: [],
+        caseTracker: [],
+        opportunities: []
     };
 
     function switchTab(event, sectionId) {
@@ -732,6 +842,53 @@
             block.style.display = "none";
             inputs.forEach(input => { input.required = false; input.value = ""; });
         }
+    }
+
+    // Interactive Dashboard Card Viewer Engine
+    function openDataModal(category) {
+        const modal = document.getElementById('dataModal');
+        const title = document.getElementById('modalTitle');
+        const body = document.getElementById('modalBody');
+        
+        // Dynamic clean modal title labels
+        const labels = {
+            calls: "Interactions History",
+            photosAdded: "Injected Photos Log",
+            videosUploaded: "Videos Uploaded Log",
+            contentApprovals: "Asset Sign-Off Profiles",
+            photoshootTracker: "Scheduled Photoshoots",
+            caseTracker: "Active Case Tickets",
+            opportunities: "Salesforce Pipelines"
+        };
+
+        title.textContent = labels[category] || "Dashboard Log View";
+        body.innerHTML = ""; // Wipe content area cleanly
+
+        const historyItems = cachedLogHistory[category];
+
+        // Creative Empty State if nothing is logged yet
+        if (!historyItems || historyItems.length === 0) {
+            body.innerHTML = `
+                <div class="empty-state" style="margin: 0; border: none;">
+                    <div class="empty-state-icon">📂</div>
+                    <h3>No information added</h3>
+                    <p>You haven't logged any data for this specific metric during your active workspace session yet.</p>
+                </div>`;
+        } else {
+            // Build the scrolling table rows dynamically
+            historyItems.forEach(item => {
+                const dataRow = document.createElement('div');
+                dataRow.className = 'modal-data-row';
+                dataRow.innerHTML = `<span>${item.timeStamp}</span><strong>${item.name}</strong><p style="margin: 6px 0 0 0; font-size: 13px; color: var(--text-muted);">${item.details}</p>`;
+                body.appendChild(dataRow);
+            });
+        }
+
+        modal.style.display = "flex";
+    }
+
+    function closeDataModal(e) {
+        document.getElementById('dataModal').style.display = 'none';
     }
 
     function pushToActivityStream(type, targetName, metadata) {
@@ -785,9 +942,12 @@
             computedPhotos = (parseInt(data.prevMissing) || 0) - (parseInt(data.currMissing) || 0);
             metaDetails = `+${computedPhotos} assets added`;
         }
-        if(actionType === "calls") metaDetails = data.callResult;
-        if(actionType === "caseTracker") metaDetails = `Case #${data.caseNumber}`;
-        if(actionType === "opportunities") metaDetails = data.oppType;
+        if(actionType === "calls") metaDetails = `${data.callGoal} ➔ ${data.callResult}`;
+        if(actionType === "videosUploaded") metaDetails = "Video Production Live";
+        if(actionType === "contentApprovals") metaDetails = data.approvalType;
+        if(actionType === "photoshootTracker") metaDetails = `Scheduled: ${data.shootDate} @ ${data.shootTime} [${data.shootStatus}]`;
+        if(actionType === "caseTracker") metaDetails = `${data.caseType} Ticket [Case #${data.caseNumber}]`;
+        if(actionType === "opportunities") metaDetails = `${data.oppType} Deal ${data.isCoFunded === 'Yes' ? `(Co-Funded ${data.coFundedSplit})` : ''}`;
 
         fetch(WEB_APP_URL, {
             method: 'POST',
@@ -802,6 +962,14 @@
             status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
             status.textContent = "✓ Entry logged successfully! Master database synced.";
             
+            // Cache record details securely to the historical log registry object
+            const currentRecordTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            cachedLogHistory[actionType].push({
+                timeStamp: currentRecordTime,
+                name: trackingLabelName,
+                details: metaDetails || data.callNotes || data.shootNotes || data.caseNotes || "No extra commentary added."
+            });
+
             if(actionType === "photosAdded") {
                 sessionMetrics.photosAdded += computedPhotos;
             } else {
