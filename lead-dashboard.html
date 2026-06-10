@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Merchant Intelligence Dashboard</title>
     <link rel="stylesheet" href="lead-dashboard.css">
 </head>
@@ -50,26 +51,16 @@
             </div>
         </section>
 
-        <section class="followup-grid">
-            <section class="panel">
-                <div class="panel-header">
-                    <h2>Today's Follow-Ups</h2>
-                    <span class="panel-subtitle">Oldest follow-up first</span>
-                </div>
-                <div id="followUpContainer" class="table-container">
-                    Follow-up queue coming soon...
-                </div>
-            </section>
+        <section class="followup-actions">
+            <button type="button" id="openFollowUpsBtn" class="followup-card-btn">
+                <span class="followup-card-title">Today's Follow-Ups</span>
+                <span class="followup-card-subtitle">Open queue view</span>
+            </button>
 
-            <section class="panel">
-                <div class="panel-header">
-                    <h2>Top Merchants To Contact</h2>
-                    <span class="panel-subtitle">Ranked by urgency and opportunity</span>
-                </div>
-                <div id="topMerchantsContainer" class="table-container">
-                    Priority queue coming soon...
-                </div>
-            </section>
+            <button type="button" id="openPriorityMerchantsBtn" class="followup-card-btn">
+                <span class="followup-card-title">Top Merchants To Contact</span>
+                <span class="followup-card-subtitle">Open priority view</span>
+            </button>
         </section>
 
         <section class="toolbar">
@@ -276,6 +267,25 @@
         </section>
 
     </main>
+
+    <div id="followUpModal" class="followup-modal" aria-hidden="true">
+        <div class="followup-modal-overlay" id="followUpModalOverlay"></div>
+
+        <div class="followup-modal-content" role="dialog" aria-modal="true" aria-labelledby="followUpModalTitle">
+            <div class="followup-modal-header">
+                <div>
+                    <h2 id="followUpModalTitle">Follow-Up Queue</h2>
+                    <p id="followUpModalSubtitle" class="subtext">Merchant list</p>
+                </div>
+
+                <button type="button" id="closeFollowUpModalBtn" class="btn btn-secondary">Close</button>
+            </div>
+
+            <div id="followUpModalBody" class="followup-modal-body">
+                Loading...
+            </div>
+        </div>
+    </div>
 
     <script src="config.js"></script>
     <script src="lead-dashboard.js"></script>
