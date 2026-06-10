@@ -107,11 +107,77 @@
                     </div>
                 </div>
 
-                <div class="drawer-section">
+                <div class="drawer-section drawer-stack">
                     <h3>Recent Activity</h3>
                     <div id="merchantActivity" class="drawer-card">
                         No activity loaded yet.
                     </div>
+
+                    <h3>Add Activity</h3>
+                    <div id="activityMerchantContext" class="drawer-card activity-context">
+                        Select a merchant to add an activity.
+                    </div>
+
+                    <form id="activityForm" class="activity-form">
+                        <div class="activity-field">
+                            <label for="activityType">Activity Type</label>
+                            <select id="activityType" required>
+                                <option value="">Select activity type</option>
+                                <option value="Call">Call</option>
+                                <option value="Email">Email</option>
+                                <option value="SMS">SMS</option>
+                                <option value="Voicemail">Voicemail</option>
+                                <option value="Photoshoot">Photoshoot</option>
+                                <option value="Support Case">Support Case</option>
+                                <option value="Sponsored Listings">Sponsored Listings</option>
+                                <option value="Promotion Discussion">Promotion Discussion</option>
+                                <option value="Loyalty Discussion">Loyalty Discussion</option>
+                                <option value="Storefront Discussion">Storefront Discussion</option>
+                                <option value="Follow-Up">Follow-Up</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="activity-field">
+                            <label for="activityOutcome">Outcome</label>
+                            <select id="activityOutcome" required>
+                                <option value="">Select outcome</option>
+                                <option value="Interested">Interested</option>
+                                <option value="Follow Up">Follow Up</option>
+                                <option value="Not Interested">Not Interested</option>
+                                <option value="Closed Won">Closed Won</option>
+                                <option value="Closed Lost">Closed Lost</option>
+                                <option value="Escalated">Escalated</option>
+                                <option value="Resolved">Resolved</option>
+                            </select>
+                        </div>
+
+                        <div class="activity-field">
+                            <label for="activityNextFollowUp">Next Follow-Up</label>
+                            <input type="date" id="activityNextFollowUp">
+                        </div>
+
+                        <div class="activity-field">
+                            <label for="activityOwner">Owner</label>
+                            <input type="text" id="activityOwner" placeholder="Esteban Golfin">
+                        </div>
+
+                        <div class="activity-field">
+                            <label for="activityNotes">Notes</label>
+                            <textarea
+                                id="activityNotes"
+                                rows="5"
+                                placeholder="Add notes, context, objections, or next steps..."
+                                required
+                            ></textarea>
+                        </div>
+
+                        <button type="submit" id="activitySaveBtn" class="btn btn-primary">
+                            Save Activity
+                        </button>
+
+                        <div id="activityStatusMessage" class="form-status"></div>
+                    </form>
                 </div>
             </div>
         </section>
