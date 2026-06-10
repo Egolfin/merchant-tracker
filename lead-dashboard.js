@@ -1,4 +1,4 @@
-const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE"; // Replace with your deployed Apps Script Web App URL
+const API_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbxZoKWK2MLL4xo55FBHEWD_qoxgqD17_H1w1L-kbO46PlxQ3ClFpOsiME14aHZ1fiK-sg/exec"; // Replace with your deployed Apps Script Web App URL
 
 let allLeads = [];
 let allActivities = [];
@@ -30,16 +30,15 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Event delegation: one click handler for all rendered lead rows
   if (leadTableContainer) {
     leadTableContainer.addEventListener("click", function (event) {
-      const row = event.target.closest("tr.lead-row");
-      if (!row) return;
+      const button = event.target.closest(".merchant-link");
+      if (!button) return;
 
-      const storeId = row.dataset.storeId;
+      const storeId = button.dataset.storeId;
       if (!storeId) return;
 
-      console.log("Row clicked, opening drawer for Store ID:", storeId);
+      console.log("Merchant clicked:", storeId);
       openMerchantDrawer(storeId);
     });
   }
@@ -181,7 +180,15 @@ function renderLeads(leads) {
 
       return `
         <tr class="lead-row" data-store-id="${escapeHtml(storeId)}">
-          <td>${escapeHtml(businessName)}</td>
+          <td>
+            <button
+              type="button"
+              class="merchant-link"
+              data-store-id="${escapeHtml(storeId)}"
+            >
+              ${escapeHtml(businessName)}
+            </button>
+          </td>
           <td>${escapeHtml(storeId)}</td>
           <td>${escapeHtml(businessId)}</td>
           <td>${escapeHtml(rxName)}</td>
@@ -310,6 +317,7 @@ function openMerchantDrawer(storeId) {
 
   if (drawer) {
     drawer.classList.add("open");
+    drawer.style.display = "block";
     drawer.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -414,6 +422,7 @@ function closeMerchantDrawer() {
   const drawer = document.getElementById("merchantDrawer");
   if (drawer) {
     drawer.classList.remove("open");
+    drawer.style.display = "";
   }
 }
 
@@ -524,4 +533,8 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function escapeJs(value) {
+  return String(value ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
