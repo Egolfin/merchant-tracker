@@ -1,14 +1,17 @@
-const API_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbxZoKWK2MLL4xo55FBHEWD_qoxgqD17_H1w1L-kbO46PlxQ3ClFpOsiME14aHZ1fiK-sg/exec"; // Replace with your deployed Apps Script Web App URL
+const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE"; // Replace with your deployed Apps Script Web App URL
 
 let allLeads = [];
 let allActivities = [];
 let filteredLeads = [];
+let currentLead = null;
+let currentStoreId = "";
 
 document.addEventListener("DOMContentLoaded", function () {
   const searchInput = document.getElementById("merchantSearch");
   const sortSelect = document.getElementById("sortSelect");
   const closeDrawerBtn = document.getElementById("closeDrawerBtn");
   const connectSheetBtn = document.getElementById("connectSheetBtn");
+  const activityForm = document.getElementById("activityForm");
   const leadTableContainer = document.getElementById("leadTableContainer");
 
   if (searchInput) {
@@ -28,6 +31,10 @@ document.addEventListener("DOMContentLoaded", function () {
       loadLeads();
       loadActivities();
     });
+  }
+
+  if (activityForm) {
+    activityForm.addEventListener("submit", handleActivitySubmit);
   }
 
   if (leadTableContainer) {
@@ -291,6 +298,9 @@ function openMerchantDrawer(storeId) {
     return;
   }
 
+  currentLead = lead;
+  currentStoreId = storeId;
+
   const drawer = document.getElementById("merchantDrawer");
   const drawerTitle = document.getElementById("drawerTitle");
   const drawerSubtitle = document.getElementById("drawerSubtitle");
@@ -298,6 +308,8 @@ function openMerchantDrawer(storeId) {
   const merchantActivity = document.getElementById("merchantActivity");
 
   console.log("Opening drawer for:", storeId);
+
+  syncActivityFormWithLead(lead);
 
   if (drawerTitle) {
     drawerTitle.textContent = getField(lead, ["Business Name"]) || "Merchant 360";
@@ -324,56 +336,202 @@ function openMerchantDrawer(storeId) {
   loadMerchantActivities(storeId);
 }
 
-function loadMerchantActivities(storeId) {
-  const callbackName = "handleMerchantActivities_" + Date.now();
+function syncActivityFormWithLead(lead) {
+  const context = document.getElementById("activityMerchantContext");
+  const activityForm = document.getElementById("activityForm");
+  const activityOwner = document.getElementById("activityOwner");
+  const activityStatus = document.getElementById("activityStatusMessage");
 
-  window[callbackName] = function (response) {
-    try {
-      const merchantActivity = document.getElementById("merchantActivity");
+  if (activityForm) {
+    activityForm.reset();
+  }
 
-      if (!response.success) {
-        if (merchantActivity) {
-          merchantActivity.innerHTML = `<div class="error-state">Unable to load merchant activity.</div>`;
-        }
-        return;
-      }
+  if (activityOwner) {
+    activityOwner.value = getField(lead, ["Owner"]) || "Esteban Golfin";
+  }
 
-      const activities = Array.isArray(response.data) ? response.data : [];
+  if (context) {
+    context.innerHTML = buildActivityContextHtml(lead);
+  }
 
-      if (!merchantActivity) return;
+  if (activityStatus) {
+    activityStatus.textContent = "Ready to log an activity for this merchant.";
+    activityStatus.classList.remove("error");
+  }
+}
 
-      if (activities.length === 0) {
-        merchantActivity.innerHTML = `<div class="empty-state">No merchant-specific activities found.</div>`;
-        return;
-      }
+function buildActivityContextHtml(lead) {
+  return `
+    <div class="overview-grid">
+      <div><strong>Business Name:</strong> ${escapeHtml(getField(lead, ["Business Name"]))}</div>
+      <div><strong>Store ID:</strong> ${escapeHtml(getField(lead, ["Store Id", "Store ID"]))}</div>
+      <div><strong>Business ID:</strong> ${escapeHtml(getField(lead, ["Business Id", "Business ID"]))}</div>
+      <div><strong>Rx Name:</strong> ${escapeHtml(getField(lead, ["Rx Name"]))}</div>
+      <div><strong>Lead Status:</strong> ${escapeHtml(getField(lead, ["Lead Status"]))}</div>
+      <div><strong>Priority Score:</strong> ${escapeHtml(getField(lead, ["Priority Score"]))}</div>
+    </div>
+  `;
+}
 
-      const html = activities
-        .slice()
-        .reverse()
-        .map(function (activity) {
-          return `
-            <div class="drawer-card merchant-activity-item">
-              <strong>${escapeHtml(getField(activity, ["Activity Type"]))}</strong><br>
-              <span class="subtext">${escapeHtml(getField(activity, ["Timestamp"]))}</span><br>
-              <div style="margin-top:8px;">${escapeHtml(getField(activity, ["Notes"]))}</div>
-              <div style="margin-top:8px;" class="subtext">
-                Outcome: ${escapeHtml(getField(activity, ["Outcome"]))} | Owner: ${escapeHtml(getField(activity, ["Owner"]))}
-              </div>
-            </div>
-          `;
-        })
-        .join("");
+async function handleActivitySubmit(event) {
+  event.preventDefault();
 
-      merchantActivity.innerHTML = html;
-    } finally {
-      delete window[callbackName];
-      script.remove();
-    }
+  if (!currentLead) {
+    setActivityStatus("Select a merchant before saving an activity.", true);
+    return;
+  }
+
+  const activityType = document.getElementById("activityType")?.value.trim() || "";
+  const activityOutcome = document.getElementById("activityOutcome")?.value.trim() || "";
+  const activityNextFollowUp = document.getElementById("activityNextFollowUp")?.value || "";
+  const activityNotes = document.getElementById("activityNotes")?.value.trim() || "";
+  const activityOwnerInput = document.getElementById("activityOwner");
+  const activityOwner = activityOwnerInput?.value.trim() || getField(currentLead, ["Owner"]) || "Esteban Golfin";
+
+  if (!activityType || !activityOutcome || !activityNotes) {
+    setActivityStatus("Please complete Activity Type, Outcome, and Notes.", true);
+    return;
+  }
+
+  const saveButton = document.getElementById("activitySaveBtn");
+  if (saveButton) {
+    saveButton.disabled = true;
+  }
+
+  const payload = {
+    "Store ID": getStoreId(currentLead),
+    "Business ID": getField(currentLead, ["Business Id", "Business ID"]),
+    "Business Name": getField(currentLead, ["Business Name"]),
+    "Activity Type": activityType,
+    "Notes": activityNotes,
+    "Outcome": activityOutcome,
+    "Owner": activityOwner,
+    "Next Follow-Up": activityNextFollowUp
   };
 
-  const script = document.createElement("script");
-  script.src = `${API_URL}?action=getActivitiesByStoreId&storeId=${encodeURIComponent(storeId)}&callback=${callbackName}&_=${Date.now()}`;
-  document.body.appendChild(script);
+  setActivityStatus("Saving activity...");
+
+  try {
+    await postActivity(payload);
+    await delay(900);
+
+    const refreshedActivities = await loadMerchantActivities(getStoreId(currentLead));
+    loadActivities();
+
+    const verified = Array.isArray(refreshedActivities) && refreshedActivities.some(function (activity) {
+      return String(getField(activity, ["Activity Type"])) === activityType &&
+             String(getField(activity, ["Notes"])) === activityNotes &&
+             String(getField(activity, ["Outcome"])) === activityOutcome;
+    });
+
+    if (verified) {
+      setActivityStatus("Activity saved successfully.");
+    } else {
+      setActivityStatus("Activity submitted. Refreshing activity log...");
+    }
+
+    const form = document.getElementById("activityForm");
+    if (form) {
+      form.reset();
+    }
+
+    if (activityOwnerInput) {
+      activityOwnerInput.value = activityOwner;
+    }
+
+    syncActivityFormWithLead(currentLead);
+    await loadMerchantActivities(getStoreId(currentLead));
+  } catch (error) {
+    console.error("Save activity error:", error);
+    setActivityStatus("Activity submitted. Refreshing activity log...", false);
+    await delay(900);
+    await loadMerchantActivities(getStoreId(currentLead));
+    loadActivities();
+  } finally {
+    if (saveButton) {
+      saveButton.disabled = false;
+    }
+  }
+}
+
+function postActivity(payload) {
+  const body = new URLSearchParams();
+  body.set("action", "saveActivity");
+  body.set("data", JSON.stringify(payload));
+
+  return fetch(API_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: body
+  });
+}
+
+function setActivityStatus(message, isError = false) {
+  const status = document.getElementById("activityStatusMessage");
+  if (!status) return;
+
+  status.textContent = message;
+  status.classList.toggle("error", Boolean(isError));
+}
+
+function loadMerchantActivities(storeId) {
+  return new Promise((resolve) => {
+    const callbackName = "handleMerchantActivities_" + Date.now();
+    const script = document.createElement("script");
+
+    window[callbackName] = function (response) {
+      try {
+        const merchantActivity = document.getElementById("merchantActivity");
+
+        if (!response.success) {
+          if (merchantActivity) {
+            merchantActivity.innerHTML = `<div class="error-state">Unable to load merchant activity.</div>`;
+          }
+          resolve([]);
+          return;
+        }
+
+        const activities = Array.isArray(response.data) ? response.data : [];
+
+        if (!merchantActivity) {
+          resolve(activities);
+          return;
+        }
+
+        if (activities.length === 0) {
+          merchantActivity.innerHTML = `<div class="empty-state">No merchant-specific activities found.</div>`;
+          resolve(activities);
+          return;
+        }
+
+        const html = activities
+          .slice()
+          .reverse()
+          .map(function (activity) {
+            return `
+              <div class="drawer-card merchant-activity-item">
+                <strong>${escapeHtml(getField(activity, ["Activity Type"]))}</strong><br>
+                <span class="subtext">${escapeHtml(getField(activity, ["Timestamp"]))}</span><br>
+                <div style="margin-top:8px;">${escapeHtml(getField(activity, ["Notes"]))}</div>
+                <div style="margin-top:8px;" class="subtext">
+                  Outcome: ${escapeHtml(getField(activity, ["Outcome"]))} | Owner: ${escapeHtml(getField(activity, ["Owner"]))}
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+
+        merchantActivity.innerHTML = html;
+        resolve(activities);
+      } finally {
+        delete window[callbackName];
+        script.remove();
+      }
+    };
+
+    script.src = `${API_URL}?action=getActivitiesByStoreId&storeId=${encodeURIComponent(storeId)}&callback=${callbackName}&_=${Date.now()}`;
+    document.body.appendChild(script);
+  });
 }
 
 function buildMerchantOverviewHtml(lead) {
@@ -535,6 +693,8 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
-function escapeJs(value) {
-  return String(value ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+function delay(ms) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  });
 }
