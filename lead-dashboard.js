@@ -15,6 +15,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const leadManagementForm = document.getElementById("leadManagementForm");
   const leadTableContainer = document.getElementById("leadTableContainer");
   const quickActionButtons = document.querySelectorAll(".quick-action-btn");
+  const followUpContainer = document.getElementById("followUpContainer");
+  const topMerchantsContainer = document.getElementById("topMerchantsContainer");
 
   if (searchInput) {
     searchInput.addEventListener("input", applyFiltersAndSort);
@@ -56,6 +58,30 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  if (followUpContainer) {
+    followUpContainer.addEventListener("click", function (event) {
+      const button = event.target.closest(".merchant-link");
+      if (!button) return;
+
+      const storeId = button.dataset.storeId;
+      if (!storeId) return;
+
+      openMerchantDrawer(storeId);
+    });
+  }
+
+  if (topMerchantsContainer) {
+    topMerchantsContainer.addEventListener("click", function (event) {
+      const button = event.target.closest(".merchant-link");
+      if (!button) return;
+
+      const storeId = button.dataset.storeId;
+      if (!storeId) return;
+
+      openMerchantDrawer(storeId);
+    });
+  }
+
   quickActionButtons.forEach(function (button) {
     button.addEventListener("click", function () {
       const template = button.dataset.template || "";
@@ -89,6 +115,7 @@ function loadLeads() {
         setConnectionStatus(true);
         updateMetrics();
         applyFiltersAndSort();
+        renderFollowUpCommandCenter();
 
         if (currentStoreId) {
           const refreshedLead = allLeads.find(function (item) {
@@ -130,6 +157,7 @@ function loadActivities() {
         allActivities = Array.isArray(response.data) ? response.data : [];
         console.log("Activities loaded:", allActivities);
         renderActivities(allActivities);
+        renderFollowUpCommandCenter();
         resolve(allActivities);
       } finally {
         delete window[callbackName];
@@ -173,7 +201,6 @@ function applyFiltersAndSort() {
 
   filteredLeads = results;
   renderLeads(filteredLeads);
-  updateMetrics(filteredLeads);
 }
 
 function compareLeads(a, b, sortValue) {
@@ -182,7 +209,7 @@ function compareLeads(a, b, sortValue) {
   }
 
   if (sortValue === "priority") {
-    return parseNumeric(getField(b, ["Priority Score"])) - parseNumeric(getField(a, ["Priority Score"]));
+    return getMerchantPriorityScore(b) - getMerchantPriorityScore(a);
   }
 
   if (sortValue === "coverage") {
@@ -216,7 +243,7 @@ function renderLeads(leads) {
       const promoOpp = getField(lead, ["Promo Opp"]);
       const siOpp = getField(lead, ["SI Opp"]);
       const leadStatus = getField(lead, ["Lead Status"]);
-      const priorityScore = getField(lead, ["Priority Score"]);
+      const priorityScore = getMerchantPriorityScore(lead);
 
       return `
         <tr class="lead-row" data-store-id="${escapeHtml(storeId)}">
@@ -317,6 +344,143 @@ function renderActivities(activities) {
       </tbody>
     </table>
   `;
+}
+
+function renderFollowUpCommandCenter() {
+  renderFollowUpQueue();
+  renderTopMerchants();
+  updateMetrics();
+}
+
+function renderFollowUpQueue() {
+  const container = document.getElementById("followUpContainer");
+  if (!container) return;
+
+  const today = getTodayDateString();
+
+  const queue = allLeads
+    .map(function (lead) {
+      return Object.assign({}, lead, {
+        __followUpDate: getDateComparableValue(getField(lead, ["Next Follow-Up"]))
+      });
+    })
+    .filter(function (lead) {
+      return lead.__followUpDate && (lead.__followUpDate <= today);
+    })
+    .sort(function (a, b) {
+      return a.__followUpDate.localeCompare(b.__followUpDate);
+    });
+
+  if (queue.length === 0) {
+    container.innerHTML = `<div class="empty-state">No follow-ups due today.</div>`;
+    return;
+  }
+
+  const html = queue
+    .map(function (lead) {
+      const storeId = getStoreId(lead);
+      const businessName = getField(lead, ["Business Name"]);
+      const owner = getField(lead, ["Owner"]);
+      const nextFollowUp = getField(lead, ["Next Follow-Up"]);
+      const leadStatus = getField(lead, ["Lead Status"]);
+      const lastActivity = getLatestActivityForStoreId(storeId);
+      const statusLabel = lead.__followUpDate < today ? "OVERDUE" : "DUE TODAY";
+
+      return `
+        <div class="queue-item">
+          <button type="button" class="merchant-link" data-store-id="${escapeHtml(storeId)}">
+            ${escapeHtml(businessName)}
+          </button>
+          <div class="queue-meta">
+            Store ID: ${escapeHtml(storeId)} | Owner: ${escapeHtml(owner)}
+          </div>
+          <div class="queue-meta">
+            Next Follow-Up: ${escapeHtml(formatDisplayDate(nextFollowUp))}
+          </div>
+          <div class="queue-meta">
+            Last Activity: ${escapeHtml(lastActivity)}
+          </div>
+          <div class="queue-meta">
+            Lead Status: ${escapeHtml(leadStatus)}
+          </div>
+          <span class="queue-badge">${escapeHtml(statusLabel)}</span>
+        </div>
+      `;
+    })
+    .join("");
+
+  container.innerHTML = `<div class="queue-list">${html}</div>`;
+}
+
+function renderTopMerchants() {
+  const container = document.getElementById("topMerchantsContainer");
+  if (!container) return;
+
+  const topMerchants = allLeads
+    .map(function (lead) {
+      return Object.assign({}, lead, {
+        __priority: getMerchantPriorityScore(lead),
+        __gmv: parseNumeric(getField(lead, ["GMV"]))
+      });
+    })
+    .sort(function (a, b) {
+      if (b.__priority !== a.__priority) {
+        return b.__priority - a.__priority;
+      }
+      if (b.__gmv !== a.__gmv) {
+        return b.__gmv - a.__gmv;
+      }
+      const aName = String(getField(a, ["Business Name"]) || "").toLowerCase();
+      const bName = String(getField(b, ["Business Name"]) || "").toLowerCase();
+      return aName.localeCompare(bName);
+    })
+    .slice(0, 10);
+
+  if (topMerchants.length === 0) {
+    container.innerHTML = `<div class="empty-state">No priority merchants found.</div>`;
+    return;
+  }
+
+  const html = topMerchants
+    .map(function (lead) {
+      const storeId = getStoreId(lead);
+      const businessName = getField(lead, ["Business Name"]);
+      const leadStatus = getField(lead, ["Lead Status"]);
+      const owner = getField(lead, ["Owner"]);
+      const nextFollowUp = getField(lead, ["Next Follow-Up"]);
+      const lastActivity = getLatestActivityForStoreId(storeId);
+      const gmv = getField(lead, ["GMV"]);
+      const priority = getMerchantPriorityScore(lead);
+      const promoOpp = getField(lead, ["Promo Opp"]);
+      const siOpp = getField(lead, ["SI Opp"]);
+
+      return `
+        <div class="queue-item">
+          <button type="button" class="merchant-link" data-store-id="${escapeHtml(storeId)}">
+            ${escapeHtml(businessName)}
+          </button>
+          <div class="queue-meta">
+            Store ID: ${escapeHtml(storeId)} | Owner: ${escapeHtml(owner)}
+          </div>
+          <div class="queue-meta">
+            GMV: ${escapeHtml(gmv)} | Priority Score: ${escapeHtml(priority)}
+          </div>
+          <div class="queue-meta">
+            Next Follow-Up: ${escapeHtml(formatDisplayDate(nextFollowUp))}
+          </div>
+          <div class="queue-meta">
+            Last Activity: ${escapeHtml(lastActivity)}
+          </div>
+          <div class="queue-meta">
+            Lead Status: ${escapeHtml(leadStatus)} | Promo Opp: ${escapeHtml(promoOpp)} | SI Opp: ${escapeHtml(siOpp)}
+          </div>
+          <span class="queue-badge">PRIORITY ${escapeHtml(String(priority))}</span>
+        </div>
+      `;
+    })
+    .join("");
+
+  container.innerHTML = `<div class="queue-list">${html}</div>`;
 }
 
 function openMerchantDrawer(storeId) {
@@ -490,7 +654,7 @@ function buildActivityContextHtml(lead) {
       <div><strong>Business ID:</strong> ${escapeHtml(getField(lead, ["Business Id", "Business ID"]))}</div>
       <div><strong>Rx Name:</strong> ${escapeHtml(getField(lead, ["Rx Name"]))}</div>
       <div><strong>Lead Status:</strong> ${escapeHtml(getField(lead, ["Lead Status"]))}</div>
-      <div><strong>Priority Score:</strong> ${escapeHtml(getField(lead, ["Priority Score"]))}</div>
+      <div><strong>Priority Score:</strong> ${escapeHtml(String(getMerchantPriorityScore(lead)))}</div>
     </div>
   `;
 }
@@ -628,6 +792,8 @@ async function refreshAfterActivitySave(storeId) {
       merchantOverview.innerHTML = buildMerchantOverviewHtml(currentLead);
     }
   }
+
+  renderFollowUpCommandCenter();
 }
 
 function postActivity(payload) {
@@ -814,12 +980,12 @@ function buildMerchantOverviewHtml(lead) {
   const promoOpp = getField(lead, ["Promo Opp"]);
   const siOpp = getField(lead, ["SI Opp"]);
   const leadStatus = getField(lead, ["Lead Status"]);
-  const priorityScore = getField(lead, ["Priority Score"]);
   const owner = getField(lead, ["Owner"]);
   const lastContacted = getField(lead, ["Last Contacted"]);
   const nextFollowUp = getField(lead, ["Next Follow-Up"]);
   const openCaseCount = getField(lead, ["Open Case Count"]);
   const pipelineStage = getField(lead, ["Pipeline Stage"]);
+  const priorityScore = getMerchantPriorityScore(lead);
 
   return `
     <div class="overview-grid">
@@ -837,7 +1003,7 @@ function buildMerchantOverviewHtml(lead) {
       <div><strong>Priority Score:</strong> ${escapeHtml(priorityScore)}</div>
       <div><strong>Owner:</strong> ${escapeHtml(owner)}</div>
       <div><strong>Last Contacted:</strong> ${escapeHtml(lastContacted)}</div>
-      <div><strong>Next Follow-Up:</strong> ${escapeHtml(nextFollowUp)}</div>
+      <div><strong>Next Follow-Up:</strong> ${escapeHtml(formatDisplayDate(nextFollowUp))}</div>
       <div><strong>Open Case Count:</strong> ${escapeHtml(openCaseCount)}</div>
       <div><strong>Pipeline Stage:</strong> ${escapeHtml(pipelineStage)}</div>
     </div>
@@ -855,27 +1021,35 @@ function closeMerchantDrawer() {
 function updateMetrics(leads = allLeads) {
   const totalLeads = leads.length;
 
-  const followUps = leads.filter(function (lead) {
-    const nextFollowUp = getField(lead, ["Next Follow-Up"]);
-    const leadStatus = getField(lead, ["Lead Status"]);
-    return String(nextFollowUp).trim() !== "" || String(leadStatus).toLowerCase().includes("follow");
+  const today = getTodayDateString();
+
+  const followUpsToday = leads.filter(function (lead) {
+    return getDateComparableValue(getField(lead, ["Next Follow-Up"])) === today;
   }).length;
 
-  const openCases = leads.filter(function (lead) {
-    return parseNumeric(getField(lead, ["Open Case Count"])) > 0;
+  const overdueFollowUps = leads.filter(function (lead) {
+    const due = getDateComparableValue(getField(lead, ["Next Follow-Up"]));
+    return due && due < today;
   }).length;
 
-  const pipelineOpps = leads.filter(function (lead) {
-    const promoOpp = parseNumeric(getField(lead, ["Promo Opp"])) > 0;
-    const siOpp = parseNumeric(getField(lead, ["SI Opp"])) > 0;
-    const pipelineStage = String(getField(lead, ["Pipeline Stage"])).trim() !== "";
-    return promoOpp || siOpp || pipelineStage;
-  }).length;
+  const priorityValues = leads
+    .map(function (lead) {
+      return getMerchantPriorityScore(lead);
+    })
+    .filter(function (value) {
+      return Number.isFinite(value);
+    });
+
+  const averagePriorityScore = priorityValues.length
+    ? (priorityValues.reduce(function (sum, value) {
+        return sum + value;
+      }, 0) / priorityValues.length).toFixed(1)
+    : "0.0";
 
   setText("totalLeads", totalLeads);
-  setText("followUps", followUps);
-  setText("openCases", openCases);
-  setText("pipelineOpps", pipelineOpps);
+  setText("followUpsToday", followUpsToday);
+  setText("overdueFollowUps", overdueFollowUps);
+  setText("averagePriorityScore", averagePriorityScore);
 }
 
 function setConnectionStatus(isConnected) {
@@ -928,9 +1102,72 @@ function getStoreId(lead) {
 }
 
 function getCoverageScore(lead) {
-  const photo = parseNumeric(getField(lead, ["Photo Coverage"]));
-  const desc = parseNumeric(getField(lead, ["Description Coverage"]));
+  const photo = normalizePercentValue(getField(lead, ["Photo Coverage"]));
+  const desc = normalizePercentValue(getField(lead, ["Description Coverage"]));
   return (photo + desc) / 2;
+}
+
+function getMerchantPriorityScore(lead) {
+  const stored = parseNumeric(getField(lead, ["Priority Score"]));
+
+  let heuristic = 0;
+
+  const gmv = parseNumeric(getField(lead, ["GMV"]));
+  heuristic += Math.min(gmv / 5000, 20);
+
+  if (isTruthyOpp(getField(lead, ["Promo Opp"]))) {
+    heuristic += 10;
+  }
+
+  if (isTruthyOpp(getField(lead, ["SI Opp"]))) {
+    heuristic += 10;
+  }
+
+  const nextFollowUp = getDateComparableValue(getField(lead, ["Next Follow-Up"]));
+  const today = getTodayDateString();
+
+  if (nextFollowUp && nextFollowUp < today) {
+    heuristic += 15;
+  } else if (nextFollowUp && nextFollowUp === today) {
+    heuristic += 10;
+  }
+
+  const lastActivityDate = getLatestActivityDateForStoreId(getStoreId(lead));
+  if (lastActivityDate) {
+    const daysSinceActivity = daysBetween(lastActivityDate, new Date());
+    if (daysSinceActivity >= 30) {
+      heuristic += 20;
+    } else if (daysSinceActivity >= 14) {
+      heuristic += 10;
+    }
+  } else {
+    heuristic += 10;
+  }
+
+  if (getCoverageScore(lead) < 80) {
+    heuristic += 10;
+  }
+
+  const pipelineStage = String(getField(lead, ["Pipeline Stage"])).trim();
+  if (pipelineStage && pipelineStage.toLowerCase() !== "closed won" && pipelineStage.toLowerCase() !== "closed lost") {
+    heuristic += 5;
+  }
+
+  return Math.max(Math.round(heuristic), stored || 0);
+}
+
+function isTruthyOpp(value) {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (!normalized) return false;
+  if (["yes", "y", "true", "1"].includes(normalized)) return true;
+  return parseNumeric(normalized) > 0;
+}
+
+function normalizePercentValue(value) {
+  if (value === null || value === undefined || value === "") return 0;
+  const num = Number(String(value).replace(/[%\s,]/g, ""));
+  if (!Number.isFinite(num)) return 0;
+  return num <= 1 ? num * 100 : num;
 }
 
 function parseNumeric(value) {
@@ -953,29 +1190,111 @@ function formatCoverage(value) {
 }
 
 function toDateInputValue(value) {
+  const date = parseFlexibleDate(value);
+  if (!date) return "";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatDisplayDate(value) {
   if (!value) return "";
+  const date = parseFlexibleDate(value);
+  if (!date) return String(value);
+  return date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+}
+
+function getDateComparableValue(value) {
+  const date = parseFlexibleDate(value);
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getTodayDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseFlexibleDate(value) {
+  if (!value) return null;
 
   if (value instanceof Date && !isNaN(value.getTime())) {
-    const year = value.getFullYear();
-    const month = String(value.getMonth() + 1).padStart(2, "0");
-    const day = String(value.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
-
-  const date = new Date(value);
-  if (!isNaN(date.getTime())) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
   }
 
   const str = String(value).trim();
+  if (!str) return null;
+
   if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-    return str;
+    const date = new Date(str + "T00:00:00");
+    return isNaN(date.getTime()) ? null : date;
   }
 
-  return "";
+  const date = new Date(str);
+  if (!isNaN(date.getTime())) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  const parts = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (parts) {
+    const month = Number(parts[1]) - 1;
+    const day = Number(parts[2]);
+    const year = Number(parts[3]);
+    const parsed = new Date(year, month, day);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  return null;
+}
+
+function daysBetween(startDate, endDate) {
+  if (!startDate || !endDate) return 0;
+  const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+  const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+  const diff = end.getTime() - start.getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+function getLatestActivityForStoreId(storeId) {
+  const latest = getLatestActivityObjectForStoreId(storeId);
+  if (!latest) return "No activity yet";
+
+  const type = getField(latest, ["Activity Type"]) || "Activity";
+  const timestamp = formatDisplayDate(getField(latest, ["Timestamp"])) || "Unknown date";
+  return `${type} • ${timestamp}`;
+}
+
+function getLatestActivityDateForStoreId(storeId) {
+  const latest = getLatestActivityObjectForStoreId(storeId);
+  if (!latest) return null;
+  return parseFlexibleDate(getField(latest, ["Timestamp"]));
+}
+
+function getLatestActivityObjectForStoreId(storeId) {
+  const matches = allActivities
+    .filter(function (activity) {
+      return String(getField(activity, ["Store ID", "Store Id"])) === String(storeId);
+    })
+    .slice()
+    .sort(function (a, b) {
+      const aDate = parseFlexibleDate(getField(a, ["Timestamp"])) || new Date(0);
+      const bDate = parseFlexibleDate(getField(b, ["Timestamp"])) || new Date(0);
+      return bDate.getTime() - aDate.getTime();
+    });
+
+  return matches.length ? matches[0] : null;
 }
 
 function getCurrentLocalDateTimeValue() {
