@@ -335,3 +335,39 @@ body{
         flex:1 1 100%;
     }
 }
+
+.lead-row{
+    cursor:pointer;
+}
+
+.lead-row:hover{
+    background:rgba(59,130,246,.10);
+}
+
+.merchant-drawer{
+    position:fixed;
+    top:0;
+    right:0;
+    width:min(480px, 92vw);
+    height:100vh;
+    background:var(--card);
+    border-left:1px solid var(--border);
+    z-index:3000;
+    transform:translateX(100%);
+    transition:transform .25s ease;
+    overflow:auto;
+    margin-top:0;
+    border-radius:0;
+}
+
+.merchant-drawer.open{
+    transform:translateX(0);
+}
+
+.drawer-body{
+    padding-bottom:30px;
+}
+
+.merchant-activity-item{
+    margin-bottom:12px;
+}
