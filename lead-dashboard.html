@@ -114,11 +114,29 @@
                     </div>
 
                     <h3>Add Activity</h3>
+
+                    <div class="quick-actions">
+                        <button type="button" class="btn btn-secondary quick-action-btn" data-template="quick-note">
+                            Quick Note
+                        </button>
+                        <button type="button" class="btn btn-secondary quick-action-btn" data-template="call">
+                            Call
+                        </button>
+                        <button type="button" class="btn btn-secondary quick-action-btn" data-template="email">
+                            Email
+                        </button>
+                    </div>
+
                     <div id="activityMerchantContext" class="drawer-card activity-context">
                         Select a merchant to add an activity.
                     </div>
 
                     <form id="activityForm" class="activity-form">
+                        <div class="activity-field">
+                            <label for="activityTimestamp">Activity Date / Time</label>
+                            <input type="datetime-local" id="activityTimestamp" readonly>
+                        </div>
+
                         <div class="activity-field">
                             <label for="activityType">Activity Type</label>
                             <select id="activityType" required>
