@@ -15,8 +15,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const leadManagementForm = document.getElementById("leadManagementForm");
   const leadTableContainer = document.getElementById("leadTableContainer");
   const quickActionButtons = document.querySelectorAll(".quick-action-btn");
-  const followUpContainer = document.getElementById("followUpContainer");
-  const topMerchantsContainer = document.getElementById("topMerchantsContainer");
+  const openFollowUpsBtn = document.getElementById("openFollowUpsBtn");
+  const openPriorityMerchantsBtn = document.getElementById("openPriorityMerchantsBtn");
+  const closeFollowUpModalBtn = document.getElementById("closeFollowUpModalBtn");
+  const followUpModalOverlay = document.getElementById("followUpModalOverlay");
 
   if (searchInput) {
     searchInput.addEventListener("input", applyFiltersAndSort);
@@ -58,28 +60,24 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  if (followUpContainer) {
-    followUpContainer.addEventListener("click", function (event) {
-      const button = event.target.closest(".merchant-link");
-      if (!button) return;
-
-      const storeId = button.dataset.storeId;
-      if (!storeId) return;
-
-      openMerchantDrawer(storeId);
+  if (openFollowUpsBtn) {
+    openFollowUpsBtn.addEventListener("click", function () {
+      openFollowUpModal("followups");
     });
   }
 
-  if (topMerchantsContainer) {
-    topMerchantsContainer.addEventListener("click", function (event) {
-      const button = event.target.closest(".merchant-link");
-      if (!button) return;
-
-      const storeId = button.dataset.storeId;
-      if (!storeId) return;
-
-      openMerchantDrawer(storeId);
+  if (openPriorityMerchantsBtn) {
+    openPriorityMerchantsBtn.addEventListener("click", function () {
+      openFollowUpModal("priority");
     });
+  }
+
+  if (closeFollowUpModalBtn) {
+    closeFollowUpModalBtn.addEventListener("click", closeFollowUpModal);
+  }
+
+  if (followUpModalOverlay) {
+    followUpModalOverlay.addEventListener("click", closeFollowUpModal);
   }
 
   quickActionButtons.forEach(function (button) {
@@ -115,7 +113,6 @@ function loadLeads() {
         setConnectionStatus(true);
         updateMetrics();
         applyFiltersAndSort();
-        renderFollowUpCommandCenter();
 
         if (currentStoreId) {
           const refreshedLead = allLeads.find(function (item) {
@@ -157,7 +154,7 @@ function loadActivities() {
         allActivities = Array.isArray(response.data) ? response.data : [];
         console.log("Activities loaded:", allActivities);
         renderActivities(allActivities);
-        renderFollowUpCommandCenter();
+        updateMetrics();
         resolve(allActivities);
       } finally {
         delete window[callbackName];
@@ -190,7 +187,9 @@ function applyFiltersAndSort() {
       businessId,
       rxName,
       parentName
-    ].join(" ").toLowerCase();
+    ]
+      .join(" ")
+      .toLowerCase();
 
     return searchableText.includes(searchTerm);
   });
@@ -346,141 +345,147 @@ function renderActivities(activities) {
   `;
 }
 
-function renderFollowUpCommandCenter() {
-  renderFollowUpQueue();
-  renderTopMerchants();
-  updateMetrics();
+function openFollowUpModal(mode) {
+  const modal = document.getElementById("followUpModal");
+  const title = document.getElementById("followUpModalTitle");
+  const subtitle = document.getElementById("followUpModalSubtitle");
+  const body = document.getElementById("followUpModalBody");
+
+  if (!modal || !title || !subtitle || !body) return;
+
+  let items = [];
+  let modalTitle = "";
+  let modalSubtitle = "";
+
+  if (mode === "followups") {
+    modalTitle = "Today's Follow-Ups";
+    modalSubtitle = "Oldest follow-up first";
+    items = getFollowUpQueueItems();
+  } else {
+    modalTitle = "Top Merchants To Contact";
+    modalSubtitle = "Ranked by urgency and opportunity";
+    items = getTopMerchantItems();
+  }
+
+  title.textContent = modalTitle;
+  subtitle.textContent = modalSubtitle;
+
+  if (!items.length) {
+    body.innerHTML = `<div class="followup-modal-empty">No records found.</div>`;
+  } else {
+    body.innerHTML = `
+      <div class="followup-modal-list">
+        ${items.map(function (lead) {
+          return renderFollowUpModalItem(lead, mode);
+        }).join("")}
+      </div>
+    `;
+  }
+
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
 }
 
-function renderFollowUpQueue() {
-  const container = document.getElementById("followUpContainer");
-  if (!container) return;
+function closeFollowUpModal() {
+  const modal = document.getElementById("followUpModal");
+  if (!modal) return;
 
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function getFollowUpQueueItems() {
   const today = getTodayDateString();
 
-  const queue = allLeads
+  return allLeads
     .map(function (lead) {
+      const dueDate = getDateComparableValue(getField(lead, ["Next Follow-Up"]));
+      const storeId = getStoreId(lead);
+
       return Object.assign({}, lead, {
-        __followUpDate: getDateComparableValue(getField(lead, ["Next Follow-Up"]))
+        __storeId: storeId,
+        __dueDate: dueDate,
+        __statusLabel: dueDate && dueDate < today ? "OVERDUE" : "DUE TODAY"
       });
     })
     .filter(function (lead) {
-      return lead.__followUpDate && (lead.__followUpDate <= today);
+      return lead.__dueDate && lead.__dueDate <= today;
     })
     .sort(function (a, b) {
-      return a.__followUpDate.localeCompare(b.__followUpDate);
+      return a.__dueDate.localeCompare(b.__dueDate);
     });
-
-  if (queue.length === 0) {
-    container.innerHTML = `<div class="empty-state">No follow-ups due today.</div>`;
-    return;
-  }
-
-  const html = queue
-    .map(function (lead) {
-      const storeId = getStoreId(lead);
-      const businessName = getField(lead, ["Business Name"]);
-      const owner = getField(lead, ["Owner"]);
-      const nextFollowUp = getField(lead, ["Next Follow-Up"]);
-      const leadStatus = getField(lead, ["Lead Status"]);
-      const lastActivity = getLatestActivityForStoreId(storeId);
-      const statusLabel = lead.__followUpDate < today ? "OVERDUE" : "DUE TODAY";
-
-      return `
-        <div class="queue-item">
-          <button type="button" class="merchant-link" data-store-id="${escapeHtml(storeId)}">
-            ${escapeHtml(businessName)}
-          </button>
-          <div class="queue-meta">
-            Store ID: ${escapeHtml(storeId)} | Owner: ${escapeHtml(owner)}
-          </div>
-          <div class="queue-meta">
-            Next Follow-Up: ${escapeHtml(formatDisplayDate(nextFollowUp))}
-          </div>
-          <div class="queue-meta">
-            Last Activity: ${escapeHtml(lastActivity)}
-          </div>
-          <div class="queue-meta">
-            Lead Status: ${escapeHtml(leadStatus)}
-          </div>
-          <span class="queue-badge">${escapeHtml(statusLabel)}</span>
-        </div>
-      `;
-    })
-    .join("");
-
-  container.innerHTML = `<div class="queue-list">${html}</div>`;
 }
 
-function renderTopMerchants() {
-  const container = document.getElementById("topMerchantsContainer");
-  if (!container) return;
-
-  const topMerchants = allLeads
+function getTopMerchantItems() {
+  return allLeads
     .map(function (lead) {
       return Object.assign({}, lead, {
+        __storeId: getStoreId(lead),
         __priority: getMerchantPriorityScore(lead),
         __gmv: parseNumeric(getField(lead, ["GMV"]))
       });
     })
     .sort(function (a, b) {
-      if (b.__priority !== a.__priority) {
-        return b.__priority - a.__priority;
-      }
-      if (b.__gmv !== a.__gmv) {
-        return b.__gmv - a.__gmv;
-      }
+      if (b.__priority !== a.__priority) return b.__priority - a.__priority;
+      if (b.__gmv !== a.__gmv) return b.__gmv - a.__gmv;
+
       const aName = String(getField(a, ["Business Name"]) || "").toLowerCase();
       const bName = String(getField(b, ["Business Name"]) || "").toLowerCase();
       return aName.localeCompare(bName);
     })
     .slice(0, 10);
+}
 
-  if (topMerchants.length === 0) {
-    container.innerHTML = `<div class="empty-state">No priority merchants found.</div>`;
-    return;
+function renderFollowUpModalItem(lead, mode) {
+  const storeId = lead.__storeId || getStoreId(lead);
+  const businessName = getField(lead, ["Business Name"]);
+  const owner = getField(lead, ["Owner"]);
+  const nextFollowUp = formatDisplayDate(getField(lead, ["Next Follow-Up"]));
+  const leadStatus = getField(lead, ["Lead Status"]);
+  const priority = getMerchantPriorityScore(lead);
+  const lastActivity = getLatestActivityForStoreId(storeId);
+  const badgeText = mode === "followups"
+    ? (lead.__statusLabel || "DUE")
+    : `PRIORITY ${String(priority)}`;
+
+  return `
+    <div class="followup-modal-item">
+      <button type="button" class="merchant-link" data-store-id="${escapeHtml(storeId)}">
+        ${escapeHtml(businessName)}
+      </button>
+
+      <div class="item-meta">Store ID: ${escapeHtml(storeId)} | Owner: ${escapeHtml(owner)}</div>
+      <div class="item-meta">Next Follow-Up: ${escapeHtml(nextFollowUp)}</div>
+      <div class="item-meta">Last Activity: ${escapeHtml(lastActivity)}</div>
+      <div class="item-meta">Lead Status: ${escapeHtml(leadStatus)}</div>
+      <span class="item-badge">${escapeHtml(badgeText)}</span>
+    </div>
+  `;
+}
+
+function renderCurrentMerchantView(lead) {
+  const drawerTitle = document.getElementById("drawerTitle");
+  const drawerSubtitle = document.getElementById("drawerSubtitle");
+  const merchantOverview = document.getElementById("merchantOverview");
+  const activityMerchantContext = document.getElementById("activityMerchantContext");
+
+  if (drawerTitle) {
+    drawerTitle.textContent = getField(lead, ["Business Name"]) || "Merchant 360";
   }
 
-  const html = topMerchants
-    .map(function (lead) {
-      const storeId = getStoreId(lead);
-      const businessName = getField(lead, ["Business Name"]);
-      const leadStatus = getField(lead, ["Lead Status"]);
-      const owner = getField(lead, ["Owner"]);
-      const nextFollowUp = getField(lead, ["Next Follow-Up"]);
-      const lastActivity = getLatestActivityForStoreId(storeId);
-      const gmv = getField(lead, ["GMV"]);
-      const priority = getMerchantPriorityScore(lead);
-      const promoOpp = getField(lead, ["Promo Opp"]);
-      const siOpp = getField(lead, ["SI Opp"]);
+  if (drawerSubtitle) {
+    drawerSubtitle.textContent = `Store ID: ${getStoreId(lead)}`;
+  }
 
-      return `
-        <div class="queue-item">
-          <button type="button" class="merchant-link" data-store-id="${escapeHtml(storeId)}">
-            ${escapeHtml(businessName)}
-          </button>
-          <div class="queue-meta">
-            Store ID: ${escapeHtml(storeId)} | Owner: ${escapeHtml(owner)}
-          </div>
-          <div class="queue-meta">
-            GMV: ${escapeHtml(gmv)} | Priority Score: ${escapeHtml(priority)}
-          </div>
-          <div class="queue-meta">
-            Next Follow-Up: ${escapeHtml(formatDisplayDate(nextFollowUp))}
-          </div>
-          <div class="queue-meta">
-            Last Activity: ${escapeHtml(lastActivity)}
-          </div>
-          <div class="queue-meta">
-            Lead Status: ${escapeHtml(leadStatus)} | Promo Opp: ${escapeHtml(promoOpp)} | SI Opp: ${escapeHtml(siOpp)}
-          </div>
-          <span class="queue-badge">PRIORITY ${escapeHtml(String(priority))}</span>
-        </div>
-      `;
-    })
-    .join("");
+  if (merchantOverview) {
+    merchantOverview.innerHTML = buildMerchantOverviewHtml(lead);
+  }
 
-  container.innerHTML = `<div class="queue-list">${html}</div>`;
+  if (activityMerchantContext) {
+    activityMerchantContext.innerHTML = buildActivityContextHtml(lead);
+  }
+
+  syncLeadManagementFormWithLead(lead);
 }
 
 function openMerchantDrawer(storeId) {
@@ -512,31 +517,6 @@ function openMerchantDrawer(storeId) {
   }
 
   loadMerchantActivities(storeId);
-}
-
-function renderCurrentMerchantView(lead) {
-  const drawerTitle = document.getElementById("drawerTitle");
-  const drawerSubtitle = document.getElementById("drawerSubtitle");
-  const merchantOverview = document.getElementById("merchantOverview");
-  const activityMerchantContext = document.getElementById("activityMerchantContext");
-
-  if (drawerTitle) {
-    drawerTitle.textContent = getField(lead, ["Business Name"]) || "Merchant 360";
-  }
-
-  if (drawerSubtitle) {
-    drawerSubtitle.textContent = `Store ID: ${getStoreId(lead)}`;
-  }
-
-  if (merchantOverview) {
-    merchantOverview.innerHTML = buildMerchantOverviewHtml(lead);
-  }
-
-  if (activityMerchantContext) {
-    activityMerchantContext.innerHTML = buildActivityContextHtml(lead);
-  }
-
-  syncLeadManagementFormWithLead(lead);
 }
 
 function syncActivityFormWithLead(lead) {
@@ -793,7 +773,7 @@ async function refreshAfterActivitySave(storeId) {
     }
   }
 
-  renderFollowUpCommandCenter();
+  updateMetrics();
 }
 
 function postActivity(payload) {
@@ -1109,7 +1089,6 @@ function getCoverageScore(lead) {
 
 function getMerchantPriorityScore(lead) {
   const stored = parseNumeric(getField(lead, ["Priority Score"]));
-
   let heuristic = 0;
 
   const gmv = parseNumeric(getField(lead, ["GMV"]));
@@ -1149,7 +1128,11 @@ function getMerchantPriorityScore(lead) {
   }
 
   const pipelineStage = String(getField(lead, ["Pipeline Stage"])).trim();
-  if (pipelineStage && pipelineStage.toLowerCase() !== "closed won" && pipelineStage.toLowerCase() !== "closed lost") {
+  if (
+    pipelineStage &&
+    pipelineStage.toLowerCase() !== "closed won" &&
+    pipelineStage.toLowerCase() !== "closed lost"
+  ) {
     heuristic += 5;
   }
 
@@ -1295,6 +1278,10 @@ function getLatestActivityObjectForStoreId(storeId) {
     });
 
   return matches.length ? matches[0] : null;
+}
+
+function renderFollowUpCommandCenter() {
+  updateMetrics();
 }
 
 function getCurrentLocalDateTimeValue() {
