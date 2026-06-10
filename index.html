@@ -518,6 +518,11 @@
                         <p>Database logs will map automatically as soon as synchronization is complete.</p>
                     </div>
                 </div>
+                <div style="text-align:center; margin-top: 12px;">
+                    <button type="button" onclick="openAllRecentInputsModal()" style="width:auto; background:none; border:none; color: var(--accent-color); font-size: 13px; padding: 0; margin: 0; text-decoration: underline; cursor: pointer;">
+                        See all recent inputs
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -965,7 +970,7 @@
         });
 
         mergedList.sort((a, b) => new Date(b.time) - new Date(a.time));
-        const limitedList = mergedList.slice(0, 8);
+        const limitedList = mergedList.slice(0, 5);
 
         if (limitedList.length === 0) {
             streamContainer.innerHTML = `
@@ -989,6 +994,14 @@
 
     function openDataModal(category) {
         currentModalCategory = category;
+        document.getElementById('modalTitle').textContent = 'Database Engine Log Query';
+        document.getElementById('dataModal').style.display = "flex";
+        resetModalFilters();
+    }
+
+    function openAllRecentInputsModal() {
+        currentModalCategory = 'allRecentInputs';
+        document.getElementById('modalTitle').textContent = 'All Recent Inputs';
         document.getElementById('dataModal').style.display = "flex";
         resetModalFilters();
     }
@@ -1012,16 +1025,28 @@
         const startVal = document.getElementById('filterStartDate').value;
         const endVal = document.getElementById('filterEndDate').value;
 
-        const targetTab = sheetTabMapping[currentModalCategory];
-        let records = globalHistoricalDatabase[targetTab] || [];
+        let records = [];
         let isHistorical = true;
+
+        if (currentModalCategory === 'allRecentInputs') {
+            Object.keys(sheetTabMapping).forEach(catKey => {
+                const tabName = sheetTabMapping[catKey];
+                const tabRecords = globalHistoricalDatabase[tabName] || [];
+                tabRecords.forEach(r => {
+                    records.push({ ...r, __sourceCategory: catKey });
+                });
+            });
+        } else {
+            const targetTab = sheetTabMapping[currentModalCategory];
+            records = globalHistoricalDatabase[targetTab] || [];
+        }
 
         if (records.length === 0) {
             records = localSessionHistory[currentModalCategory] || [];
             isHistorical = false;
         }
 
-        const filtered = records.filter(item => {
+        let filtered = records.filter(item => {
             const storeName = (item["Store Name"] || item["Store"] || item["Business Name"] || item["storeName"] || item["businessName"] || "").toString().toLowerCase();
             const dateStr = item["Timestamp"] || item["Date Logged"] || item["Date"] || item["loggedAt"] || "";
 
@@ -1032,6 +1057,12 @@
                 if (endVal && ms > new Date(endVal + "T23:59:59").getTime()) return false;
             }
             return true;
+        });
+
+        filtered = filtered.sort((a, b) => {
+            const aTime = new Date(a["Timestamp"] || a["Date Logged"] || a["Date"] || a["loggedAt"] || 0).getTime();
+            const bTime = new Date(b["Timestamp"] || b["Date Logged"] || b["Date"] || b["loggedAt"] || 0).getTime();
+            return bTime - aTime;
         });
 
         if (filtered.length === 0) {
@@ -1045,12 +1076,13 @@
             rowDiv.id = `row-wrapper-${item["ID"] || 'temp'}`;
 
             const timeSource = item["Timestamp"] || item["Date Logged"] || item["Date"] || item["loggedAt"];
-            const rawTime = timeSource ? new Date(timeSource).toLocaleDateString() + " " + new Date(timeSource).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "N/A";
+            const rawTime = timeSource ? new Date(timeSource).toLocaleDateString() + " " + new Date(timeSource).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "N/A";
             const name = item["Store Name"] || item["Store"] || item["Business Name"] || item["storeName"] || item["businessName"] || "Merchant Record";
+            const sourceCategory = item.__sourceCategory || currentModalCategory;
 
             let gridHtml = `<div class="metric-item-pill-grid" id="view-pillbox-${item["ID"]}">`;
             Object.keys(item).forEach(key => {
-                if (!["ID", "Timestamp", "loggedAt", "formSource"].includes(key)) {
+                if(!["ID", "Timestamp", "loggedAt", "formSource", "__sourceCategory"].includes(key)) {
                     gridHtml += `<div class="metric-pill"><strong>${key}</strong><span>${item[key]}</span></div>`;
                 }
             });
@@ -1058,7 +1090,7 @@
 
             let editFormHtml = `<div class="inline-editing-form" id="edit-formbox-${item["ID"]}" style="display:none; margin-top:10px;">`;
             Object.keys(item).forEach(key => {
-                if (!["ID", "Timestamp", "loggedAt", "formSource"].includes(key)) {
+                if(!["ID", "Timestamp", "loggedAt", "formSource", "__sourceCategory"].includes(key)) {
                     editFormHtml += `
                         <div style="margin-bottom:10px;">
                             <label style="font-size:10px; color:var(--accent-color);">${key}</label>
@@ -1074,7 +1106,7 @@
             </div>`;
 
             rowDiv.innerHTML = `
-                <span class="row-meta-tag">${item["ID"] || 'PENDING'} — ${rawTime} ${!isHistorical ? '[Local Backup Session]' : '[Sheet Database]'}</span>
+                <span class="row-meta-tag">${item["ID"] || 'PENDING'} — ${rawTime} ${sourceCategory ? '[' + sourceCategory + ']' : ''} ${!isHistorical ? '[Local Backup Session]' : '[Sheet Database]'}</span>
                 <strong style="font-size:16px;">${name}</strong>
                 ${gridHtml}
                 ${editFormHtml}
