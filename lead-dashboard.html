@@ -105,6 +105,59 @@
                     <div id="merchantOverview" class="drawer-card">
                         No merchant selected.
                     </div>
+
+                    <h3 style="margin-top:16px;">Lead Management</h3>
+                    <form id="leadManagementForm" class="activity-form">
+                        <div class="activity-field">
+                            <label for="leadStatus">Lead Status</label>
+                            <select id="leadStatus" required>
+                                <option value="">Select lead status</option>
+                                <option value="New">New</option>
+                                <option value="Contacted">Contacted</option>
+                                <option value="Follow Up Needed">Follow Up Needed</option>
+                                <option value="Interested">Interested</option>
+                                <option value="Proposal Sent">Proposal Sent</option>
+                                <option value="Negotiating">Negotiating</option>
+                                <option value="Closed Won">Closed Won</option>
+                                <option value="Closed Lost">Closed Lost</option>
+                            </select>
+                        </div>
+
+                        <div class="activity-field">
+                            <label for="leadOwner">Owner</label>
+                            <input type="text" id="leadOwner" placeholder="Esteban Golfin">
+                        </div>
+
+                        <div class="activity-field">
+                            <label for="leadNextFollowUp">Next Follow-Up</label>
+                            <input type="date" id="leadNextFollowUp">
+                        </div>
+
+                        <div class="activity-field">
+                            <label for="leadPriorityScore">Priority Score</label>
+                            <input type="number" id="leadPriorityScore" min="0" step="1" placeholder="0">
+                        </div>
+
+                        <div class="activity-field">
+                            <label for="leadPipelineStage">Pipeline Stage</label>
+                            <select id="leadPipelineStage" required>
+                                <option value="">Select pipeline stage</option>
+                                <option value="Lead">Lead</option>
+                                <option value="Qualified">Qualified</option>
+                                <option value="Discovery">Discovery</option>
+                                <option value="Proposal">Proposal</option>
+                                <option value="Negotiation">Negotiation</option>
+                                <option value="Closed Won">Closed Won</option>
+                                <option value="Closed Lost">Closed Lost</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" id="leadSaveBtn" class="btn btn-primary">
+                            Save Lead Updates
+                        </button>
+
+                        <div id="leadUpdateStatusMessage" class="form-status"></div>
+                    </form>
                 </div>
 
                 <div class="drawer-section drawer-stack">
