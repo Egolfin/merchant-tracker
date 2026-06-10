@@ -603,3 +603,105 @@ body{
 .merchant-activity-item{
     margin-bottom:12px;
 }
+
+.drawer-section{
+    margin-bottom:20px;
+}
+
+.drawer-section h3{
+    margin:0 0 12px;
+    font-size:16px;
+}
+
+.drawer-stack{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+}
+
+.quick-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.quick-action-btn{
+    flex:1 1 120px;
+}
+
+.activity-context{
+    font-size:13px;
+    line-height:1.6;
+}
+
+.activity-form{
+    display:grid;
+    gap:14px;
+}
+
+.activity-field{
+    display:grid;
+    gap:6px;
+}
+
+.activity-field label{
+    font-size:13px;
+    font-weight:700;
+    color:var(--text);
+}
+
+.activity-field input,
+.activity-field select,
+.activity-field textarea{
+    width:100%;
+    padding:12px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#0f172a;
+    color:var(--text);
+    outline:none;
+}
+
+.activity-field textarea{
+    min-height:110px;
+    resize:vertical;
+}
+
+.form-status{
+    min-height:18px;
+    font-size:13px;
+    color:var(--muted);
+}
+
+.form-status.error{
+    color:#fca5a5;
+}
+
+#leadSaveBtn,
+#activitySaveBtn{
+    width:100%;
+}
+
+.merchant-activity-item{
+    margin-bottom:12px;
+}
+
+.merchant-drawer{
+    position:fixed;
+    top:20px;
+    right:20px;
+    bottom:20px;
+    width:min(720px, 92vw);
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    z-index:9999;
+    transform:translateX(110%);
+    transition:transform .25s ease;
+    overflow:auto;
+    margin-top:0;
+}
+
+.merchant-drawer.open{
+    transform:translateX(0);
+}
