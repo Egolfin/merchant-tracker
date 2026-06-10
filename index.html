@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- 1) Page metadata and mobile behavior -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Merchant Portal v3.0 - Live Sync Edition</title>
-    
     <link rel="icon" type="image/png" href="https://i.imgur.com/VcJTtbD.png">
-    
+
+    <!-- 2) Visual design and layout -->
     <style>
         :root {
             --bg-color: #0f1115;
@@ -113,17 +114,10 @@
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
         }
 
-        .form-section {
-            display: none;
-        }
+        .form-section { display: none; }
+        .form-section.active { display: block; }
 
-        .form-section.active {
-            display: block;
-        }
-
-        .form-group {
-            margin-bottom: 24px;
-        }
+        .form-group { margin-bottom: 24px; }
 
         .conditional-fields {
             display: none;
@@ -172,18 +166,8 @@
             font-family: inherit;
         }
 
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .grid-3 {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 16px;
-            align-items: end;
-        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px; align-items: end; }
 
         @media (max-width: 768px) {
             .grid-2, .grid-3 {
@@ -219,7 +203,6 @@
             display: none;
         }
 
-        /* ================= DASHBOARD STYLES ================= */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -328,7 +311,6 @@
         .badge.case { background: rgba(239, 68, 68, 0.15); color: #f87171; }
         .badge.opp { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
 
-        /* ================= MODAL INTERFACE OVERLAY FILTERS ================= */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -418,7 +400,14 @@
             border: 1px solid var(--border-color);
         }
 
-        .metric-pill strong { color: var(--text-muted); font-weight: 500; font-size: 11px; display:block; text-transform: uppercase; margin-bottom: 2px;}
+        .metric-pill strong {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 11px;
+            display:block;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
         
         .mutation-btn-group {
             display: flex;
@@ -450,6 +439,7 @@
 </head>
 <body>
 
+<!-- 3) Main tab navigation -->
 <nav class="tab-navigation">
     <div class="tab active" onclick="switchTab(event, 'homeSection')">🏠 Home Dashboard</div>
     <div class="tab" onclick="switchTab(event, 'callsSection')">Call Follow Up</div>
@@ -464,6 +454,7 @@
 <div class="container">
     <div class="form-card">
         
+        <!-- 4) Dashboard area -->
         <div id="homeSection" class="form-section active">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" alt="Merchant Portal Logo" class="app-logo">
@@ -528,6 +519,7 @@
             </div>
         </div>
         
+        <!-- 5) Call log form -->
         <div id="callsSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
@@ -581,6 +573,7 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- 6) Photos Added form -->
         <div id="photosAddedSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
@@ -606,6 +599,7 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- 7) Videos Uploaded form -->
         <div id="videosUploadedSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
@@ -621,6 +615,7 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- 8) Approvals form -->
         <div id="approvalsSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
@@ -648,6 +643,7 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- 9) Photoshoot tracker form -->
         <div id="photoshootSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
@@ -685,6 +681,7 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- 10) Case tracker form -->
         <div id="caseTrackerSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
@@ -728,6 +725,7 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- 11) Opportunities form -->
         <div id="opportunitiesSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
@@ -778,6 +776,7 @@
     </div>
 </div>
 
+<!-- 12) Record modal for viewing and editing rows -->
 <div id="dataModal" class="modal-overlay" onclick="closeDataModal(event)">
     <div class="modal-window" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -810,11 +809,11 @@
     </div>
 </div>
 
+<!-- 13) JavaScript logic: syncing, form submission, edit/delete, dashboard refresh -->
 <script>
     const WEB_APP_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbwh7GddixjGsa8F1WHE45UZ7JmR4wZBAHrEcks8XUan-2PnwI0G-pnbQ5vX62OKtggAJQ/exec";
     
     let currentModalCategory = "";
-    
     const sessionMetrics = { calls: 0, photosAdded: 0, videosUploaded: 0, contentApprovals: 0, photoshootTracker: 0, caseTracker: 0, opportunities: 0 };
     const localSessionHistory = { calls: [], photosAdded: [], videosUploaded: [], contentApprovals: [], photoshootTracker: [], caseTracker: [], opportunities: [] };
     let globalHistoricalDatabase = {}; 
@@ -843,34 +842,90 @@
         else { block.style.display = "none"; inputs.forEach(i => { i.required = false; i.value = ""; }); }
     }
 
+    function normalizeDatabasePayload(response) {
+        if (!response) throw new Error("No response returned from Apps Script.");
+        if (response.status === "error" || response.error) throw new Error(response.message || response.error);
+        return response.data || response;
+    }
+
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function postToAppsScript(payload) {
+        const body = new URLSearchParams();
+        body.append("payload", JSON.stringify(payload));
+
+        return fetch(WEB_APP_URL, {
+            method: "POST",
+            mode: "no-cors",
+            credentials: "include",
+            body: body
+        });
+    }
+
     function syncGlobalHistory() {
-        const syncBtn = document.getElementById('syncDatabaseBtn');
-        syncBtn.textContent = "Connecting to Sheets Engine Data Stream...";
-        syncBtn.disabled = true;
+        return syncGlobalHistoryAsync().catch(err => {
+            console.error(err);
+            const syncBtn = document.getElementById('syncDatabaseBtn');
+            if (syncBtn) {
+                syncBtn.textContent = "✕ Sync Error: " + err.message;
+                syncBtn.style.color = "var(--danger-color)";
+                syncBtn.disabled = false;
+            }
+        });
+    }
 
-        const callbackName = 'doorDashCallback_' + Math.round(100000 * Math.random());
-        
-        window[callbackName] = function(data) {
-            globalHistoricalDatabase = data;
-            syncBtn.textContent = "✓ Master Sheets Linked Real-Time";
-            syncBtn.style.color = "var(--success-color)";
-            syncBtn.disabled = false;
-            
-            recalculateDashboardCounters();
-            buildActivityStreamFromHistory();
-            
-            delete window[callbackName];
-            document.getElementById('syncScriptTag')?.remove();
-        };
+    function syncGlobalHistoryAsync() {
+        return new Promise((resolve, reject) => {
+            const syncBtn = document.getElementById('syncDatabaseBtn');
+            if (syncBtn) {
+                syncBtn.textContent = "Connecting to Sheets Engine Data Stream...";
+                syncBtn.disabled = true;
+            }
 
-        const script = document.createElement('script');
-        script.id = 'syncScriptTag';
-        script.src = WEB_APP_URL + (WEB_APP_URL.includes('?') ? '&' : '?') + 'callback=' + callbackName;
-        script.onerror = function() {
-            syncBtn.textContent = "✕ Database Sync Timed Out. Retrying...";
-            syncBtn.disabled = false;
-        };
-        document.body.appendChild(script);
+            const callbackName = 'doorDashCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+            const script = document.createElement('script');
+            const timeout = setTimeout(() => {
+                cleanup();
+                reject(new Error("Database sync timed out."));
+            }, 15000);
+
+            function cleanup() {
+                clearTimeout(timeout);
+                delete window[callbackName];
+                if (script.parentNode) script.parentNode.removeChild(script);
+                if (syncBtn) syncBtn.disabled = false;
+            }
+
+            window[callbackName] = function(response) {
+                try {
+                    const db = normalizeDatabasePayload(response);
+                    globalHistoricalDatabase = db || {};
+                    recalculateDashboardCounters();
+                    buildActivityStreamFromHistory();
+
+                    if (syncBtn) {
+                        syncBtn.textContent = "✓ Master Sheets Linked Real-Time";
+                        syncBtn.style.color = "var(--success-color)";
+                    }
+
+                    cleanup();
+                    resolve(globalHistoricalDatabase);
+                } catch (err) {
+                    cleanup();
+                    reject(err);
+                }
+            };
+
+            script.onerror = function() {
+                cleanup();
+                reject(new Error("Could not load Apps Script JSONP endpoint."));
+            };
+
+            script.src = WEB_APP_URL + (WEB_APP_URL.includes('?') ? '&' : '?') + 'callback=' + encodeURIComponent(callbackName) + '&t=' + Date.now();
+            document.body.appendChild(script);
+        });
     }
 
     function recalculateDashboardCounters() {
@@ -933,9 +988,7 @@
             const activityItem = document.createElement('div');
             activityItem.className = 'activity-log-item';
             const displayTime = new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
             let displayBadge = item.category === 'photosAdded' ? 'photo' : item.category === 'videosUploaded' ? 'video' : item.category === 'contentApprovals' ? 'opp' : item.category === 'caseTracker' ? 'case' : 'call';
-            
             activityItem.innerHTML = `<div class="activity-details"><span class="badge ${displayBadge}">${item.id || item.category}</span> Verified tracking for <span>${item.store}</span></div><div class="activity-time">${displayTime}</div>`;
             streamContainer.appendChild(activityItem);
         });
@@ -945,6 +998,10 @@
         currentModalCategory = category;
         document.getElementById('dataModal').style.display = "flex";
         resetModalFilters();
+    }
+
+    function closeDataModal(e) {
+        document.getElementById('dataModal').style.display = 'none';
     }
 
     function resetModalFilters() {
@@ -974,7 +1031,6 @@
         let filtered = records.filter(item => {
             const storeName = (item["Store Name"] || item["Store"] || item["Business Name"] || item["storeName"] || item["businessName"] || "").toString().toLowerCase();
             const dateStr = item["Timestamp"] || item["Date Logged"] || item["Date"] || item["loggedAt"] || "";
-            
             if (searchTerm && !storeName.includes(searchTerm)) return false;
             if (dateStr) {
                 const ms = new Date(dateStr).getTime();
@@ -994,7 +1050,8 @@
             rowDiv.className = 'modal-data-row';
             rowDiv.id = `row-wrapper-${item["ID"] || 'temp'}`;
             
-            const rawTime = item["Timestamp"] || item["Date Logged"] || item["Date"] || item["loggedAt"] ? new Date(item["Timestamp"] || item["Date Logged"] || item["Date"] || item["loggedAt"]).toLocaleDateString() + " " + new Date(item["Timestamp"] || item["Date Logged"] || item["Date"] || item["loggedAt"]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "N/A";
+            const timeSource = item["Timestamp"] || item["Date Logged"] || item["Date"] || item["loggedAt"];
+            const rawTime = timeSource ? new Date(timeSource).toLocaleDateString() + " " + new Date(timeSource).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "N/A";
             const name = item["Store Name"] || item["Store"] || item["Business Name"] || item["storeName"] || item["businessName"] || "Merchant Record";
 
             let gridHtml = `<div class="metric-item-pill-grid" id="view-pillbox-${item["ID"]}">`;
@@ -1031,7 +1088,6 @@
                     <button class="mutation-inline-btn edit-trigger" onclick="toggleInlineEditLayout('${item["ID"]}', true)">✏️ Edit Row</button>
                     <button class="mutation-inline-btn delete-trigger" onclick="executeRowDeletionMutation('${item["ID"]}')">🗑️ Erase Record</button>
                 </div>`;
-                
             body.appendChild(rowDiv);
         });
     }
@@ -1042,7 +1098,7 @@
         document.getElementById(`btn-group-${id}`).style.display = showForm ? "none" : "flex";
     }
 
-    function submitInlineEditMutation(recordId) {
+    async function submitInlineEditMutation(recordId) {
         const formBox = document.getElementById(`edit-formbox-${recordId}`);
         const inputs = formBox.querySelectorAll('input[data-field-key]');
         const updatedFields = {};
@@ -1057,31 +1113,24 @@
         const targetRow = document.getElementById(`row-wrapper-${recordId}`);
         targetRow.style.opacity = "0.4";
 
-        fetch(WEB_APP_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        })
-        .then(() => {
-            let localTargetArray = globalHistoricalDatabase[targetTab] || [];
-            let itemIdx = localTargetArray.findIndex(r => r["ID"] === recordId);
-            if(itemIdx !== -1) {
-                Object.keys(updatedFields).forEach(k => { localTargetArray[itemIdx][k] = updatedFields[k]; });
-            }
+        try {
+            await postToAppsScript(payload);
+            await delay(1000);
+            await syncGlobalHistoryAsync();
+
             targetRow.style.opacity = "1";
             toggleInlineEditLayout(recordId, false);
             applyActiveModalFilters();
             recalculateDashboardCounters();
-        })
-        .catch(err => {
-            alert("Network timeout. Revision failed.");
+            buildActivityStreamFromHistory();
+        } catch (err) {
+            alert("Revision failed. Sync error.");
             targetRow.style.opacity = "1";
             console.error(err);
-        });
+        }
     }
 
-    function executeRowDeletionMutation(recordId) {
+    async function executeRowDeletionMutation(recordId) {
         if (!confirm(`⚠️ Confirm Deletion:\nAre you sure you want to permanently erase record ${recordId} from Google Sheets?`)) return;
 
         const targetTab = sheetTabMapping[currentModalCategory];
@@ -1090,84 +1139,124 @@
         const targetRow = document.getElementById(`row-wrapper-${recordId}`);
         targetRow.style.opacity = "0.3";
 
-        fetch(WEB_APP_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        })
-        .then(() => {
-            let localTargetArray = globalHistoricalDatabase[targetTab] || [];
-            globalHistoricalDatabase[targetTab] = localTargetArray.filter(r => r["ID"] !== recordId);
+        try {
+            await postToAppsScript(payload);
+            await delay(1000);
+            await syncGlobalHistoryAsync();
+
             targetRow.remove();
             applyActiveModalFilters();
             recalculateDashboardCounters();
             buildActivityStreamFromHistory();
-        })
-        .catch(err => {
+        } catch (err) {
             alert("Erase failed. Sync error.");
             targetRow.style.opacity = "1";
             console.error(err);
-        });
+        }
     }
 
-    function handleFormSubmit(e, actionType) {
+    async function handleFormSubmit(e, actionType) {
         e.preventDefault();
+
         const form = e.target;
         const btn = form.querySelector('button[type="submit"]');
         const status = form.nextElementSibling;
-        
-        btn.disabled = true;
-        btn.textContent = "Writing Row to Live Sheets...";
-        status.style.display = "none";
+        const originalBtnText = btn.textContent;
+        const targetTab = sheetTabMapping[actionType];
 
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-        data.formSource = actionType;
+        try {
+            btn.disabled = true;
+            btn.textContent = "Checking Sheet state...";
+            status.style.display = "none";
 
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(() => {
+            const beforeDb = await syncGlobalHistoryAsync();
+            const beforeCount = ((beforeDb && beforeDb[targetTab]) || []).length;
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.formSource = actionType;
+
+            const submittedMerchantName = (data.storeName || data.businessName || "").toString().trim().toLowerCase();
+
+            btn.textContent = "Writing Row to Live Sheets...";
+            await postToAppsScript(data);
+
+            btn.textContent = "Confirming Sheet Write...";
+            await delay(1500);
+
+            const afterDb = await syncGlobalHistoryAsync();
+            const afterRows = (afterDb && afterDb[targetTab]) || [];
+            const afterCount = afterRows.length;
+
+            const confirmedByCount = afterCount > beforeCount;
+            const confirmedByMerchant = afterRows.some(row => {
+                const rowMerchant = (
+                    row["Store Name"] ||
+                    row["Business Name"] ||
+                    row["storeName"] ||
+                    row["businessName"] ||
+                    ""
+                ).toString().trim().toLowerCase();
+                return submittedMerchantName && rowMerchant === submittedMerchantName;
+            });
+
+            if (!confirmedByCount && !confirmedByMerchant) {
+                throw new Error("Submission was sent, but Google Sheets did not confirm a new row.");
+            }
+
             status.style.display = "block";
             status.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
             status.style.color = "#10b981";
             status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
-            status.textContent = "✓ Recorded perfectly! Row added to Google Sheets database.";
-            
-            const sessionPayload = { ...data, loggedAt: new Date().toISOString() };
-            localSessionHistory[actionType].push(sessionPayload);
+            status.textContent = "✓ Confirmed. Row was written to Google Sheets and dashboard was refreshed.";
 
             form.reset();
-            if(actionType === "opportunities") toggleCoFundedFields("No");
-            
-            setTimeout(syncGlobalHistory, 1200);
-        })
-        .catch(err => {
+            if (actionType === "opportunities") toggleCoFundedFields("No");
+
+        } catch (err) {
+            console.error(err);
             status.style.display = "block";
             status.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
             status.style.color = "#ef4444";
             status.style.border = "1px solid rgba(239, 68, 68, 0.2)";
-            status.textContent = "✕ Handshake error. Entry submission blocked.";
-            console.error(err);
-        })
-        .finally(() => {
+            status.textContent = "✕ Not confirmed: " + err.message;
+        } finally {
             btn.disabled = false;
-            if (actionType === 'calls') btn.textContent = "Log Call Entry";
-            else if (actionType === 'photosAdded') btn.textContent = "Log Photos Added";
-            else if (actionType === 'videosUploaded') btn.textContent = "Log Video Upload";
-            else if (actionType === 'contentApprovals') btn.textContent = "Log Asset Approval";
-            else if (actionType === 'photoshootTracker') btn.textContent = "Log Photoshoot Entry";
-            else if (actionType === 'caseTracker') btn.textContent = "Log Case Ticket";
-            else btn.textContent = "Log Opportunity";
-        });
+            btn.textContent = originalBtnText;
+        }
     }
 
-    function closeDataModal(e) { document.getElementById('dataModal').style.display = 'none'; }
-    window.addEventListener('load', () => { syncGlobalHistory(); });
+    window.addEventListener('load', () => {
+        syncGlobalHistory();
+    });
 </script>
 </body>
 </html>
+```
+
+## What each numbered section does
+
+1. Page metadata and mobile setup.
+2. The dark theme, form styling, dashboard cards, modal styling, and edit controls.
+3. The top navigation tabs that switch between forms and dashboard.
+4. The home dashboard, summary cards, and live activity stream.
+5. The call logging form.
+6. The photos added form.
+7. The videos uploaded form.
+8. The approvals form.
+9. The photoshoot tracker form.
+10. The case tracker form.
+11. The opportunities form.
+12. The modal that lets you filter, inspect, edit, and delete records.
+13. The JavaScript that connects the page to Apps Script, syncs the sheet, posts new rows, refreshes the dashboard, and handles inline edits/deletes.
+
+## Important note
+
+This file is designed to work with the Apps Script updates we already fixed:
+
+• `Config.gs` with `getDb_()`
+• `Receiver.gs` with JSONP sync and POST routing
+• all service files using `getDb_()`
+• edit/delete confirmation after writes
+
+Once you paste this into GitHub, the next step is to redeploy Apps Script and test one form submission end to end.
