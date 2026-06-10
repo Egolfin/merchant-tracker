@@ -1,50 +1,125 @@
-body{
-    margin:0;
-    padding:0;
-    background:#111827;
-    color:white;
-    font-family:Arial,sans-serif;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant Intelligence Dashboard</title>
+    <link rel="stylesheet" href="lead-dashboard.css">
+</head>
+<body>
 
-.header{
-    padding:20px;
-    border-bottom:1px solid #374151;
-}
+    <header class="header">
+        <div class="header-left">
+            <h1>Merchant Intelligence Dashboard</h1>
+            <p class="subtext">Live lead intelligence powered by Google Sheets</p>
+        </div>
+    </header>
 
-.connection-card{
-    margin:20px;
-    padding:20px;
-    background:#1f2937;
-    border-radius:10px;
-}
+    <main class="dashboard">
 
-.metrics-grid{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:20px;
-    padding:20px;
-}
+        <section class="connection-card">
+            <div>
+                <h2>Google Sheet Connection</h2>
+                <p id="sheetStatus" class="status-pill status-offline">Not Connected</p>
+            </div>
 
-.metric-card{
-    background:#1f2937;
-    padding:20px;
-    border-radius:10px;
-}
+            <button id="connectSheetBtn" class="btn btn-primary">
+                Connect Lead Sheet
+            </button>
+        </section>
 
-.search-section{
-    padding:20px;
-}
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <h3>Total Leads</h3>
+                <span id="totalLeads">0</span>
+            </div>
 
-input{
-    width:100%;
-    padding:12px;
-    border-radius:8px;
-    border:none;
-}
+            <div class="metric-card">
+                <h3>Needs Follow Up</h3>
+                <span id="followUps">0</span>
+            </div>
 
-#leadTableContainer{
-    margin:20px;
-    padding:20px;
-    background:#1f2937;
-    border-radius:10px;
-}
+            <div class="metric-card">
+                <h3>Open Cases</h3>
+                <span id="openCases">0</span>
+            </div>
+
+            <div class="metric-card">
+                <h3>Pipeline Opportunities</h3>
+                <span id="pipelineOpps">0</span>
+            </div>
+        </section>
+
+        <section class="toolbar">
+            <input
+                type="text"
+                id="merchantSearch"
+                placeholder="Search merchant, store ID, business ID, or Rx name..."
+            >
+
+            <select id="sortSelect" class="select-input">
+                <option value="businessName">Sort by Business Name</option>
+                <option value="gmv">Sort by GMV</option>
+                <option value="priority">Sort by Priority Score</option>
+                <option value="coverage">Sort by Coverage</option>
+            </select>
+        </section>
+
+        <section class="content-grid">
+            <section class="panel">
+                <div class="panel-header">
+                    <h2>Lead List</h2>
+                    <span class="panel-subtitle">Click a merchant to open the detail view</span>
+                </div>
+
+                <div id="leadTableContainer" class="table-container">
+                    Lead table coming soon...
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-header">
+                    <h2>Activity Stream</h2>
+                    <span class="panel-subtitle">Latest interaction history from Activity_Log</span>
+                </div>
+
+                <div id="activityContainer" class="table-container">
+                    Activity stream coming soon...
+                </div>
+            </section>
+        </section>
+
+        <section id="merchantDrawer" class="merchant-drawer">
+            <div class="drawer-header">
+                <div>
+                    <h2 id="drawerTitle">Merchant 360</h2>
+                    <p id="drawerSubtitle" class="subtext">Select a merchant to view details</p>
+                </div>
+
+                <button id="closeDrawerBtn" class="btn btn-secondary">Close</button>
+            </div>
+
+            <div class="drawer-body">
+                <div class="drawer-section">
+                    <h3>Merchant Overview</h3>
+                    <div id="merchantOverview" class="drawer-card">
+                        No merchant selected.
+                    </div>
+                </div>
+
+                <div class="drawer-section">
+                    <h3>Recent Activity</h3>
+                    <div id="merchantActivity" class="drawer-card">
+                        No activity loaded yet.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="config.js"></script>
+    <script src="lead-dashboard.js"></script>
+
+</body>
+</html>
