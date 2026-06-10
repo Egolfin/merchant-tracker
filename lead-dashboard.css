@@ -1,0 +1,50 @@
+body{
+    margin:0;
+    padding:0;
+    background:#111827;
+    color:white;
+    font-family:Arial,sans-serif;
+}
+
+.header{
+    padding:20px;
+    border-bottom:1px solid #374151;
+}
+
+.connection-card{
+    margin:20px;
+    padding:20px;
+    background:#1f2937;
+    border-radius:10px;
+}
+
+.metrics-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:20px;
+    padding:20px;
+}
+
+.metric-card{
+    background:#1f2937;
+    padding:20px;
+    border-radius:10px;
+}
+
+.search-section{
+    padding:20px;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    border-radius:8px;
+    border:none;
+}
+
+#leadTableContainer{
+    margin:20px;
+    padding:20px;
+    background:#1f2937;
+    border-radius:10px;
+}
