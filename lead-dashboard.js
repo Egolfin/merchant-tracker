@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbxZoKWK2MLL4xo55FBHEWD_qoxgqD17_H1w1L-kbO46PlxQ3ClFpOsiME14aHZ1fiK-sg/exec"; // Replace with your deployed Apps Script Web App URL
+const API_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbxZoKWK2MLL4xo55FBHEWD_qoxgqD17_H1w1L-kbO46PlxQ3ClFpOsiME14aHZ1fiK-sg/exec";
 
 let allLeads = [];
 let allActivities = [];
@@ -19,6 +19,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const openPriorityMerchantsBtn = document.getElementById("openPriorityMerchantsBtn");
   const closeFollowUpModalBtn = document.getElementById("closeFollowUpModalBtn");
   const followUpModalOverlay = document.getElementById("followUpModalOverlay");
+  const followUpModalBody = document.getElementById("followUpModalBody");
+  const merchantDrawer = document.getElementById("merchantDrawer");
 
   if (searchInput) {
     searchInput.addEventListener("input", applyFiltersAndSort);
@@ -30,6 +32,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (closeDrawerBtn) {
     closeDrawerBtn.addEventListener("click", closeMerchantDrawer);
+  }
+
+  if (merchantDrawer) {
+    merchantDrawer.addEventListener("click", function (event) {
+      if (event.target === merchantDrawer) {
+        closeMerchantDrawer();
+      }
+    });
   }
 
   if (connectSheetBtn) {
@@ -57,6 +67,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
       console.log("Merchant clicked:", storeId);
       openMerchantDrawer(storeId);
+    });
+  }
+
+  if (followUpModalBody) {
+    followUpModalBody.addEventListener("click", function (event) {
+      const button = event.target.closest(".merchant-link");
+      if (!button) return;
+
+      const storeId = button.dataset.storeId;
+      if (!storeId) return;
+
+      openMerchantDrawer(storeId);
+      closeFollowUpModal();
     });
   }
 
@@ -113,6 +136,7 @@ function loadLeads() {
         setConnectionStatus(true);
         updateMetrics();
         applyFiltersAndSort();
+        renderFollowUpCommandCenter();
 
         if (currentStoreId) {
           const refreshedLead = allLeads.find(function (item) {
@@ -512,8 +536,7 @@ function openMerchantDrawer(storeId) {
   const drawer = document.getElementById("merchantDrawer");
   if (drawer) {
     drawer.classList.add("open");
-    drawer.style.display = "block";
-    drawer.scrollIntoView({ behavior: "smooth", block: "start" });
+    drawer.style.display = "";
   }
 
   loadMerchantActivities(storeId);
@@ -1032,6 +1055,10 @@ function updateMetrics(leads = allLeads) {
   setText("averagePriorityScore", averagePriorityScore);
 }
 
+function renderFollowUpCommandCenter() {
+  updateMetrics();
+}
+
 function setConnectionStatus(isConnected) {
   const status = document.getElementById("sheetStatus");
   if (!status) return;
@@ -1278,10 +1305,6 @@ function getLatestActivityObjectForStoreId(storeId) {
     });
 
   return matches.length ? matches[0] : null;
-}
-
-function renderFollowUpCommandCenter() {
-  updateMetrics();
 }
 
 function getCurrentLocalDateTimeValue() {
