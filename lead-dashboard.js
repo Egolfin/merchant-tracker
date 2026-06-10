@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbxZoKWK2MLL4xo55FBHEWD_qoxgqD17_H1w1L-kbO46PlxQ3ClFpOsiME14aHZ1fiK-sg/exec"; // Replace with your deployed Apps Script Web App URL
+const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE"; // Replace with your deployed Apps Script Web App URL
 
 let allLeads = [];
 let allActivities = [];
@@ -451,6 +451,7 @@ async function handleActivitySubmit(event) {
   const activityTimestampInput = document.getElementById("activityTimestamp");
   const activityOwner = activityOwnerInput?.value.trim() || getField(currentLead, ["Owner"]) || "Esteban Golfin";
   const activityTimestamp = activityTimestampInput?.value || getCurrentLocalDateTimeValue();
+  const storeId = getStoreId(currentLead);
 
   if (!activityType || !activityOutcome || !activityNotes) {
     setActivityStatus("Please complete Activity Type, Outcome, and Notes.", true);
@@ -464,7 +465,7 @@ async function handleActivitySubmit(event) {
 
   const payload = {
     "Timestamp": activityTimestamp,
-    "Store ID": getStoreId(currentLead),
+    "Store ID": storeId,
     "Business ID": getField(currentLead, ["Business Id", "Business ID"]),
     "Business Name": getField(currentLead, ["Business Name"]),
     "Activity Type": activityType,
@@ -478,22 +479,7 @@ async function handleActivitySubmit(event) {
 
   try {
     await postActivity(payload);
-    await delay(900);
-
-    const refreshedActivities = await loadMerchantActivities(getStoreId(currentLead));
-    loadActivities();
-
-    const verified = Array.isArray(refreshedActivities) && refreshedActivities.some(function (activity) {
-      return String(getField(activity, ["Activity Type"])) === activityType &&
-        String(getField(activity, ["Notes"])) === activityNotes &&
-        String(getField(activity, ["Outcome"])) === activityOutcome;
-    });
-
-    if (verified) {
-      setActivityStatus("Activity saved successfully.");
-    } else {
-      setActivityStatus("Activity submitted. Refreshing activity log...");
-    }
+    await refreshAfterActivitySave(storeId);
 
     const form = document.getElementById("activityForm");
     if (form) {
@@ -509,16 +495,27 @@ async function handleActivitySubmit(event) {
     }
 
     syncActivityFormWithLead(currentLead);
-    await loadMerchantActivities(getStoreId(currentLead));
+    setActivityStatus("Activity saved successfully.");
   } catch (error) {
     console.error("Save activity error:", error);
-    setActivityStatus("Activity submitted. Refreshing activity log...", false);
-    await delay(900);
-    await loadMerchantActivities(getStoreId(currentLead));
-    loadActivities();
+    setActivityStatus("Activity submitted, but refresh failed. Please check the Activity Log.", true);
   } finally {
     if (saveButton) {
       saveButton.disabled = false;
+    }
+  }
+}
+
+async function refreshAfterActivitySave(storeId) {
+  if (!storeId) return;
+
+  await loadMerchantActivities(storeId);
+  loadActivities();
+
+  if (currentLead) {
+    const merchantOverview = document.getElementById("merchantOverview");
+    if (merchantOverview) {
+      merchantOverview.innerHTML = buildMerchantOverviewHtml(currentLead);
     }
   }
 }
