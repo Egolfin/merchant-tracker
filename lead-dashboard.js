@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const connectSheetBtn = document.getElementById("connectSheetBtn");
   const activityForm = document.getElementById("activityForm");
   const leadTableContainer = document.getElementById("leadTableContainer");
+  const quickActionButtons = document.querySelectorAll(".quick-action-btn");
 
   if (searchInput) {
     searchInput.addEventListener("input", applyFiltersAndSort);
@@ -49,6 +50,13 @@ document.addEventListener("DOMContentLoaded", function () {
       openMerchantDrawer(storeId);
     });
   }
+
+  quickActionButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      const template = button.dataset.template || "";
+      applyQuickTemplate(template);
+    });
+  });
 
   loadLeads();
   loadActivities();
@@ -340,6 +348,7 @@ function syncActivityFormWithLead(lead) {
   const context = document.getElementById("activityMerchantContext");
   const activityForm = document.getElementById("activityForm");
   const activityOwner = document.getElementById("activityOwner");
+  const activityTimestamp = document.getElementById("activityTimestamp");
   const activityStatus = document.getElementById("activityStatusMessage");
 
   if (activityForm) {
@@ -350,6 +359,10 @@ function syncActivityFormWithLead(lead) {
     activityOwner.value = getField(lead, ["Owner"]) || "Esteban Golfin";
   }
 
+  if (activityTimestamp) {
+    activityTimestamp.value = getCurrentLocalDateTimeValue();
+  }
+
   if (context) {
     context.innerHTML = buildActivityContextHtml(lead);
   }
@@ -357,6 +370,55 @@ function syncActivityFormWithLead(lead) {
   if (activityStatus) {
     activityStatus.textContent = "Ready to log an activity for this merchant.";
     activityStatus.classList.remove("error");
+  }
+}
+
+function applyQuickTemplate(template) {
+  const activityType = document.getElementById("activityType");
+  const activityOutcome = document.getElementById("activityOutcome");
+  const activityNotes = document.getElementById("activityNotes");
+  const activityTimestamp = document.getElementById("activityTimestamp");
+  const activityOwner = document.getElementById("activityOwner");
+
+  if (activityTimestamp) {
+    activityTimestamp.value = getCurrentLocalDateTimeValue();
+  }
+
+  if (activityOwner && (!activityOwner.value || !activityOwner.value.trim())) {
+    activityOwner.value = "Esteban Golfin";
+  }
+
+  if (template === "quick-note") {
+    if (activityType) activityType.value = "Follow-Up";
+    if (activityOutcome) activityOutcome.value = "Follow Up";
+    if (activityNotes) {
+      activityNotes.focus();
+      activityNotes.placeholder = "Write a quick note for this merchant...";
+    }
+    setActivityStatus("Quick Note template loaded.");
+    return;
+  }
+
+  if (template === "call") {
+    if (activityType) activityType.value = "Call";
+    if (activityOutcome) activityOutcome.value = "Follow Up";
+    if (activityNotes) {
+      activityNotes.focus();
+      activityNotes.placeholder = "Summarize the call, objections, and next step...";
+    }
+    setActivityStatus("Call template loaded.");
+    return;
+  }
+
+  if (template === "email") {
+    if (activityType) activityType.value = "Email";
+    if (activityOutcome) activityOutcome.value = "Follow Up";
+    if (activityNotes) {
+      activityNotes.focus();
+      activityNotes.placeholder = "Summarize the email sent and next step...";
+    }
+    setActivityStatus("Email template loaded.");
+    return;
   }
 }
 
@@ -386,7 +448,9 @@ async function handleActivitySubmit(event) {
   const activityNextFollowUp = document.getElementById("activityNextFollowUp")?.value || "";
   const activityNotes = document.getElementById("activityNotes")?.value.trim() || "";
   const activityOwnerInput = document.getElementById("activityOwner");
+  const activityTimestampInput = document.getElementById("activityTimestamp");
   const activityOwner = activityOwnerInput?.value.trim() || getField(currentLead, ["Owner"]) || "Esteban Golfin";
+  const activityTimestamp = activityTimestampInput?.value || getCurrentLocalDateTimeValue();
 
   if (!activityType || !activityOutcome || !activityNotes) {
     setActivityStatus("Please complete Activity Type, Outcome, and Notes.", true);
@@ -399,6 +463,7 @@ async function handleActivitySubmit(event) {
   }
 
   const payload = {
+    "Timestamp": activityTimestamp,
     "Store ID": getStoreId(currentLead),
     "Business ID": getField(currentLead, ["Business Id", "Business ID"]),
     "Business Name": getField(currentLead, ["Business Name"]),
@@ -420,8 +485,8 @@ async function handleActivitySubmit(event) {
 
     const verified = Array.isArray(refreshedActivities) && refreshedActivities.some(function (activity) {
       return String(getField(activity, ["Activity Type"])) === activityType &&
-             String(getField(activity, ["Notes"])) === activityNotes &&
-             String(getField(activity, ["Outcome"])) === activityOutcome;
+        String(getField(activity, ["Notes"])) === activityNotes &&
+        String(getField(activity, ["Outcome"])) === activityOutcome;
     });
 
     if (verified) {
@@ -437,6 +502,10 @@ async function handleActivitySubmit(event) {
 
     if (activityOwnerInput) {
       activityOwnerInput.value = activityOwner;
+    }
+
+    if (activityTimestampInput) {
+      activityTimestampInput.value = getCurrentLocalDateTimeValue();
     }
 
     syncActivityFormWithLead(currentLead);
@@ -691,6 +760,17 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function escapeJs(value) {
+  return String(value ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+function getCurrentLocalDateTimeValue() {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  const local = new Date(now.getTime() - offset);
+  return local.toISOString().slice(0, 16);
 }
 
 function delay(ms) {
