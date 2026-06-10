@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant Intelligence Dashboard</title>
+
+    <link rel="stylesheet" href="lead-dashboard.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <h1>Merchant Intelligence Dashboard</h1>
+    </header>
+
+    <main>
+
+        <section class="connection-card">
+            <h2>Google Sheet Connection</h2>
+
+            <div id="sheetStatus">
+                Not Connected
+            </div>
+
+            <button id="connectSheetBtn">
+                Connect Lead Sheet
+            </button>
+        </section>
+
+        <section class="metrics-grid">
+
+            <div class="metric-card">
+                <h3>Total Leads</h3>
+                <span id="totalLeads">0</span>
+            </div>
+
+            <div class="metric-card">
+                <h3>Needs Follow Up</h3>
+                <span id="followUps">0</span>
+            </div>
+
+            <div class="metric-card">
+                <h3>Open Cases</h3>
+                <span id="openCases">0</span>
+            </div>
+
+            <div class="metric-card">
+                <h3>Pipeline Opportunities</h3>
+                <span id="pipelineOpps">0</span>
+            </div>
+
+        </section>
+
+        <section class="search-section">
+
+            <input
+                type="text"
+                id="merchantSearch"
+                placeholder="Search merchant..."
+            >
+
+        </section>
+
+        <section id="leadTableContainer">
+            Lead table coming soon...
+        </section>
+
+    </main>
+
+    <script src="config.js"></script>
+    <script src="lead-dashboard.js"></script>
+
+</body>
+</html>
