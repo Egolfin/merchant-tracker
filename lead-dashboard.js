@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const closeDrawerBtn = document.getElementById("closeDrawerBtn");
   const connectSheetBtn = document.getElementById("connectSheetBtn");
   const activityForm = document.getElementById("activityForm");
+  const leadManagementForm = document.getElementById("leadManagementForm");
   const leadTableContainer = document.getElementById("leadTableContainer");
   const quickActionButtons = document.querySelectorAll(".quick-action-btn");
 
@@ -36,6 +37,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (activityForm) {
     activityForm.addEventListener("submit", handleActivitySubmit);
+  }
+
+  if (leadManagementForm) {
+    leadManagementForm.addEventListener("submit", handleLeadManagementSubmit);
   }
 
   if (leadTableContainer) {
@@ -63,58 +68,78 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function loadLeads() {
-  const callbackName = "handleLeadsResponse_" + Date.now();
+  return new Promise((resolve) => {
+    const callbackName = "handleLeadsResponse_" + Date.now();
+    const script = document.createElement("script");
 
-  window[callbackName] = function (response) {
-    try {
-      if (!response.success) {
-        console.error("Lead load failed:", response.message);
-        renderLeadError(response.message);
-        setConnectionStatus(false);
-        return;
+    window[callbackName] = function (response) {
+      try {
+        if (!response.success) {
+          console.error("Lead load failed:", response.message);
+          renderLeadError(response.message);
+          setConnectionStatus(false);
+          resolve([]);
+          return;
+        }
+
+        allLeads = Array.isArray(response.data) ? response.data : [];
+        filteredLeads = allLeads.slice();
+
+        console.log("Leads loaded:", allLeads);
+        setConnectionStatus(true);
+        updateMetrics();
+        applyFiltersAndSort();
+
+        if (currentStoreId) {
+          const refreshedLead = allLeads.find(function (item) {
+            return String(getStoreId(item)) === String(currentStoreId);
+          });
+
+          if (refreshedLead) {
+            currentLead = refreshedLead;
+            renderCurrentMerchantView(currentLead);
+          }
+        }
+
+        resolve(allLeads);
+      } finally {
+        delete window[callbackName];
+        script.remove();
       }
+    };
 
-      allLeads = Array.isArray(response.data) ? response.data : [];
-      filteredLeads = allLeads.slice();
-
-      console.log("Leads loaded:", allLeads);
-      setConnectionStatus(true);
-      updateMetrics();
-      applyFiltersAndSort();
-    } finally {
-      delete window[callbackName];
-      script.remove();
-    }
-  };
-
-  const script = document.createElement("script");
-  script.src = `${API_URL}?action=getLeads&callback=${callbackName}&_=${Date.now()}`;
-  document.body.appendChild(script);
+    script.src = `${API_URL}?action=getLeads&callback=${callbackName}&_=${Date.now()}`;
+    document.body.appendChild(script);
+  });
 }
 
 function loadActivities() {
-  const callbackName = "handleActivitiesResponse_" + Date.now();
+  return new Promise((resolve) => {
+    const callbackName = "handleActivitiesResponse_" + Date.now();
+    const script = document.createElement("script");
 
-  window[callbackName] = function (response) {
-    try {
-      if (!response.success) {
-        console.error("Activity load failed:", response.message);
-        renderActivityError(response.message);
-        return;
+    window[callbackName] = function (response) {
+      try {
+        if (!response.success) {
+          console.error("Activity load failed:", response.message);
+          renderActivityError(response.message);
+          resolve([]);
+          return;
+        }
+
+        allActivities = Array.isArray(response.data) ? response.data : [];
+        console.log("Activities loaded:", allActivities);
+        renderActivities(allActivities);
+        resolve(allActivities);
+      } finally {
+        delete window[callbackName];
+        script.remove();
       }
+    };
 
-      allActivities = Array.isArray(response.data) ? response.data : [];
-      console.log("Activities loaded:", allActivities);
-      renderActivities(allActivities);
-    } finally {
-      delete window[callbackName];
-      script.remove();
-    }
-  };
-
-  const script = document.createElement("script");
-  script.src = `${API_URL}?action=getActivities&callback=${callbackName}&_=${Date.now()}`;
-  document.body.appendChild(script);
+    script.src = `${API_URL}?action=getActivities&callback=${callbackName}&_=${Date.now()}`;
+    document.body.appendChild(script);
+  });
 }
 
 function applyFiltersAndSort() {
@@ -309,32 +334,13 @@ function openMerchantDrawer(storeId) {
   currentLead = lead;
   currentStoreId = storeId;
 
-  const drawer = document.getElementById("merchantDrawer");
-  const drawerTitle = document.getElementById("drawerTitle");
-  const drawerSubtitle = document.getElementById("drawerSubtitle");
-  const merchantOverview = document.getElementById("merchantOverview");
-  const merchantActivity = document.getElementById("merchantActivity");
-
   console.log("Opening drawer for:", storeId);
 
+  renderCurrentMerchantView(lead);
+  syncLeadManagementFormWithLead(lead);
   syncActivityFormWithLead(lead);
 
-  if (drawerTitle) {
-    drawerTitle.textContent = getField(lead, ["Business Name"]) || "Merchant 360";
-  }
-
-  if (drawerSubtitle) {
-    drawerSubtitle.textContent = `Store ID: ${storeId}`;
-  }
-
-  if (merchantOverview) {
-    merchantOverview.innerHTML = buildMerchantOverviewHtml(lead);
-  }
-
-  if (merchantActivity) {
-    merchantActivity.innerHTML = `<div class="empty-state">Loading activity history...</div>`;
-  }
-
+  const drawer = document.getElementById("merchantDrawer");
   if (drawer) {
     drawer.classList.add("open");
     drawer.style.display = "block";
@@ -344,8 +350,32 @@ function openMerchantDrawer(storeId) {
   loadMerchantActivities(storeId);
 }
 
+function renderCurrentMerchantView(lead) {
+  const drawerTitle = document.getElementById("drawerTitle");
+  const drawerSubtitle = document.getElementById("drawerSubtitle");
+  const merchantOverview = document.getElementById("merchantOverview");
+  const activityMerchantContext = document.getElementById("activityMerchantContext");
+
+  if (drawerTitle) {
+    drawerTitle.textContent = getField(lead, ["Business Name"]) || "Merchant 360";
+  }
+
+  if (drawerSubtitle) {
+    drawerSubtitle.textContent = `Store ID: ${getStoreId(lead)}`;
+  }
+
+  if (merchantOverview) {
+    merchantOverview.innerHTML = buildMerchantOverviewHtml(lead);
+  }
+
+  if (activityMerchantContext) {
+    activityMerchantContext.innerHTML = buildActivityContextHtml(lead);
+  }
+
+  syncLeadManagementFormWithLead(lead);
+}
+
 function syncActivityFormWithLead(lead) {
-  const context = document.getElementById("activityMerchantContext");
   const activityForm = document.getElementById("activityForm");
   const activityOwner = document.getElementById("activityOwner");
   const activityTimestamp = document.getElementById("activityTimestamp");
@@ -363,13 +393,43 @@ function syncActivityFormWithLead(lead) {
     activityTimestamp.value = getCurrentLocalDateTimeValue();
   }
 
-  if (context) {
-    context.innerHTML = buildActivityContextHtml(lead);
-  }
-
   if (activityStatus) {
     activityStatus.textContent = "Ready to log an activity for this merchant.";
     activityStatus.classList.remove("error");
+  }
+}
+
+function syncLeadManagementFormWithLead(lead) {
+  const leadStatus = document.getElementById("leadStatus");
+  const leadOwner = document.getElementById("leadOwner");
+  const leadNextFollowUp = document.getElementById("leadNextFollowUp");
+  const leadPriorityScore = document.getElementById("leadPriorityScore");
+  const leadPipelineStage = document.getElementById("leadPipelineStage");
+  const leadUpdateStatusMessage = document.getElementById("leadUpdateStatusMessage");
+
+  if (leadStatus) {
+    leadStatus.value = getField(lead, ["Lead Status"]) || "";
+  }
+
+  if (leadOwner) {
+    leadOwner.value = getField(lead, ["Owner"]) || "Esteban Golfin";
+  }
+
+  if (leadNextFollowUp) {
+    leadNextFollowUp.value = toDateInputValue(getField(lead, ["Next Follow-Up"]));
+  }
+
+  if (leadPriorityScore) {
+    leadPriorityScore.value = getField(lead, ["Priority Score"]) || "";
+  }
+
+  if (leadPipelineStage) {
+    leadPipelineStage.value = getField(lead, ["Pipeline Stage"]) || "";
+  }
+
+  if (leadUpdateStatusMessage) {
+    leadUpdateStatusMessage.textContent = "";
+    leadUpdateStatusMessage.classList.remove("error");
   }
 }
 
@@ -506,11 +566,61 @@ async function handleActivitySubmit(event) {
   }
 }
 
+async function handleLeadManagementSubmit(event) {
+  event.preventDefault();
+
+  if (!currentLead) {
+    setLeadUpdateStatus("Select a merchant before saving lead updates.", true);
+    return;
+  }
+
+  const storeId = getStoreId(currentLead);
+
+  const updates = {
+    "Lead Status": document.getElementById("leadStatus")?.value || "",
+    "Owner": document.getElementById("leadOwner")?.value.trim() || "",
+    "Next Follow-Up": document.getElementById("leadNextFollowUp")?.value || "",
+    "Priority Score": document.getElementById("leadPriorityScore")?.value || "",
+    "Pipeline Stage": document.getElementById("leadPipelineStage")?.value || ""
+  };
+
+  const saveButton = document.getElementById("leadSaveBtn");
+  if (saveButton) {
+    saveButton.disabled = true;
+  }
+
+  setLeadUpdateStatus("Saving lead updates...");
+
+  try {
+    await postLeadUpdate(storeId, updates);
+    await loadLeads();
+
+    const refreshedLead = allLeads.find(function (item) {
+      return String(getStoreId(item)) === String(storeId);
+    });
+
+    if (refreshedLead) {
+      currentLead = refreshedLead;
+      renderCurrentMerchantView(refreshedLead);
+      syncLeadManagementFormWithLead(refreshedLead);
+    }
+
+    setLeadUpdateStatus("Lead updated successfully.");
+  } catch (error) {
+    console.error("Lead update error:", error);
+    setLeadUpdateStatus("Lead update failed. Please try again.", true);
+  } finally {
+    if (saveButton) {
+      saveButton.disabled = false;
+    }
+  }
+}
+
 async function refreshAfterActivitySave(storeId) {
   if (!storeId) return;
 
   await loadMerchantActivities(storeId);
-  loadActivities();
+  await loadActivities();
 
   if (currentLead) {
     const merchantOverview = document.getElementById("merchantOverview");
@@ -566,8 +676,66 @@ function postActivity(payload) {
   });
 }
 
+function postLeadUpdate(storeId, updates) {
+  return new Promise((resolve, reject) => {
+    const callbackName = "handleUpdateLead_" + Date.now();
+    const script = document.createElement("script");
+    let timedOut = false;
+
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      cleanup();
+      reject(new Error("Lead update request timed out."));
+    }, 20000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[callbackName];
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    }
+
+    window[callbackName] = function (response) {
+      try {
+        if (timedOut) return;
+
+        if (!response || !response.success) {
+          reject(new Error((response && response.message) || "Failed to update lead."));
+          return;
+        }
+
+        resolve(response);
+      } finally {
+        cleanup();
+      }
+    };
+
+    const params = new URLSearchParams();
+    params.set("action", "updateLead");
+    params.set("storeId", storeId);
+    params.set("callback", callbackName);
+    params.set("_", String(Date.now()));
+
+    Object.keys(updates || {}).forEach(function (key) {
+      params.set(key, updates[key]);
+    });
+
+    script.src = `${API_URL}?${params.toString()}`;
+    document.body.appendChild(script);
+  });
+}
+
 function setActivityStatus(message, isError = false) {
   const status = document.getElementById("activityStatusMessage");
+  if (!status) return;
+
+  status.textContent = message;
+  status.classList.toggle("error", Boolean(isError));
+}
+
+function setLeadUpdateStatus(message, isError = false) {
+  const status = document.getElementById("leadUpdateStatusMessage");
   if (!status) return;
 
   status.textContent = message;
@@ -784,6 +952,39 @@ function formatCoverage(value) {
   return String(value);
 }
 
+function toDateInputValue(value) {
+  if (!value) return "";
+
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const day = String(value.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  const date = new Date(value);
+  if (!isNaN(date.getTime())) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  const str = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str;
+  }
+
+  return "";
+}
+
+function getCurrentLocalDateTimeValue() {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  const local = new Date(now.getTime() - offset);
+  return local.toISOString().slice(0, 16);
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -795,13 +996,6 @@ function escapeHtml(value) {
 
 function escapeJs(value) {
   return String(value ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-}
-
-function getCurrentLocalDateTimeValue() {
-  const now = new Date();
-  const offset = now.getTimezoneOffset() * 60000;
-  const local = new Date(now.getTime() - offset);
-  return local.toISOString().slice(0, 16);
 }
 
 function delay(ms) {
