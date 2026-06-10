@@ -167,7 +167,7 @@ function renderLeads(leads) {
       const priorityScore = getField(lead, ["Priority Score"]);
 
       return `
-        <tr data-store-id="${escapeHtml(storeId)}" onclick="openMerchantDrawer('${escapeJs(storeId)}')">
+        <tr class="lead-row" data-store-id="${escapeHtml(storeId)}">
           <td>${escapeHtml(businessName)}</td>
           <td>${escapeHtml(storeId)}</td>
           <td>${escapeHtml(businessId)}</td>
@@ -208,6 +208,20 @@ function renderLeads(leads) {
       </tbody>
     </table>
   `;
+
+  attachLeadRowEvents();
+}
+
+function attachLeadRowEvents() {
+  const rows = document.querySelectorAll(".lead-row");
+  rows.forEach(function (row) {
+    row.addEventListener("click", function () {
+      const storeId = row.dataset.storeId;
+      if (storeId) {
+        openMerchantDrawer(storeId);
+      }
+    });
+  });
 }
 
 function renderActivities(activities) {
@@ -461,7 +475,12 @@ function getField(obj, candidates) {
   if (!obj || !Array.isArray(candidates)) return "";
 
   for (const key of candidates) {
-    if (Object.prototype.hasOwnProperty.call(obj, key) && obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== "") {
+    if (
+      Object.prototype.hasOwnProperty.call(obj, key) &&
+      obj[key] !== undefined &&
+      obj[key] !== null &&
+      String(obj[key]).trim() !== ""
+    ) {
       return obj[key];
     }
   }
