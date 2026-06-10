@@ -524,14 +524,48 @@ async function handleActivitySubmit(event) {
 }
 
 function postActivity(payload) {
-  const body = new URLSearchParams();
-  body.set("action", "saveActivity");
-  body.set("data", JSON.stringify(payload));
+  return new Promise((resolve, reject) => {
+    const callbackName = "handleSaveActivity_" + Date.now();
+    const script = document.createElement("script");
+    let timedOut = false;
 
-  return fetch(API_URL, {
-    method: "POST",
-    mode: "no-cors",
-    body: body
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      cleanup();
+      reject(new Error("Save activity request timed out."));
+    }, 20000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[callbackName];
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    }
+
+    window[callbackName] = function (response) {
+      try {
+        if (timedOut) return;
+
+        if (!response || !response.success) {
+          reject(new Error((response && response.message) || "Failed to save activity."));
+          return;
+        }
+
+        resolve(response);
+      } finally {
+        cleanup();
+      }
+    };
+
+    const params = new URLSearchParams();
+    params.set("action", "saveActivity");
+    params.set("data", JSON.stringify(payload));
+    params.set("callback", callbackName);
+    params.set("_", String(Date.now()));
+
+    script.src = `${API_URL}?${params.toString()}`;
+    document.body.appendChild(script);
   });
 }
 
