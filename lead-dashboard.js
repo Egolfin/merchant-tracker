@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbxZoKWK2MLL4xo55FBHEWD_qoxgqD17_H1w1L-kbO46PlxQ3ClFpOsiME14aHZ1fiK-sg/exec"; // Replace with your deployed Apps Script Web App URL
+const API_URL = "PASTE_YOUR_WEB_APP_URL_HERE"; // Replace with your deployed Apps Script Web App URL
 
 let allLeads = [];
 let allActivities = [];
@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const sortSelect = document.getElementById("sortSelect");
   const closeDrawerBtn = document.getElementById("closeDrawerBtn");
   const connectSheetBtn = document.getElementById("connectSheetBtn");
+  const leadTableContainer = document.getElementById("leadTableContainer");
 
   if (searchInput) {
     searchInput.addEventListener("input", applyFiltersAndSort);
@@ -26,6 +27,20 @@ document.addEventListener("DOMContentLoaded", function () {
     connectSheetBtn.addEventListener("click", function () {
       loadLeads();
       loadActivities();
+    });
+  }
+
+  // Event delegation: one click handler for all rendered lead rows
+  if (leadTableContainer) {
+    leadTableContainer.addEventListener("click", function (event) {
+      const row = event.target.closest("tr.lead-row");
+      if (!row) return;
+
+      const storeId = row.dataset.storeId;
+      if (!storeId) return;
+
+      console.log("Row clicked, opening drawer for Store ID:", storeId);
+      openMerchantDrawer(storeId);
     });
   }
 
@@ -108,9 +123,7 @@ function applyFiltersAndSort() {
       businessId,
       rxName,
       parentName
-    ]
-      .join(" ")
-      .toLowerCase();
+    ].join(" ").toLowerCase();
 
     return searchableText.includes(searchTerm);
   });
@@ -208,20 +221,6 @@ function renderLeads(leads) {
       </tbody>
     </table>
   `;
-
-  attachLeadRowEvents();
-}
-
-function attachLeadRowEvents() {
-  const rows = document.querySelectorAll(".lead-row");
-  rows.forEach(function (row) {
-    row.addEventListener("click", function () {
-      const storeId = row.dataset.storeId;
-      if (storeId) {
-        openMerchantDrawer(storeId);
-      }
-    });
-  });
 }
 
 function renderActivities(activities) {
@@ -233,10 +232,7 @@ function renderActivities(activities) {
     return;
   }
 
-  const latestActivities = activities
-    .slice()
-    .reverse()
-    .slice(0, 5);
+  const latestActivities = activities.slice().reverse().slice(0, 5);
 
   const rows = latestActivities
     .map(function (activity) {
@@ -294,6 +290,8 @@ function openMerchantDrawer(storeId) {
   const merchantOverview = document.getElementById("merchantOverview");
   const merchantActivity = document.getElementById("merchantActivity");
 
+  console.log("Opening drawer for:", storeId);
+
   if (drawerTitle) {
     drawerTitle.textContent = getField(lead, ["Business Name"]) || "Merchant 360";
   }
@@ -312,6 +310,7 @@ function openMerchantDrawer(storeId) {
 
   if (drawer) {
     drawer.classList.add("open");
+    drawer.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   loadMerchantActivities(storeId);
@@ -345,7 +344,7 @@ function loadMerchantActivities(storeId) {
         .reverse()
         .map(function (activity) {
           return `
-            <div class="drawer-card" style="margin-bottom:12px;">
+            <div class="drawer-card merchant-activity-item">
               <strong>${escapeHtml(getField(activity, ["Activity Type"]))}</strong><br>
               <span class="subtext">${escapeHtml(getField(activity, ["Timestamp"]))}</span><br>
               <div style="margin-top:8px;">${escapeHtml(getField(activity, ["Notes"]))}</div>
@@ -420,6 +419,7 @@ function closeMerchantDrawer() {
 
 function updateMetrics(leads = allLeads) {
   const totalLeads = leads.length;
+
   const followUps = leads.filter(function (lead) {
     const nextFollowUp = getField(lead, ["Next Follow-Up"]);
     const leadStatus = getField(lead, ["Lead Status"]);
@@ -524,8 +524,4 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
-}
-
-function escapeJs(value) {
-  return String(value ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
