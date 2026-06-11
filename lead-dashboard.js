@@ -199,23 +199,34 @@ function loadActivities() {
   });
 }
 
-function loadOpenCasesByStoreId(storeId) {
+function loadMerchantOpenCases(storeId) {
   return new Promise((resolve) => {
     if (!storeId) {
+      currentOpenCases = [];
+      currentOpenCasesStoreId = "";
       resolve([]);
       return;
     }
 
-    const callbackName = "handleOpenCasesResponse_" + Date.now();
+    const requestedStoreId = String(storeId).trim();
+    const callbackName = "handleMerchantOpenCases_" + Date.now();
     const script = document.createElement("script");
 
     window[callbackName] = function (response) {
       try {
+        const merchantOverview = document.getElementById("merchantOverview");
+
         if (!response.success) {
           console.error("Open cases load failed:", response.message);
           currentOpenCases = [];
-          currentOpenCasesStoreId = String(storeId).trim();
-          renderMerchantOpenCases(currentLead, [], false);
+          currentOpenCasesStoreId = requestedStoreId;
+
+          if (merchantOverview && currentLead && String(getStoreId(currentLead)) === requestedStoreId) {
+            merchantOverview.innerHTML =
+              buildMerchantOverviewHtml(currentLead) +
+              buildOpenCasesHtml(currentLead, [], false);
+          }
+
           resolve([]);
           return;
         }
@@ -223,10 +234,16 @@ function loadOpenCasesByStoreId(storeId) {
         const cases = Array.isArray(response.data) ? response.data : [];
         allOpenCases = cases.slice();
         currentOpenCases = cases.slice();
-        currentOpenCasesStoreId = String(storeId).trim();
+        currentOpenCasesStoreId = requestedStoreId;
 
-        if (currentLead && String(getStoreId(currentLead)) === String(storeId).trim()) {
-          renderMerchantOpenCases(currentLead, currentOpenCases, false);
+        if (
+          merchantOverview &&
+          currentLead &&
+          String(getStoreId(currentLead)) === requestedStoreId
+        ) {
+          merchantOverview.innerHTML =
+            buildMerchantOverviewHtml(currentLead) +
+            buildOpenCasesHtml(currentLead, currentOpenCases, false);
         }
 
         resolve(cases);
@@ -238,7 +255,7 @@ function loadOpenCasesByStoreId(storeId) {
 
     const params = new URLSearchParams();
     params.set("action", "getOpenCasesByStoreId");
-    params.set("storeId", storeId);
+    params.set("storeId", requestedStoreId);
     params.set("callback", callbackName);
     params.set("_", String(Date.now()));
 
@@ -557,7 +574,11 @@ function renderCurrentMerchantView(lead) {
     drawerSubtitle.textContent = `Store ID: ${getStoreId(lead)}`;
   }
 
-  renderMerchantOverviewWithCases(lead, currentOpenCases, true);
+  if (merchantOverview) {
+    merchantOverview.innerHTML =
+      buildMerchantOverviewHtml(lead) +
+      buildOpenCasesHtml(lead, currentOpenCases, true);
+  }
 
   if (activityMerchantContext) {
     activityMerchantContext.innerHTML = buildActivityContextHtml(lead);
@@ -602,7 +623,6 @@ function openMerchantDrawer(storeId) {
   }
 
   loadMerchantActivities(storeId);
-  loadMerchantOpenCases(storeId);
 }
 
 function syncActivityFormWithLead(lead) {
@@ -712,6 +732,66 @@ function applyQuickTemplate(template) {
   }
 }
 
+function buildOpenCasesHtml(lead, openCases, isLoading) {
+  const cases = Array.isArray(openCases) ? openCases : [];
+  const total = cases.length;
+
+  if (isLoading) {
+    return `
+      <div class="open-cases-section">
+        <h3 style="margin-top:16px;">Open Cases (${total})</h3>
+        <div class="empty-state">Loading open cases...</div>
+      </div>
+    `;
+  }
+
+  if (!cases.length) {
+    return `
+      <div class="open-cases-section">
+        <h3 style="margin-top:16px;">Open Cases (${total})</h3>
+        <div class="empty-state">No open cases found for this merchant.</div>
+      </div>
+    `;
+  }
+
+  const cards = cases.map(function (caseItem) {
+    return renderOpenCaseCard(caseItem);
+  }).join("");
+
+  return `
+    <div class="open-cases-section">
+      <h3 style="margin-top:16px;">Open Cases (${total})</h3>
+      <div class="open-cases-list">
+        ${cards}
+      </div>
+    </div>
+  `;
+}
+
+function renderOpenCaseCard(caseItem) {
+  const caseId = getField(caseItem, ["Case ID", "Case Id"]);
+  const caseType = getField(caseItem, ["Case Type"]);
+  const status = getField(caseItem, ["Status"]);
+  const priority = getField(caseItem, ["Priority"]);
+  const createdDate = formatDisplayDate(getField(caseItem, ["Created Date"]));
+  const lastUpdated = formatDisplayDate(getField(caseItem, ["Last Updated"]));
+  const owner = getField(caseItem, ["Owner"]);
+  const notes = getField(caseItem, ["Notes"]);
+
+  return `
+    <div class="drawer-card merchant-open-case-item" style="margin-top:12px;">
+      <strong>${escapeHtml(caseId || "Case")}</strong><br>
+      <span class="subtext">${escapeHtml(caseType)} • ${escapeHtml(status)} • ${escapeHtml(priority)}</span>
+      <div style="margin-top:8px;">
+        <div><strong>Created:</strong> ${escapeHtml(createdDate)}</div>
+        <div><strong>Last Updated:</strong> ${escapeHtml(lastUpdated)}</div>
+        <div><strong>Owner:</strong> ${escapeHtml(owner)}</div>
+      </div>
+      <div style="margin-top:8px;">${escapeHtml(notes)}</div>
+    </div>
+  `;
+}
+
 function renderMerchantTimeline(lead, activitiesOverride) {
   const container = document.getElementById("merchantTimeline");
   if (!container) return;
@@ -752,188 +832,13 @@ function renderMerchantTimeline(lead, activitiesOverride) {
   `;
 }
 
-function renderMerchantOpenCases(lead, openCases, isLoading) {
+function handleMerchantOpenCasesErrorFallback(lead) {
   const merchantOverview = document.getElementById("merchantOverview");
-  if (!merchantOverview) return;
-
-  merchantOverview.innerHTML =
-    buildMerchantOverviewHtml(lead) +
-    buildOpenCasesHtml(lead, openCases, isLoading);
-}
-
-function buildOpenCasesHtml(lead, openCases, isLoading) {
-  const cases = Array.isArray(openCases) ? openCases : [];
-  const total = cases.length;
-  const headline = `Open Cases (${total})`;
-
-  if (isLoading) {
-    return `
-      <div class="open-cases-section">
-        <h3 style="margin-top:16px;">${escapeHtml(headline)}</h3>
-        <div class="empty-state">Loading open cases...</div>
-      </div>
-    `;
+  if (merchantOverview && lead) {
+    merchantOverview.innerHTML =
+      buildMerchantOverviewHtml(lead) +
+      buildOpenCasesHtml(lead, [], false);
   }
-
-  if (!cases.length) {
-    return `
-      <div class="open-cases-section">
-        <h3 style="margin-top:16px;">${escapeHtml(headline)}</h3>
-        <div class="empty-state">No open cases found for this merchant.</div>
-      </div>
-    `;
-  }
-
-  const cards = cases.map(function (caseItem) {
-    return renderOpenCaseCard(caseItem);
-  }).join("");
-
-  return `
-    <div class="open-cases-section">
-      <h3 style="margin-top:16px;">${escapeHtml(headline)}</h3>
-      <div class="open-cases-list">
-        ${cards}
-      </div>
-    </div>
-  `;
-}
-
-function renderOpenCaseCard(caseItem) {
-  const caseId = getField(caseItem, ["Case ID", "Case Id"]);
-  const caseType = getField(caseItem, ["Case Type"]);
-  const status = getField(caseItem, ["Status"]);
-  const priority = getField(caseItem, ["Priority"]);
-  const createdDate = formatDisplayDate(getField(caseItem, ["Created Date"]));
-  const lastUpdated = formatDisplayDate(getField(caseItem, ["Last Updated"]));
-  const owner = getField(caseItem, ["Owner"]);
-  const notes = getField(caseItem, ["Notes"]);
-
-  return `
-    <div class="drawer-card merchant-open-case-item" style="margin-top:12px;">
-      <strong>${escapeHtml(caseId || "Case")}</strong><br>
-      <span class="subtext">${escapeHtml(caseType)} • ${escapeHtml(status)} • ${escapeHtml(priority)}</span>
-      <div style="margin-top:8px;">
-        <div><strong>Created:</strong> ${escapeHtml(createdDate)}</div>
-        <div><strong>Last Updated:</strong> ${escapeHtml(lastUpdated)}</div>
-        <div><strong>Owner:</strong> ${escapeHtml(owner)}</div>
-      </div>
-      <div style="margin-top:8px;">${escapeHtml(notes)}</div>
-    </div>
-  `;
-}
-
-function renderMerchantOverviewWithCases(lead, openCases, isLoading) {
-  renderMerchantOpenCases(lead, openCases, isLoading);
-}
-
-function buildMerchantSnapshotTimelineEntry(lead, activityCount) {
-  const storeId = getStoreId(lead);
-  const lastActivity = getLatestActivityForStoreId(storeId);
-  const leadStatus = getField(lead, ["Lead Status"]);
-  const pipelineStage = getField(lead, ["Pipeline Stage"]);
-  const owner = getField(lead, ["Owner"]);
-  const nextFollowUp = formatDisplayDate(getField(lead, ["Next Follow-Up"]));
-  const priorityScore = getMerchantPriorityScore(lead);
-  const openCaseCount = getField(lead, ["Open Case Count"]);
-  const photoCoverage = formatCoverage(getField(lead, ["Photo Coverage"]));
-  const descCoverage = formatCoverage(getField(lead, ["Description Coverage"]));
-  const uptime = formatCoverage(getField(lead, ["Uptime"]));
-  const gmv = getField(lead, ["GMV"]);
-  const businessId = getField(lead, ["Business Id", "Business ID"]);
-  const rxName = getField(lead, ["Rx Name"]);
-  const lastContacted = getField(lead, ["Last Contacted"]);
-
-  return {
-    kind: "snapshot",
-    title: "Merchant Snapshot",
-    badge: "LIVE RECORD",
-    meta: `${activityCount} logged activity${activityCount === 1 ? "" : "ies"}`,
-    submeta: `Last activity: ${lastActivity}`,
-    details: [
-      { label: "Business Name", value: getField(lead, ["Business Name"]) },
-      { label: "Store ID", value: storeId },
-      { label: "Business ID", value: businessId },
-      { label: "Rx Name", value: rxName },
-      { label: "Lead Status", value: leadStatus },
-      { label: "Pipeline Stage", value: pipelineStage },
-      { label: "Owner", value: owner },
-      { label: "Next Follow-Up", value: nextFollowUp },
-      { label: "Priority Score", value: String(priorityScore) },
-      { label: "Open Case Count", value: openCaseCount },
-      { label: "GMV", value: gmv },
-      { label: "Last Contacted", value: lastContacted },
-      { label: "Photo Coverage", value: photoCoverage },
-      { label: "Description Coverage", value: descCoverage },
-      { label: "Uptime", value: uptime }
-    ]
-  };
-}
-
-function buildMerchantActivityTimelineEntry(activity) {
-  const activityType = getField(activity, ["Activity Type"]) || "Activity";
-  const outcome = getField(activity, ["Outcome"]);
-  const owner = getField(activity, ["Owner"]);
-  const timestamp = formatDateTimeDisplay(getField(activity, ["Timestamp"]));
-  const notes = getField(activity, ["Notes"]);
-  const nextFollowUp = formatDisplayDate(getField(activity, ["Next Follow-Up"]));
-  const businessName = getField(activity, ["Business Name"]);
-  const storeId = getField(activity, ["Store ID", "Store Id"]);
-
-  return {
-    kind: "activity",
-    title: activityType,
-    badge: outcome || "Logged",
-    meta: timestamp,
-    submeta: `Owner: ${owner} • Store ID: ${storeId}`,
-    details: [
-      { label: "Business Name", value: businessName },
-      { label: "Owner", value: owner },
-      { label: "Outcome", value: outcome },
-      { label: "Next Follow-Up", value: nextFollowUp }
-    ],
-    notes: notes
-  };
-}
-
-function renderMerchantTimelineEntry(entry) {
-  const typeClass = entry.kind === "snapshot" ? "timeline-snapshot" : "timeline-activity";
-
-  const detailsHtml = Array.isArray(entry.details)
-    ? entry.details
-        .map(function (item) {
-          return `
-            <div class="timeline-detail">
-              <strong>${escapeHtml(item.label)}</strong>
-              <span>${escapeHtml(item.value)}</span>
-            </div>
-          `;
-        })
-        .join("")
-    : "";
-
-  return `
-    <article class="timeline-entry ${typeClass}">
-      <div class="timeline-marker"></div>
-
-      <div class="timeline-card">
-        <div class="timeline-header">
-          <div>
-            <span class="timeline-kicker">${escapeHtml(entry.kind === "snapshot" ? "Current record" : "Activity event")}</span>
-            <h4 class="timeline-title">${escapeHtml(entry.title)}</h4>
-          </div>
-          <span class="timeline-badge">${escapeHtml(entry.badge)}</span>
-        </div>
-
-        <div class="timeline-meta">${escapeHtml(entry.meta || "")}${entry.submeta ? ` • ${escapeHtml(entry.submeta)}` : ""}</div>
-
-        <div class="timeline-details">
-          ${detailsHtml}
-        </div>
-
-        ${entry.notes ? `<div class="timeline-notes">${escapeHtml(entry.notes)}</div>` : ""}
-      </div>
-    </article>
-  `;
 }
 
 async function handleActivitySubmit(event) {
@@ -1067,7 +972,9 @@ async function refreshAfterActivitySave(storeId) {
   if (currentLead) {
     const merchantOverview = document.getElementById("merchantOverview");
     if (merchantOverview) {
-      merchantOverview.innerHTML = buildMerchantOverviewHtml(currentLead) + buildOpenCasesHtml(currentLead, currentOpenCases, false);
+      merchantOverview.innerHTML =
+        buildMerchantOverviewHtml(currentLead) +
+        buildOpenCasesHtml(currentLead, currentOpenCases, false);
     }
 
     renderMerchantTimeline(currentLead);
