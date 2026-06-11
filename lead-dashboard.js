@@ -2,9 +2,12 @@ const API_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbxZo
 
 let allLeads = [];
 let allActivities = [];
+let allOpenCases = [];
 let filteredLeads = [];
 let currentLead = null;
 let currentStoreId = "";
+let currentOpenCases = [];
+let currentOpenCasesStoreId = "";
 
 document.addEventListener("DOMContentLoaded", function () {
   const searchInput = document.getElementById("merchantSearch");
@@ -192,6 +195,54 @@ function loadActivities() {
     };
 
     script.src = `${API_URL}?action=getActivities&callback=${callbackName}&_=${Date.now()}`;
+    document.body.appendChild(script);
+  });
+}
+
+function loadOpenCasesByStoreId(storeId) {
+  return new Promise((resolve) => {
+    if (!storeId) {
+      resolve([]);
+      return;
+    }
+
+    const callbackName = "handleOpenCasesResponse_" + Date.now();
+    const script = document.createElement("script");
+
+    window[callbackName] = function (response) {
+      try {
+        if (!response.success) {
+          console.error("Open cases load failed:", response.message);
+          currentOpenCases = [];
+          currentOpenCasesStoreId = String(storeId).trim();
+          renderMerchantOpenCases(currentLead, [], false);
+          resolve([]);
+          return;
+        }
+
+        const cases = Array.isArray(response.data) ? response.data : [];
+        allOpenCases = cases.slice();
+        currentOpenCases = cases.slice();
+        currentOpenCasesStoreId = String(storeId).trim();
+
+        if (currentLead && String(getStoreId(currentLead)) === String(storeId).trim()) {
+          renderMerchantOpenCases(currentLead, currentOpenCases, false);
+        }
+
+        resolve(cases);
+      } finally {
+        delete window[callbackName];
+        script.remove();
+      }
+    };
+
+    const params = new URLSearchParams();
+    params.set("action", "getOpenCasesByStoreId");
+    params.set("storeId", storeId);
+    params.set("callback", callbackName);
+    params.set("_", String(Date.now()));
+
+    script.src = `${API_URL}?${params.toString()}`;
     document.body.appendChild(script);
   });
 }
@@ -506,9 +557,7 @@ function renderCurrentMerchantView(lead) {
     drawerSubtitle.textContent = `Store ID: ${getStoreId(lead)}`;
   }
 
-  if (merchantOverview) {
-    merchantOverview.innerHTML = buildMerchantOverviewHtml(lead);
-  }
+  renderMerchantOverviewWithCases(lead, currentOpenCases, true);
 
   if (activityMerchantContext) {
     activityMerchantContext.innerHTML = buildActivityContextHtml(lead);
@@ -516,6 +565,11 @@ function renderCurrentMerchantView(lead) {
 
   renderMerchantTimeline(lead);
   syncLeadManagementFormWithLead(lead);
+
+  const storeId = getStoreId(lead);
+  if (storeId) {
+    loadMerchantOpenCases(storeId);
+  }
 }
 
 function openMerchantDrawer(storeId) {
@@ -532,6 +586,8 @@ function openMerchantDrawer(storeId) {
 
   currentLead = lead;
   currentStoreId = storeId;
+  currentOpenCases = [];
+  currentOpenCasesStoreId = String(storeId).trim();
 
   console.log("Opening drawer for:", storeId);
 
@@ -546,6 +602,7 @@ function openMerchantDrawer(storeId) {
   }
 
   loadMerchantActivities(storeId);
+  loadMerchantOpenCases(storeId);
 }
 
 function syncActivityFormWithLead(lead) {
@@ -693,6 +750,80 @@ function renderMerchantTimeline(lead, activitiesOverride) {
       }).join("")}
     </div>
   `;
+}
+
+function renderMerchantOpenCases(lead, openCases, isLoading) {
+  const merchantOverview = document.getElementById("merchantOverview");
+  if (!merchantOverview) return;
+
+  merchantOverview.innerHTML =
+    buildMerchantOverviewHtml(lead) +
+    buildOpenCasesHtml(lead, openCases, isLoading);
+}
+
+function buildOpenCasesHtml(lead, openCases, isLoading) {
+  const cases = Array.isArray(openCases) ? openCases : [];
+  const total = cases.length;
+  const headline = `Open Cases (${total})`;
+
+  if (isLoading) {
+    return `
+      <div class="open-cases-section">
+        <h3 style="margin-top:16px;">${escapeHtml(headline)}</h3>
+        <div class="empty-state">Loading open cases...</div>
+      </div>
+    `;
+  }
+
+  if (!cases.length) {
+    return `
+      <div class="open-cases-section">
+        <h3 style="margin-top:16px;">${escapeHtml(headline)}</h3>
+        <div class="empty-state">No open cases found for this merchant.</div>
+      </div>
+    `;
+  }
+
+  const cards = cases.map(function (caseItem) {
+    return renderOpenCaseCard(caseItem);
+  }).join("");
+
+  return `
+    <div class="open-cases-section">
+      <h3 style="margin-top:16px;">${escapeHtml(headline)}</h3>
+      <div class="open-cases-list">
+        ${cards}
+      </div>
+    </div>
+  `;
+}
+
+function renderOpenCaseCard(caseItem) {
+  const caseId = getField(caseItem, ["Case ID", "Case Id"]);
+  const caseType = getField(caseItem, ["Case Type"]);
+  const status = getField(caseItem, ["Status"]);
+  const priority = getField(caseItem, ["Priority"]);
+  const createdDate = formatDisplayDate(getField(caseItem, ["Created Date"]));
+  const lastUpdated = formatDisplayDate(getField(caseItem, ["Last Updated"]));
+  const owner = getField(caseItem, ["Owner"]);
+  const notes = getField(caseItem, ["Notes"]);
+
+  return `
+    <div class="drawer-card merchant-open-case-item" style="margin-top:12px;">
+      <strong>${escapeHtml(caseId || "Case")}</strong><br>
+      <span class="subtext">${escapeHtml(caseType)} • ${escapeHtml(status)} • ${escapeHtml(priority)}</span>
+      <div style="margin-top:8px;">
+        <div><strong>Created:</strong> ${escapeHtml(createdDate)}</div>
+        <div><strong>Last Updated:</strong> ${escapeHtml(lastUpdated)}</div>
+        <div><strong>Owner:</strong> ${escapeHtml(owner)}</div>
+      </div>
+      <div style="margin-top:8px;">${escapeHtml(notes)}</div>
+    </div>
+  `;
+}
+
+function renderMerchantOverviewWithCases(lead, openCases, isLoading) {
+  renderMerchantOpenCases(lead, openCases, isLoading);
 }
 
 function buildMerchantSnapshotTimelineEntry(lead, activityCount) {
@@ -931,11 +1062,12 @@ async function refreshAfterActivitySave(storeId) {
 
   await loadMerchantActivities(storeId);
   await loadActivities();
+  await loadMerchantOpenCases(storeId);
 
   if (currentLead) {
     const merchantOverview = document.getElementById("merchantOverview");
     if (merchantOverview) {
-      merchantOverview.innerHTML = buildMerchantOverviewHtml(currentLead);
+      merchantOverview.innerHTML = buildMerchantOverviewHtml(currentLead) + buildOpenCasesHtml(currentLead, currentOpenCases, false);
     }
 
     renderMerchantTimeline(currentLead);
