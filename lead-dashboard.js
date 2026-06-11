@@ -659,15 +659,26 @@ function ensureMerchantCaseCenterModal() {
                 <label style="display:block; font-size:10px; text-transform:uppercase; margin-bottom:6px;">Case Category</label>
                 <select id="caseCenterNewCategory">
                   <option value="">Select category</option>
-                  <option value="Tablet Issue">Tablet Issue</option>
-                  <option value="Photo Issue">Photo Issue</option>
-                  <option value="Video Issue">Video Issue</option>
-                  <option value="Menu Issue">Menu Issue</option>
-                  <option value="Support Request">Support Request</option>
-                  <option value="Billing">Billing</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Operations">Operations</option>
-                  <option value="Other">Other</option>
+                  <option value="Account settings">Account settings</option>
+                  <option value="Bulk Update">Bulk Update</option>
+                  <option value="Change of Ownership">Change of Ownership</option>
+                  <option value="COVID Inquiries">COVID Inquiries</option>
+                  <option value="Data Reporting Request">Data Reporting Request</option>
+                  <option value="Deactivation">Deactivation</option>
+                  <option value="Feedback">Feedback</option>
+                  <option value="Growth">Growth</option>
+                  <option value="Menu">Menu</option>
+                  <option value="Merchant Portal">Merchant Portal</option>
+                  <option value="Onboarding Issues">Onboarding Issues</option>
+                  <option value="Order Protocol">Order Protocol</option>
+                  <option value="Payment">Payment</option>
+                  <option value="Photography">Photography</option>
+                  <option value="Point of Sale">Point of Sale</option>
+                  <option value="Reactivation">Reactivation</option>
+                  <option value="Renegotiation">Renegotiation</option>
+                  <option value="Store Addition">Store Addition</option>
+                  <option value="Tablet/Printer">Tablet/Printer</option>
+                  <option value="Verticals">Verticals</option>
                 </select>
               </div>
             </div>
