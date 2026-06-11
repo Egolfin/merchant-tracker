@@ -536,7 +536,7 @@ function getTopMerchantItems() {
 function renderFollowUpModalItem(lead, mode) {
   const storeId = lead.__storeId || getStoreId(lead);
   const businessName = getField(lead, ["Business Name"]);
-  const owner = getField(lead, ["Owner"]);
+  const owner = getMerchantOwnerName(lead);
   const nextFollowUp = formatDisplayDate(getField(lead, ["Next Follow-Up"]));
   const leadStatus = getField(lead, ["Lead Status"]);
   const priority = getMerchantPriorityScore(lead);
@@ -558,6 +558,12 @@ function renderFollowUpModalItem(lead, mode) {
       <span class="item-badge">${escapeHtml(badgeText)}</span>
     </div>
   `;
+}
+
+function getMerchantOwnerName(lead) {
+  return String(
+    getField(lead, ["DM Name", "DM name", "Owner"])
+  ).trim();
 }
 
 function renderCurrentMerchantView(lead) {
@@ -636,7 +642,7 @@ function syncActivityFormWithLead(lead) {
   }
 
   if (activityOwner) {
-    activityOwner.value = getField(lead, ["Owner"]) || "Esteban Golfin";
+    activityOwner.value = getMerchantOwnerName(lead) || "Esteban Golfin";
   }
 
   if (activityTimestamp) {
@@ -662,7 +668,7 @@ function syncLeadManagementFormWithLead(lead) {
   }
 
   if (leadOwner) {
-    leadOwner.value = getField(lead, ["Owner"]) || "Esteban Golfin";
+    leadOwner.value = getMerchantOwnerName(lead) || "Esteban Golfin";
   }
 
   if (leadNextFollowUp) {
@@ -837,7 +843,7 @@ function buildMerchantSnapshotTimelineEntry(lead, activityCount) {
   const lastActivity = getLatestActivityForStoreId(storeId);
   const leadStatus = getField(lead, ["Lead Status"]);
   const pipelineStage = getField(lead, ["Pipeline Stage"]);
-  const owner = getField(lead, ["Owner"]);
+  const owner = getMerchantOwnerName(lead);
   const nextFollowUp = formatDisplayDate(getField(lead, ["Next Follow-Up"]));
   const priorityScore = getMerchantPriorityScore(lead);
   const openCaseCount = getField(lead, ["Open Case Count"]);
@@ -956,7 +962,7 @@ async function handleActivitySubmit(event) {
   const activityNotes = document.getElementById("activityNotes")?.value.trim() || "";
   const activityOwnerInput = document.getElementById("activityOwner");
   const activityTimestampInput = document.getElementById("activityTimestamp");
-  const activityOwner = activityOwnerInput?.value.trim() || getField(currentLead, ["Owner"]) || "Esteban Golfin";
+  const activityOwner = activityOwnerInput?.value.trim() || getMerchantOwnerName(currentLead) || "Esteban Golfin";
   const activityTimestamp = activityTimestampInput?.value || getCurrentLocalDateTimeValue();
   const storeId = getStoreId(currentLead);
 
@@ -1279,7 +1285,7 @@ function buildMerchantOverviewHtml(lead) {
   const promoOpp = getField(lead, ["Promo Opp"]);
   const siOpp = getField(lead, ["SI Opp"]);
   const leadStatus = getField(lead, ["Lead Status"]);
-  const owner = getField(lead, ["Owner"]);
+  const owner = getMerchantOwnerName(lead);
   const lastContacted = getField(lead, ["Last Contacted"]);
   const nextFollowUp = getField(lead, ["Next Follow-Up"]);
   const openCaseCount = getField(lead, ["Open Case Count"]);
@@ -1316,6 +1322,7 @@ function buildActivityContextHtml(lead) {
       <div><strong>Store ID:</strong> ${escapeHtml(getField(lead, ["Store Id", "Store ID"]))}</div>
       <div><strong>Business ID:</strong> ${escapeHtml(getField(lead, ["Business Id", "Business ID"]))}</div>
       <div><strong>Rx Name:</strong> ${escapeHtml(getField(lead, ["Rx Name"]))}</div>
+      <div><strong>DM Name:</strong> ${escapeHtml(getMerchantOwnerName(lead))}</div>
       <div><strong>Lead Status:</strong> ${escapeHtml(getField(lead, ["Lead Status"]))}</div>
       <div><strong>Priority Score:</strong> ${escapeHtml(String(getMerchantPriorityScore(lead)))}</div>
     </div>
