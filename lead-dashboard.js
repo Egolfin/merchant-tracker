@@ -521,24 +521,25 @@ function ensureMerchantCaseCenterStyles() {
     .case-center-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(3, 7, 18, 0.78);
-      backdrop-filter: blur(8px);
-      z-index: 2000;
+      background: rgba(3, 7, 18, 0.84);
+      backdrop-filter: blur(10px);
+      z-index: 99999;
       display: none;
-      align-items: center;
-      justify-content: center;
+      align-items: stretch;
+      justify-content: flex-end;
       padding: 18px;
     }
     .case-center-window {
-      width: min(1280px, 100%);
-      height: min(90vh, 980px);
+      width: min(1120px, 96vw);
+      height: calc(100vh - 36px);
       background: #111827;
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 18px;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.55);
+      box-shadow: -30px 0 80px rgba(0,0,0,0.55);
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      margin-left: auto;
     }
     .case-center-header {
       display: flex;
@@ -548,6 +549,7 @@ function ensureMerchantCaseCenterStyles() {
       padding: 18px 22px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      flex: 0 0 auto;
     }
     .case-center-title { margin: 0; font-size: 20px; color: #f3f4f6; }
     .case-center-subtitle { margin-top: 6px; color: rgba(243,244,246,0.68); font-size: 13px; }
@@ -559,6 +561,7 @@ function ensureMerchantCaseCenterStyles() {
       overflow: hidden;
       flex: 1;
       min-height: 0;
+      background: #111827;
     }
     .case-center-panel {
       background: #1e222b;
@@ -570,17 +573,22 @@ function ensureMerchantCaseCenterStyles() {
     }
     .case-center-list { display: flex; flex-direction: column; gap: 12px; }
     .case-center-form label, .case-center-panel label { color: rgba(243,244,246,0.68); }
-    .case-center-form input, .case-center-form select, .case-center-form textarea {
+    .case-center-form input, .case-center-form select, .case-center-form textarea,
+    .case-center-case select, .case-center-case textarea {
       width: 100%;
-      background: #111827;
-      color: #f3f4f6;
-      border: 1px solid #2d3139;
+      background: #111827 !important;
+      color: #f3f4f6 !important;
+      border: 1px solid #2d3139 !important;
       border-radius: 10px;
       padding: 12px 14px;
       font-size: 14px;
       outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
     }
-    .case-center-form textarea { min-height: 110px; resize: vertical; }
+    .case-center-form textarea, .case-center-case textarea { min-height: 110px; resize: vertical; line-height: 1.45; }
     .case-center-case {
       background: rgba(255,255,255,0.02);
       border: 1px solid rgba(255,255,255,0.08);
@@ -592,6 +600,17 @@ function ensureMerchantCaseCenterStyles() {
     .case-center-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 14px; }
     .case-center-link { cursor: pointer; }
     .case-delete-btn { background: rgba(239,68,68,0.15) !important; color: #fca5a5 !important; border: 1px solid rgba(239,68,68,0.25) !important; }
+    .case-center-form input::placeholder,
+    .case-center-form textarea::placeholder,
+    .case-center-case textarea::placeholder { color: rgba(243,244,246,0.38); }
+    .case-center-form input:focus,
+    .case-center-form select:focus,
+    .case-center-form textarea:focus,
+    .case-center-case select:focus,
+    .case-center-case textarea:focus {
+      border-color: rgba(96,165,250,0.85) !important;
+      box-shadow: 0 0 0 3px rgba(96,165,250,0.14);
+    }
   `;
   document.head.appendChild(style);
 }
