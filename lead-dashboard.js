@@ -204,6 +204,7 @@ function loadMerchantOpenCases(storeId) {
     if (!storeId) {
       currentOpenCases = [];
       currentOpenCasesStoreId = "";
+      renderMerchantCases(null, []);
       resolve([]);
       return;
     }
@@ -215,20 +216,21 @@ function loadMerchantOpenCases(storeId) {
     window[callbackName] = function (response) {
       try {
         const merchantOverview = document.getElementById("merchantOverview");
+        const merchantCases = document.getElementById("merchantCases");
 
         if (!response.success) {
           console.error("Open cases load failed:", response.message);
           currentOpenCases = [];
           currentOpenCasesStoreId = requestedStoreId;
 
-          if (
-            merchantOverview &&
-            currentLead &&
-            String(getStoreId(currentLead)) === requestedStoreId
-          ) {
+          if (merchantOverview && currentLead && String(getStoreId(currentLead)) === requestedStoreId) {
             merchantOverview.innerHTML =
               buildMerchantOverviewHtml(currentLead) +
               buildOpenCasesHtml(currentLead, [], false);
+          }
+
+          if (merchantCases && currentLead && String(getStoreId(currentLead)) === requestedStoreId) {
+            merchantCases.innerHTML = buildMerchantCasesHtml([], false);
           }
 
           if (currentLead && String(getStoreId(currentLead)) === requestedStoreId) {
@@ -254,6 +256,14 @@ function loadMerchantOpenCases(storeId) {
             buildOpenCasesHtml(currentLead, currentOpenCases, false);
         }
 
+        if (
+          merchantCases &&
+          currentLead &&
+          String(getStoreId(currentLead)) === requestedStoreId
+        ) {
+          merchantCases.innerHTML = buildMerchantCasesHtml(currentOpenCases, false);
+        }
+
         if (currentLead && String(getStoreId(currentLead)) === requestedStoreId) {
           renderMerchantTimeline(currentLead);
         }
@@ -274,6 +284,292 @@ function loadMerchantOpenCases(storeId) {
     script.src = `${API_URL}?${params.toString()}`;
     document.body.appendChild(script);
   });
+}
+
+function buildMerchantCasesHtml(cases, isLoading) {
+  const caseList = Array.isArray(cases) ? cases : [];
+
+  if (isLoading) {
+    return `<div class="empty-state">Loading cases...</div>`;
+  }
+
+  if (!caseList.length) {
+    return `<div class="empty-state">No cases selected.</div>`;
+  }
+
+  return `
+    <div class="merchant-cases-list">
+      ${caseList.map(function (caseItem) {
+        return renderMerchantCaseCard(caseItem);
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderMerchantCases(lead, casesOverride) {
+  const container = document.getElementById("merchantCases");
+  if (!container) return;
+
+  if (!lead) {
+    container.innerHTML = buildMerchantCasesHtml([], false);
+    return;
+  }
+
+  const storeId = getStoreId(lead);
+  const merchantCases = Array.isArray(casesOverride)
+    ? casesOverride.slice()
+    : (String(currentOpenCasesStoreId) === String(storeId) ? currentOpenCases.slice() : []);
+
+  merchantCases.sort(function (a, b) {
+    const aDate =
+      parseFlexibleDateTime(getField(a, ["Last Updated"])) ||
+      parseFlexibleDateTime(getField(a, ["Created Date"])) ||
+      new Date(0);
+
+    const bDate =
+      parseFlexibleDateTime(getField(b, ["Last Updated"])) ||
+      parseFlexibleDateTime(getField(b, ["Created Date"])) ||
+      new Date(0);
+
+    return bDate.getTime() - aDate.getTime();
+  });
+
+  container.innerHTML = buildMerchantCasesHtml(merchantCases, false);
+}
+
+function renderMerchantCaseCard(caseItem) {
+  const caseId = getField(caseItem, ["Case ID", "Case Id"]);
+  const caseType = getField(caseItem, ["Case Type"]) || "Open Case";
+  const status = getField(caseItem, ["Status"]) || "Open";
+  const priority = getField(caseItem, ["Priority"]);
+  const createdDateValue = getField(caseItem, ["Created Date"]);
+  const lastUpdatedValue = getField(caseItem, ["Last Updated"]);
+  const owner = getField(caseItem, ["Owner"]);
+  const notes = getField(caseItem, ["Notes"]);
+  const businessName = getField(caseItem, ["Business Name"]);
+  const storeId = getField(caseItem, ["Store ID", "Store Id"]);
+
+  const statusOptions = [
+    "Open",
+    "Resolved",
+    "Closed",
+    "Closed Unresolved"
+  ].map(function (option) {
+    const selected = String(option).toLowerCase() === String(status).trim().toLowerCase() ? "selected" : "";
+    return `<option value="${escapeHtml(option)}" ${selected}>${escapeHtml(option)}</option>`;
+  }).join("");
+
+  return `
+    <div class="drawer-card merchant-case-card" data-case-id="${escapeHtml(caseId)}" style="margin-top:12px;">
+      <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+        <div>
+          <strong>${escapeHtml(caseType)}</strong><br>
+          <span class="subtext">Case ID: ${escapeHtml(caseId)} • Priority: ${escapeHtml(priority)} • Store ID: ${escapeHtml(storeId)}</span>
+        </div>
+
+        <div style="min-width:190px;">
+          <label style="font-size:10px; text-transform:uppercase; display:block; margin-bottom:6px;">Status</label>
+          <select class="case-status-select" data-case-id="${escapeHtml(caseId)}">
+            ${statusOptions}
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div><strong>Business Name:</strong> ${escapeHtml(businessName)}</div>
+        <div><strong>Owner:</strong> ${escapeHtml(owner)}</div>
+        <div><strong>Created Date:</strong> ${escapeHtml(formatDisplayDate(createdDateValue))}</div>
+        <div><strong>Last Updated:</strong> ${escapeHtml(formatDisplayDate(lastUpdatedValue))}</div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <strong>Notes</strong>
+        <div style="white-space:pre-wrap; margin-top:6px; padding:10px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:8px;">
+          ${escapeHtml(notes || "No notes yet.")}
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label style="font-size:10px; text-transform:uppercase; display:block; margin-bottom:6px;">Add Note</label>
+        <textarea
+          class="case-new-note"
+          data-case-id="${escapeHtml(caseId)}"
+          rows="3"
+          placeholder="Add a note for this case..."
+        ></textarea>
+      </div>
+
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary" onclick="saveCaseStatus('${escapeJs(caseId)}')">Save Status</button>
+        <button type="button" class="btn btn-primary" onclick="addCaseNote('${escapeJs(caseId)}')">Add Note</button>
+      </div>
+    </div>
+  `;
+}
+
+function postOpenCaseUpdate(caseId, updates) {
+  return new Promise((resolve, reject) => {
+    const callbackName = "handleUpdateOpenCase_" + Date.now();
+    const script = document.createElement("script");
+    let timedOut = false;
+
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      cleanup();
+      reject(new Error("Case update request timed out."));
+    }, 20000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[callbackName];
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    }
+
+    window[callbackName] = function (response) {
+      try {
+        if (timedOut) return;
+
+        if (!response || !response.success) {
+          reject(new Error((response && response.message) || "Failed to update case."));
+          return;
+        }
+
+        resolve(response);
+      } finally {
+        cleanup();
+      }
+    };
+
+    const params = new URLSearchParams();
+    params.set("action", "updateOpenCase");
+    params.set("caseId", caseId);
+    params.set("callback", callbackName);
+    params.set("_", String(Date.now()));
+
+    Object.keys(updates || {}).forEach(function (key) {
+      params.set(key, updates[key]);
+    });
+
+    script.src = `${API_URL}?${params.toString()}`;
+    document.body.appendChild(script);
+  });
+}
+
+function postOpenCaseNote(caseId, note, owner) {
+  return new Promise((resolve, reject) => {
+    const callbackName = "handleAddOpenCaseNote_" + Date.now();
+    const script = document.createElement("script");
+    let timedOut = false;
+
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      cleanup();
+      reject(new Error("Case note request timed out."));
+    }, 20000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[callbackName];
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    }
+
+    window[callbackName] = function (response) {
+      try {
+        if (timedOut) return;
+
+        if (!response || !response.success) {
+          reject(new Error((response && response.message) || "Failed to add case note."));
+          return;
+        }
+
+        resolve(response);
+      } finally {
+        cleanup();
+      }
+    };
+
+    const params = new URLSearchParams();
+    params.set("action", "addOpenCaseNote");
+    params.set("caseId", caseId);
+    params.set("note", note);
+    params.set("owner", owner || "");
+    params.set("callback", callbackName);
+    params.set("_", String(Date.now()));
+
+    script.src = `${API_URL}?${params.toString()}`;
+    document.body.appendChild(script);
+  });
+}
+
+function saveCaseStatus(caseId) {
+  const caseIdStr = String(caseId).trim();
+  const select = Array.from(document.querySelectorAll(".case-status-select")).find(function (el) {
+    return String(el.dataset.caseId).trim() === caseIdStr;
+  });
+
+  if (!select) {
+    alert("Could not find the case status field.");
+    return;
+  }
+
+  const status = String(select.value || "").trim();
+
+  if (!status) {
+    alert("Please select a case status.");
+    return;
+  }
+
+  select.disabled = true;
+
+  postOpenCaseUpdate(caseIdStr, { Status: status })
+    .then(function () {
+      return loadMerchantOpenCases(currentStoreId);
+    })
+    .catch(function (error) {
+      console.error("Case update error:", error);
+      alert(error.message || "Could not save the case status.");
+    })
+    .finally(function () {
+      select.disabled = false;
+    });
+}
+
+function addCaseNote(caseId) {
+  const caseIdStr = String(caseId).trim();
+  const noteInput = Array.from(document.querySelectorAll(".case-new-note")).find(function (el) {
+    return String(el.dataset.caseId).trim() === caseIdStr;
+  });
+
+  if (!noteInput) {
+    alert("Could not find the case note field.");
+    return;
+  }
+
+  const note = String(noteInput.value || "").trim();
+
+  if (!note) {
+    alert("Please enter a note before saving.");
+    return;
+  }
+
+  noteInput.disabled = true;
+
+  postOpenCaseNote(caseIdStr, note, getMerchantOwnerName(currentLead))
+    .then(function () {
+      noteInput.value = "";
+      return loadMerchantOpenCases(currentStoreId);
+    })
+    .catch(function (error) {
+      console.error("Case note error:", error);
+      alert(error.message || "Could not add the case note.");
+    })
+    .finally(function () {
+      noteInput.disabled = false;
+    });
 }
 
 function applyFiltersAndSort() {
@@ -620,6 +916,11 @@ function renderCurrentMerchantView(lead) {
     activityMerchantContext.innerHTML = buildActivityContextHtml(lead);
   }
 
+  const merchantCases = document.getElementById("merchantCases");
+  if (merchantCases) {
+    merchantCases.innerHTML = buildMerchantCasesHtml([], true);
+  }
+
   renderMerchantTimeline(lead);
   syncLeadManagementFormWithLead(lead);
 
@@ -627,7 +928,6 @@ function renderCurrentMerchantView(lead) {
   if (storeId) {
     loadMerchantOpenCases(storeId);
   }
-}
 
 function openMerchantDrawer(storeId) {
   if (!storeId) return;
