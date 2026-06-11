@@ -485,8 +485,241 @@ function renderOpenCaseCard(caseItem) {
 function buildMerchantCasesHtml(cases, isLoading) {
   const caseList = Array.isArray(cases) ? cases : [];
   if (isLoading) return `<div class="empty-state">Loading cases...</div>`;
-  if (!caseList.length) return `<div class="empty-state">No cases selected.</div>`;
-  return `<div class="merchant-cases-list">${caseList.map(renderMerchantCaseCard).join("")}</div>`;
+  if (!caseList.length) {
+    return `
+      <div class="empty-state" style="margin-bottom:14px;">
+        No cases selected.
+      </div>
+    `;
+  }
+  return `
+    <div class="merchant-cases-list">
+      ${caseList.map(renderMerchantCaseCard).join("")}
+    </div>
+  `;
+}
+
+function renderMerchantCases(lead, casesOverride) {
+  const c = getEl("merchantCases");
+  if (!c) return;
+  if (!lead) {
+    c.innerHTML = buildMerchantCasesHtml([], false);
+    return;
+  }
+  const storeId = getStoreId(lead);
+  const merchantCases = Array.isArray(casesOverride) ? casesOverride.slice() : (String(currentOpenCasesStoreId) === String(storeId) ? currentOpenCases.slice() : []);
+  merchantCases.sort((a, b) => (parseFlexibleDateTime(getField(b, ["Last Updated"])) || parseFlexibleDateTime(getField(b, ["Created Date"])) || new Date(0)) - (parseFlexibleDateTime(getField(a, ["Last Updated"])) || parseFlexibleDateTime(getField(a, ["Created Date"])) || new Date(0)));
+  c.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;">
+      <div class="subtext" style="color:rgba(243,244,246,0.7);">Open cases for this merchant</div>
+      <button type="button" class="btn btn-primary" onclick="openCaseCreateForm()" style="min-width:140px;">Create Case</button>
+    </div>
+    <div id="caseCreatePanel" style="display:none; margin-bottom:16px;"></div>
+    ${buildMerchantCasesHtml(merchantCases, false)}
+  `;
+}
+
+function renderMerchantCasesAfterLoad() {
+  if (!currentLead) return;
+  renderMerchantCases(currentLead, currentOpenCases);
+}
+
+function openCaseCreateForm() {
+  const panel = getEl("caseCreatePanel");
+  if (!panel) return;
+  const isVisible = panel.style.display === "block";
+  if (isVisible) {
+    panel.style.display = "none";
+    panel.innerHTML = "";
+    return;
+  }
+
+  const lead = currentLead;
+  if (!lead) {
+    alert("Select a merchant first.");
+    return;
+  }
+
+  panel.style.display = "block";
+  panel.innerHTML = `
+    <div class="drawer-card" style="padding:16px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.02); border-radius:14px; margin-bottom:12px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div>
+          <label style="font-size:10px; text-transform:uppercase; color:rgba(243,244,246,0.68); display:block; margin-bottom:6px;">Case Number</label>
+          <input id="newCaseNumber" type="text" placeholder="718445321" style="width:100%; background:#1e222b; color:#f3f4f6; border:1px solid #2d3139; border-radius:10px; padding:12px 14px;">
+        </div>
+        <div>
+          <label style="font-size:10px; text-transform:uppercase; color:rgba(243,244,246,0.68); display:block; margin-bottom:6px;">Priority</label>
+          <select id="newCasePriority" style="width:100%; background:#1e222b; color:#f3f4f6; border:1px solid #2d3139; border-radius:10px; padding:12px 14px;">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High" selected>High</option>
+            <option value="Urgent">Urgent</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+        <div>
+          <label style="font-size:10px; text-transform:uppercase; color:rgba(243,244,246,0.68); display:block; margin-bottom:6px;">Case Subject</label>
+          <input id="newCaseSubject" type="text" placeholder="Tablet not receiving orders" style="width:100%; background:#1e222b; color:#f3f4f6; border:1px solid #2d3139; border-radius:10px; padding:12px 14px;">
+        </div>
+        <div>
+          <label style="font-size:10px; text-transform:uppercase; color:rgba(243,244,246,0.68); display:block; margin-bottom:6px;">Case Category</label>
+          <select id="newCaseCategory" style="width:100%; background:#1e222b; color:#f3f4f6; border:1px solid #2d3139; border-radius:10px; padding:12px 14px;">
+            <option value="">Select category</option>
+            <option value="Tablet Issue">Tablet Issue</option>
+            <option value="Photo Issue">Photo Issue</option>
+            <option value="Video Issue">Video Issue</option>
+            <option value="Menu Issue">Menu Issue</option>
+            <option value="Support Request">Support Request</option>
+            <option value="Billing">Billing</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Operations">Operations</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <label style="font-size:10px; text-transform:uppercase; color:rgba(243,244,246,0.68); display:block; margin-bottom:6px;">Initial Note</label>
+        <textarea id="newCaseNotes" rows="4" placeholder="Write the case details here..." style="width:100%; resize:vertical; min-height:110px; background:#1e222b; color:#f3f4f6; border:1px solid #2d3139; border-radius:10px; padding:12px 14px;"></textarea>
+      </div>
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary" onclick="closeCaseCreateForm()" style="min-width:120px;">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="createCaseForCurrentMerchant()" style="min-width:140px;">Save Case</button>
+      </div>
+    </div>
+  `;
+}
+
+function closeCaseCreateForm() {
+  const panel = getEl("caseCreatePanel");
+  if (!panel) return;
+  panel.style.display = "none";
+  panel.innerHTML = "";
+}
+
+function createCaseForCurrentMerchant() {
+  if (!currentLead) {
+    alert("Select a merchant first.");
+    return;
+  }
+
+  const numberEl = getEl("newCaseNumber");
+  const subjectEl = getEl("newCaseSubject");
+  const categoryEl = getEl("newCaseCategory");
+  const priorityEl = getEl("newCasePriority");
+  const notesEl = getEl("newCaseNotes");
+
+  const caseNumber = String(numberEl?.value || "").trim();
+  const caseSubject = String(subjectEl?.value || "").trim();
+  const caseCategory = String(categoryEl?.value || "").trim();
+  const priority = String(priorityEl?.value || "High").trim() || "High";
+  const notes = String(notesEl?.value || "").trim();
+
+  if (!caseNumber) {
+    alert("Please enter a case number.");
+    return;
+  }
+
+  if (!caseSubject) {
+    alert("Please enter a case subject.");
+    return;
+  }
+
+  if (!caseCategory) {
+    alert("Please select a case category.");
+    return;
+  }
+
+  const payload = {
+    storeId: getStoreId(currentLead),
+    businessId: getField(currentLead, ["Business Id", "Business ID"]),
+    businessName: getField(currentLead, ["Business Name"]),
+    caseNumber,
+    caseSubject,
+    caseCategory,
+    priority,
+    notes,
+    owner: getMerchantOwnerName(currentLead) || "Esteban Golfin"
+  };
+
+  const btn = document.querySelector("#caseCreatePanel .btn-primary");
+  if (btn) btn.disabled = true;
+
+  postCreateOpenCase(payload)
+    .then(() => loadMerchantOpenCases(currentStoreId))
+    .then(() => {
+      closeCaseCreateForm();
+      renderMerchantCases(currentLead, currentOpenCases);
+      loadLeads();
+    })
+    .catch(error => {
+      console.error("Create case error:", error);
+      alert(error.message || "Could not create the case.");
+    })
+    .finally(() => {
+      if (btn) btn.disabled = false;
+    });
+}
+
+function renderMerchantCaseCard(caseItem) {
+  const caseId = getField(caseItem, ["Case ID", "Case Id", "Case Number", "Case number"]);
+  const caseSubject = getField(caseItem, ["Case Subject", "Subject"]) || getField(caseItem, ["Case Type"]) || "Open Case";
+  const caseCategory = getField(caseItem, ["Case Category", "Case Type"]) || "Other";
+  const status = getField(caseItem, ["Status"]) || "Open";
+  const priority = getField(caseItem, ["Priority"]);
+  const createdDateValue = getField(caseItem, ["Created Date"]);
+  const lastUpdatedValue = getField(caseItem, ["Last Updated"]);
+  const owner = getField(caseItem, ["Owner"]);
+  const notes = getField(caseItem, ["Notes"]);
+  const businessName = getField(caseItem, ["Business Name"]);
+  const storeId = getField(caseItem, ["Store ID", "Store Id"]);
+  const statusOptions = OPEN_CASE_STATUSES.map(option => `<option value="${escapeHtml(option)}" ${String(option).toLowerCase() === String(status).trim().toLowerCase() ? "selected" : ""}>${escapeHtml(option)}</option>`).join("");
+
+  return `
+    <div class="drawer-card merchant-case-card" data-case-id="${escapeHtml(caseId)}" style="margin-top:12px; padding:18px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.02); border-radius:14px;">
+      <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:14px;">
+        <div>
+          <strong style="font-size:16px; display:block; margin-bottom:4px;">${escapeHtml(caseSubject)}</strong>
+          <span class="subtext" style="color:rgba(243,244,246,0.72); font-size:12px;">Case Number: ${escapeHtml(caseId)} • Category: ${escapeHtml(caseCategory)} • Priority: ${escapeHtml(priority)} • Store ID: ${escapeHtml(storeId)}</span>
+        </div>
+        <div style="min-width:220px; flex:0 0 220px;">
+          <label style="font-size:10px; text-transform:uppercase; display:block; margin-bottom:6px; color:rgba(243,244,246,0.68); letter-spacing:0.06em;">Status</label>
+          <select class="case-status-select" data-case-id="${escapeHtml(caseId)}" style="width:100%; appearance:none; background:#1e222b; color:#f3f4f6; border:1px solid #2d3139; border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.2; box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);">
+            ${statusOptions}
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px 18px; margin-top:4px;">
+        <div><strong>Business Name:</strong> ${escapeHtml(businessName)}</div>
+        <div><strong>Owner:</strong> ${escapeHtml(owner)}</div>
+        <div><strong>Created Date:</strong> ${escapeHtml(formatDisplayDate(createdDateValue))}</div>
+        <div><strong>Last Updated:</strong> ${escapeHtml(formatDisplayDate(lastUpdatedValue))}</div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <strong style="display:block; margin-bottom:8px;">Notes</strong>
+        <div style="white-space:pre-wrap; padding:12px 14px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:10px; color:#f3f4f6; line-height:1.5;">${escapeHtml(notes || "No notes yet.")}</div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label style="font-size:10px; text-transform:uppercase; display:block; margin-bottom:6px; color:rgba(243,244,246,0.68); letter-spacing:0.06em;">Add Note</label>
+        <textarea
+          class="case-new-note"
+          data-case-id="${escapeHtml(caseId)}"
+          rows="4"
+          placeholder="Add a note for this case..."
+          style="width:100%; resize:vertical; min-height:110px; background:#1e222b; color:#f3f4f6; border:1px solid #2d3139; border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.45; box-shadow:inset 0 1px 0 rgba(255,255,255,0.03); outline:none;"
+        ></textarea>
+      </div>
+
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:14px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary" onclick="saveCaseStatus('${escapeJs(caseId)}')" style="min-width:120px;">Save Status</button>
+        <button type="button" class="btn btn-primary" onclick="addCaseNote('${escapeJs(caseId)}')" style="min-width:120px;">Add Note</button>
+      </div>
+    </div>
+  `;
 }
 
 function renderMerchantCases(lead, casesOverride) {
@@ -1020,6 +1253,23 @@ function postOpenCaseNote(caseId, note, owner) {
     params.set("caseId", caseId);
     params.set("note", note);
     params.set("owner", owner || "");
+    params.set("callback", callbackName);
+    params.set("_", String(Date.now()));
+    script.src = `${API_URL}?${params.toString()}`;
+    document.body.appendChild(script);
+  });
+}
+
+function postCreateOpenCase(payload) {
+  return new Promise((resolve, reject) => {
+    const callbackName = "handleCreateOpenCase_" + Date.now();
+    const script = document.createElement("script");
+    const timeout = setTimeout(() => { cleanup(); reject(new Error("Case create request timed out.")); }, 20000);
+    function cleanup() { clearTimeout(timeout); delete window[callbackName]; if (script.parentNode) script.parentNode.removeChild(script); }
+    window[callbackName] = response => { try { if (!response || !response.success) { reject(new Error((response && response.message) || "Failed to create case.")); return; } resolve(response); } finally { cleanup(); } };
+    const params = new URLSearchParams();
+    params.set("action", "createOpenCase");
+    params.set("data", JSON.stringify(payload));
     params.set("callback", callbackName);
     params.set("_", String(Date.now()));
     script.src = `${API_URL}?${params.toString()}`;
