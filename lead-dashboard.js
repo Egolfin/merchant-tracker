@@ -485,19 +485,329 @@ function renderOpenCaseCard(caseItem) {
 function buildMerchantCasesHtml(cases, isLoading) {
   const caseList = Array.isArray(cases) ? cases : [];
   if (isLoading) return `<div class="empty-state">Loading cases...</div>`;
-  if (!caseList.length) {
-    return `
-      <div class="empty-state" style="margin-bottom:14px;">
-        No cases selected.
-      </div>
-    `;
-  }
+  const count = caseList.length;
   return `
-    <div class="merchant-cases-list">
-      ${caseList.map(renderMerchantCaseCard).join("")}
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:2px 0 6px 0;">
+      <div>
+        <div style="font-size:14px; font-weight:600; color:#f3f4f6;">Cases for this merchant</div>
+        <div class="subtext" style="color:rgba(243,244,246,0.68); font-size:12px; margin-top:4px;">${count} case${count === 1 ? "" : "s"} available</div>
+      </div>
+      <a href="#" onclick="openMerchantCaseCenter(); return false;" style="display:inline-flex; align-items:center; gap:8px; color:#60a5fa; text-decoration:underline; font-weight:600; font-size:13px;">
+        Open Case Center ↗
+      </a>
+    </div>
+    ${count ? `<div class="empty-state" style="margin-top:12px; text-align:left; padding:14px 16px;">Use the Case Center to view, edit, create, or delete cases.</div>` : `<div class="empty-state" style="margin-top:12px; text-align:left; padding:14px 16px;">No cases selected.</div>`}
+  `;
+}
+
+function renderMerchantCases(lead, casesOverride) {
+  const c = getEl("merchantCases");
+  if (!c) return;
+  if (!lead) {
+    c.innerHTML = buildMerchantCasesHtml([], false);
+    return;
+  }
+  const storeId = getStoreId(lead);
+  const merchantCases = Array.isArray(casesOverride) ? casesOverride.slice() : (String(currentOpenCasesStoreId) === String(storeId) ? currentOpenCases.slice() : []);
+  merchantCases.sort((a, b) => (parseFlexibleDateTime(getField(b, ["Last Updated"])) || parseFlexibleDateTime(getField(b, ["Created Date"])) || new Date(0)) - (parseFlexibleDateTime(getField(a, ["Last Updated"])) || parseFlexibleDateTime(getField(a, ["Created Date"])) || new Date(0)));
+  c.innerHTML = buildMerchantCasesHtml(merchantCases, false);
+}
+
+function ensureMerchantCaseCenterStyles() {
+  if (document.getElementById("merchantCaseCenterStyles")) return;
+  const style = document.createElement("style");
+  style.id = "merchantCaseCenterStyles";
+  style.textContent = `
+    .case-center-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.78);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .case-center-window {
+      width: min(1280px, 100%);
+      height: min(90vh, 980px);
+      background: #111827;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.55);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .case-center-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    }
+    .case-center-title { margin: 0; font-size: 20px; color: #f3f4f6; }
+    .case-center-subtitle { margin-top: 6px; color: rgba(243,244,246,0.68); font-size: 13px; }
+    .case-center-body {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+      padding: 18px;
+      overflow: hidden;
+      flex: 1;
+      min-height: 0;
+    }
+    .case-center-panel {
+      background: #1e222b;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 16px;
+      overflow: auto;
+      min-height: 0;
+    }
+    .case-center-list { display: flex; flex-direction: column; gap: 12px; }
+    .case-center-form label, .case-center-panel label { color: rgba(243,244,246,0.68); }
+    .case-center-form input, .case-center-form select, .case-center-form textarea {
+      width: 100%;
+      background: #111827;
+      color: #f3f4f6;
+      border: 1px solid #2d3139;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 14px;
+      outline: none;
+    }
+    .case-center-form textarea { min-height: 110px; resize: vertical; }
+    .case-center-case {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .case-center-case h4 { margin: 0 0 6px 0; color: #f3f4f6; }
+    .case-center-case .meta { color: rgba(243,244,246,0.68); font-size: 12px; }
+    .case-center-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 14px; }
+    .case-center-link { cursor: pointer; }
+    .case-delete-btn { background: rgba(239,68,68,0.15) !important; color: #fca5a5 !important; border: 1px solid rgba(239,68,68,0.25) !important; }
+  `;
+  document.head.appendChild(style);
+}
+
+function ensureMerchantCaseCenterModal() {
+  ensureMerchantCaseCenterStyles();
+  if (document.getElementById("merchantCaseCenterOverlay")) return;
+
+  const overlay = document.createElement("div");
+  overlay.id = "merchantCaseCenterOverlay";
+  overlay.className = "case-center-overlay";
+  overlay.innerHTML = `
+    <div class="case-center-window" role="dialog" aria-modal="true" aria-labelledby="caseCenterTitle">
+      <div class="case-center-header">
+        <div>
+          <h2 id="caseCenterTitle" class="case-center-title">Case Center</h2>
+          <div id="caseCenterSubtitle" class="case-center-subtitle">Select a merchant to manage cases.</div>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="closeMerchantCaseCenter()">Close</button>
+      </div>
+      <div class="case-center-body">
+        <div class="case-center-panel">
+          <h3 style="margin:0 0 12px 0; color:#f3f4f6;">Create New Case</h3>
+          <form id="caseCenterCreateForm" class="case-center-form">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label style="display:block; font-size:10px; text-transform:uppercase; margin-bottom:6px;">Case Number</label>
+                <input id="caseCenterNewNumber" type="text" placeholder="718445321">
+              </div>
+              <div>
+                <label style="display:block; font-size:10px; text-transform:uppercase; margin-bottom:6px;">Priority</label>
+                <select id="caseCenterNewPriority">
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High" selected>High</option>
+                  <option value="Urgent">Urgent</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+              <div>
+                <label style="display:block; font-size:10px; text-transform:uppercase; margin-bottom:6px;">Case Subject</label>
+                <input id="caseCenterNewSubject" type="text" placeholder="Tablet not receiving orders">
+              </div>
+              <div>
+                <label style="display:block; font-size:10px; text-transform:uppercase; margin-bottom:6px;">Case Category</label>
+                <select id="caseCenterNewCategory">
+                  <option value="">Select category</option>
+                  <option value="Tablet Issue">Tablet Issue</option>
+                  <option value="Photo Issue">Photo Issue</option>
+                  <option value="Video Issue">Video Issue</option>
+                  <option value="Menu Issue">Menu Issue</option>
+                  <option value="Support Request">Support Request</option>
+                  <option value="Billing">Billing</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Operations">Operations</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:12px;">
+              <label style="display:block; font-size:10px; text-transform:uppercase; margin-bottom:6px;">Initial Note</label>
+              <textarea id="caseCenterNewNotes" rows="4" placeholder="Write the case details here..."></textarea>
+            </div>
+            <div class="case-center-actions">
+              <button type="button" class="btn btn-secondary" onclick="closeMerchantCaseCenter()">Cancel</button>
+              <button type="button" class="btn btn-primary" onclick="createCaseFromCaseCenter()">Create Case</button>
+            </div>
+          </form>
+        </div>
+        <div class="case-center-panel">
+          <h3 style="margin:0 0 12px 0; color:#f3f4f6;">Merchant Cases</h3>
+          <div id="caseCenterCaseList" class="case-center-list"></div>
+        </div>
+      </div>
+    </div>
+  `;
+  overlay.addEventListener("click", event => {
+    if (event.target === overlay) closeMerchantCaseCenter();
+  });
+  document.body.appendChild(overlay);
+}
+
+function openMerchantCaseCenter() {
+  if (!currentLead) {
+    alert("Select a merchant first.");
+    return;
+  }
+  ensureMerchantCaseCenterModal();
+  const overlay = document.getElementById("merchantCaseCenterOverlay");
+  if (!overlay) return;
+  overlay.style.display = "flex";
+  renderMerchantCaseCenter(currentLead);
+}
+
+function closeMerchantCaseCenter() {
+  const overlay = document.getElementById("merchantCaseCenterOverlay");
+  if (!overlay) return;
+  overlay.style.display = "none";
+}
+
+function renderMerchantCaseCenter(lead) {
+  const title = getEl("caseCenterTitle");
+  const subtitle = getEl("caseCenterSubtitle");
+  const list = getEl("caseCenterCaseList");
+  if (!title || !subtitle || !list || !lead) return;
+  title.textContent = `${getField(lead, ["Business Name"]) || "Merchant"} Case Center`;
+  subtitle.textContent = `Store ID: ${getStoreId(lead)} • Business ID: ${getField(lead, ["Business Id", "Business ID"])}`;
+  const merchantCases = (String(currentOpenCasesStoreId) === String(getStoreId(lead)) ? currentOpenCases.slice() : []).sort((a, b) => (parseFlexibleDateTime(getField(b, ["Last Updated"])) || parseFlexibleDateTime(getField(b, ["Created Date"])) || new Date(0)) - (parseFlexibleDateTime(getField(a, ["Last Updated"])) || parseFlexibleDateTime(getField(a, ["Created Date"])) || new Date(0)));
+  if (!merchantCases.length) {
+    list.innerHTML = `<div class="empty-state">No cases found for this merchant.</div>`;
+    return;
+  }
+  list.innerHTML = merchantCases.map(renderMerchantCaseCenterCard).join("");
+}
+
+function renderMerchantCaseCenterCard(caseItem) {
+  const caseNumber = getField(caseItem, ["Case Number", "Case ID", "Case Id"]);
+  const caseSubject = getField(caseItem, ["Case Subject", "Subject"]) || getField(caseItem, ["Case Type"]) || "Open Case";
+  const caseCategory = getField(caseItem, ["Case Category", "Case Type"]) || "Other";
+  const status = getField(caseItem, ["Status"]) || "Open";
+  const priority = getField(caseItem, ["Priority"]);
+  const owner = getField(caseItem, ["Owner"]);
+  const notes = getField(caseItem, ["Notes"]);
+  const createdDateValue = getField(caseItem, ["Created Date"]);
+  const lastUpdatedValue = getField(caseItem, ["Last Updated"]);
+  const statusOptions = OPEN_CASE_STATUSES.map(option => `<option value="${escapeHtml(option)}" ${String(option).toLowerCase() === String(status).trim().toLowerCase() ? "selected" : ""}>${escapeHtml(option)}</option>`).join("");
+  return `
+    <div class="case-center-case">
+      <h4>${escapeHtml(caseSubject)}</h4>
+      <div class="meta">Case Number: ${escapeHtml(caseNumber)} • Category: ${escapeHtml(caseCategory)} • Priority: ${escapeHtml(priority)}</div>
+      <div style="margin-top:12px; display:grid; grid-template-columns:1fr 220px; gap:12px; align-items:start;">
+        <div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; margin-bottom:10px; font-size:13px; color:#f3f4f6;">
+            <div><strong>Owner:</strong> ${escapeHtml(owner)}</div>
+            <div><strong>Created:</strong> ${escapeHtml(formatDisplayDate(createdDateValue))}</div>
+            <div><strong>Updated:</strong> ${escapeHtml(formatDisplayDate(lastUpdatedValue))}</div>
+            <div><strong>Status:</strong> ${escapeHtml(status)}</div>
+          </div>
+          <div style="white-space:pre-wrap; padding:12px 14px; border:1px solid rgba(255,255,255,0.08); border-radius:10px; background:rgba(255,255,255,0.02); line-height:1.5;">${escapeHtml(notes || "No notes yet.")}</div>
+          <div style="margin-top:10px;">
+            <label style="display:block; font-size:10px; text-transform:uppercase; margin-bottom:6px; color:rgba(243,244,246,0.68);">Add Note</label>
+            <textarea class="case-center-note" data-case-number="${escapeHtml(caseNumber)}" rows="3" placeholder="Add a note for this case..."></textarea>
+          </div>
+        </div>
+        <div>
+          <label style="display:block; font-size:10px; text-transform:uppercase; margin-bottom:6px; color:rgba(243,244,246,0.68);">Status</label>
+          <select class="case-center-status" data-case-number="${escapeHtml(caseNumber)}">
+            ${statusOptions}
+          </select>
+          <div class="case-center-actions" style="justify-content:stretch; margin-top:12px;">
+            <button type="button" class="btn btn-secondary" style="width:100%;" onclick="saveCaseStatusFromCenter('${escapeJs(caseNumber)}')">Save Status</button>
+            <button type="button" class="btn btn-primary" style="width:100%;" onclick="addCaseNoteFromCenter('${escapeJs(caseNumber)}')">Add Note</button>
+            <button type="button" class="btn case-delete-btn" style="width:100%;" onclick="deleteCaseFromCenter('${escapeJs(caseNumber)}')">Delete Case</button>
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }
+
+function postDeleteOpenCase(caseNumber) {
+  return new Promise((resolve, reject) => {
+    const callbackName = "handleDeleteOpenCase_" + Date.now();
+    const script = document.createElement("script");
+    const timeout = setTimeout(() => { cleanup(); reject(new Error("Case delete request timed out.")); }, 20000);
+    function cleanup() { clearTimeout(timeout); delete window[callbackName]; if (script.parentNode) script.parentNode.removeChild(script); }
+    window[callbackName] = response => { try { if (!response || !response.success) { reject(new Error((response && response.message) || "Failed to delete case.")); return; } resolve(response); } finally { cleanup(); } };
+    const params = new URLSearchParams();
+    params.set("action", "deleteOpenCase");
+    params.set("caseId", caseNumber);
+    params.set("callback", callbackName);
+    params.set("_", String(Date.now()));
+    script.src = `${API_URL}?${params.toString()}`;
+    document.body.appendChild(script);
+  });
+}
+
+function saveCaseStatusFromCenter(caseNumber) {
+  const select = document.querySelector(`.case-center-status[data-case-number="${CSS.escape(String(caseNumber))}"]`);
+  if (!select) return alert("Could not find the case status field.");
+  const status = String(select.value || "").trim();
+  if (!status) return alert("Please select a case status.");
+  select.disabled = true;
+  postOpenCaseUpdate(caseNumber, { Status: status })
+    .then(() => loadMerchantOpenCases(currentStoreId))
+    .then(() => renderMerchantCaseCenter(currentLead))
+    .catch(error => { console.error("Case update error:", error); alert(error.message || "Could not save the case status."); })
+    .finally(() => { select.disabled = false; });
+}
+
+function addCaseNoteFromCenter(caseNumber) {
+  const noteInput = document.querySelector(`.case-center-note[data-case-number="${CSS.escape(String(caseNumber))}"]`);
+  if (!noteInput) return alert("Could not find the case note field.");
+  const note = String(noteInput.value || "").trim();
+  if (!note) return alert("Please enter a note before saving.");
+  noteInput.disabled = true;
+  postOpenCaseNote(caseNumber, note, getMerchantOwnerName(currentLead))
+    .then(() => { noteInput.value = ""; return loadMerchantOpenCases(currentStoreId); })
+    .then(() => renderMerchantCaseCenter(currentLead))
+    .catch(error => { console.error("Case note error:", error); alert(error.message || "Could not add the case note."); })
+    .finally(() => { noteInput.disabled = false; });
+}
+
+function deleteCaseFromCenter(caseNumber) {
+  if (!confirm(`Delete case ${caseNumber}? This cannot be undone.`)) return;
+  postDeleteOpenCase(caseNumber)
+    .then(() => loadMerchantOpenCases(currentStoreId))
+    .then(() => renderMerchantCaseCenter(currentLead))
+    .then(() => loadLeads())
+    .catch(error => {
+      console.error("Delete case error:", error);
+      alert(error.message || "Could not delete the case.");
+    });
+}
+
 
 function renderMerchantCases(lead, casesOverride) {
   const c = getEl("merchantCases");
