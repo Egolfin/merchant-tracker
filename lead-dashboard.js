@@ -514,35 +514,48 @@ function renderMerchantCaseCard(caseItem) {
   const businessName = getField(caseItem, ["Business Name"]);
   const storeId = getField(caseItem, ["Store ID", "Store Id"]);
   const statusOptions = OPEN_CASE_STATUSES.map(option => `<option value="${escapeHtml(option)}" ${String(option).toLowerCase() === String(status).trim().toLowerCase() ? "selected" : ""}>${escapeHtml(option)}</option>`).join("");
+
   return `
-    <div class="drawer-card merchant-case-card" data-case-id="${escapeHtml(caseId)}" style="margin-top:12px;">
-      <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+    <div class="drawer-card merchant-case-card" data-case-id="${escapeHtml(caseId)}" style="margin-top:12px; padding:18px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.02); border-radius:14px;">
+      <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:14px;">
         <div>
-          <strong>${escapeHtml(caseType)}</strong><br>
-          <span class="subtext">Case ID: ${escapeHtml(caseId)} • Priority: ${escapeHtml(priority)} • Store ID: ${escapeHtml(storeId)}</span>
+          <strong style="font-size:16px; display:block; margin-bottom:4px;">${escapeHtml(caseType)}</strong>
+          <span class="subtext" style="color:rgba(243,244,246,0.72); font-size:12px;">Case ID: ${escapeHtml(caseId)} • Priority: ${escapeHtml(priority)} • Store ID: ${escapeHtml(storeId)}</span>
         </div>
-        <div style="min-width:190px;">
-          <label style="font-size:10px; text-transform:uppercase; display:block; margin-bottom:6px;">Status</label>
-          <select class="case-status-select" data-case-id="${escapeHtml(caseId)}">${statusOptions}</select>
+        <div style="min-width:220px; flex:0 0 220px;">
+          <label style="font-size:10px; text-transform:uppercase; display:block; margin-bottom:6px; color:rgba(243,244,246,0.68); letter-spacing:0.06em;">Status</label>
+          <select class="case-status-select" data-case-id="${escapeHtml(caseId)}" style="width:100%; appearance:none; background:#1e222b; color:#f3f4f6; border:1px solid #2d3139; border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.2; box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);">
+            ${statusOptions}
+          </select>
         </div>
       </div>
-      <div style="margin-top:10px;">
+
+      <div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px 18px; margin-top:4px;">
         <div><strong>Business Name:</strong> ${escapeHtml(businessName)}</div>
         <div><strong>Owner:</strong> ${escapeHtml(owner)}</div>
         <div><strong>Created Date:</strong> ${escapeHtml(formatDisplayDate(createdDateValue))}</div>
         <div><strong>Last Updated:</strong> ${escapeHtml(formatDisplayDate(lastUpdatedValue))}</div>
       </div>
-      <div style="margin-top:12px;">
-        <strong>Notes</strong>
-        <div style="white-space:pre-wrap; margin-top:6px; padding:10px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:8px;">${escapeHtml(notes || "No notes yet.")}</div>
+
+      <div style="margin-top:14px;">
+        <strong style="display:block; margin-bottom:8px;">Notes</strong>
+        <div style="white-space:pre-wrap; padding:12px 14px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.08); border-radius:10px; color:#f3f4f6; line-height:1.5;">${escapeHtml(notes || "No notes yet.")}</div>
       </div>
-      <div style="margin-top:12px;">
-        <label style="font-size:10px; text-transform:uppercase; display:block; margin-bottom:6px;">Add Note</label>
-        <textarea class="case-new-note" data-case-id="${escapeHtml(caseId)}" rows="3" placeholder="Add a note for this case..."></textarea>
+
+      <div style="margin-top:14px;">
+        <label style="font-size:10px; text-transform:uppercase; display:block; margin-bottom:6px; color:rgba(243,244,246,0.68); letter-spacing:0.06em;">Add Note</label>
+        <textarea
+          class="case-new-note"
+          data-case-id="${escapeHtml(caseId)}"
+          rows="4"
+          placeholder="Add a note for this case..."
+          style="width:100%; resize:vertical; min-height:110px; background:#1e222b; color:#f3f4f6; border:1px solid #2d3139; border-radius:10px; padding:12px 14px; font-size:14px; line-height:1.45; box-shadow:inset 0 1px 0 rgba(255,255,255,0.03); outline:none;"
+        ></textarea>
       </div>
-      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap;">
-        <button type="button" class="btn btn-secondary" onclick="saveCaseStatus('${escapeJs(caseId)}')">Save Status</button>
-        <button type="button" class="btn btn-primary" onclick="addCaseNote('${escapeJs(caseId)}')">Add Note</button>
+
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:14px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary" onclick="saveCaseStatus('${escapeJs(caseId)}')" style="min-width:120px;">Save Status</button>
+        <button type="button" class="btn btn-primary" onclick="addCaseNote('${escapeJs(caseId)}')" style="min-width:120px;">Add Note</button>
       </div>
     </div>
   `;
