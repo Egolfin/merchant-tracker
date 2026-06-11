@@ -573,9 +573,27 @@ function renderFollowUpModalItem(lead, mode) {
 }
 
 function getMerchantOwnerName(lead) {
-  return String(
-    getField(lead, ["DM Name", "DM name", "Owner"])
+  const dmName = String(
+    getField(lead, ["DM Name", "DM name"])
   ).trim();
+
+  if (
+    dmName &&
+    dmName !== "[Unknown]" &&
+    !dmName.includes("[Unknown]")
+  ) {
+    return dmName;
+  }
+
+  const owner = String(
+    getField(lead, ["Owner"])
+  ).trim();
+
+  if (owner) {
+    return owner;
+  }
+
+  return "Unassigned";
 }
 
 function renderCurrentMerchantView(lead) {
