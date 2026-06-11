@@ -832,13 +832,114 @@ function renderMerchantTimeline(lead, activitiesOverride) {
   `;
 }
 
-function handleMerchantOpenCasesErrorFallback(lead) {
-  const merchantOverview = document.getElementById("merchantOverview");
-  if (merchantOverview && lead) {
-    merchantOverview.innerHTML =
-      buildMerchantOverviewHtml(lead) +
-      buildOpenCasesHtml(lead, [], false);
-  }
+function buildMerchantSnapshotTimelineEntry(lead, activityCount) {
+  const storeId = getStoreId(lead);
+  const lastActivity = getLatestActivityForStoreId(storeId);
+  const leadStatus = getField(lead, ["Lead Status"]);
+  const pipelineStage = getField(lead, ["Pipeline Stage"]);
+  const owner = getField(lead, ["Owner"]);
+  const nextFollowUp = formatDisplayDate(getField(lead, ["Next Follow-Up"]));
+  const priorityScore = getMerchantPriorityScore(lead);
+  const openCaseCount = getField(lead, ["Open Case Count"]);
+  const photoCoverage = formatCoverage(getField(lead, ["Photo Coverage"]));
+  const descCoverage = formatCoverage(getField(lead, ["Description Coverage"]));
+  const uptime = formatCoverage(getField(lead, ["Uptime"]));
+  const gmv = getField(lead, ["GMV"]);
+  const businessId = getField(lead, ["Business Id", "Business ID"]);
+  const rxName = getField(lead, ["Rx Name"]);
+  const lastContacted = getField(lead, ["Last Contacted"]);
+
+  return {
+    kind: "snapshot",
+    title: "Merchant Snapshot",
+    badge: "LIVE RECORD",
+    meta: `${activityCount} logged activity${activityCount === 1 ? "" : "ies"}`,
+    submeta: `Last activity: ${lastActivity}`,
+    details: [
+      { label: "Business Name", value: getField(lead, ["Business Name"]) },
+      { label: "Store ID", value: storeId },
+      { label: "Business ID", value: businessId },
+      { label: "Rx Name", value: rxName },
+      { label: "Lead Status", value: leadStatus },
+      { label: "Pipeline Stage", value: pipelineStage },
+      { label: "Owner", value: owner },
+      { label: "Next Follow-Up", value: nextFollowUp },
+      { label: "Priority Score", value: String(priorityScore) },
+      { label: "Open Case Count", value: openCaseCount },
+      { label: "GMV", value: gmv },
+      { label: "Last Contacted", value: lastContacted },
+      { label: "Photo Coverage", value: photoCoverage },
+      { label: "Description Coverage", value: descCoverage },
+      { label: "Uptime", value: uptime }
+    ]
+  };
+}
+
+function buildMerchantActivityTimelineEntry(activity) {
+  const activityType = getField(activity, ["Activity Type"]) || "Activity";
+  const outcome = getField(activity, ["Outcome"]);
+  const owner = getField(activity, ["Owner"]);
+  const timestamp = formatDateTimeDisplay(getField(activity, ["Timestamp"]));
+  const notes = getField(activity, ["Notes"]);
+  const nextFollowUp = formatDisplayDate(getField(activity, ["Next Follow-Up"]));
+  const businessName = getField(activity, ["Business Name"]);
+  const storeId = getField(activity, ["Store ID", "Store Id"]);
+
+  return {
+    kind: "activity",
+    title: activityType,
+    badge: outcome || "Logged",
+    meta: timestamp,
+    submeta: `Owner: ${owner} • Store ID: ${storeId}`,
+    details: [
+      { label: "Business Name", value: businessName },
+      { label: "Owner", value: owner },
+      { label: "Outcome", value: outcome },
+      { label: "Next Follow-Up", value: nextFollowUp }
+    ],
+    notes: notes
+  };
+}
+
+function renderMerchantTimelineEntry(entry) {
+  const typeClass = entry.kind === "snapshot" ? "timeline-snapshot" : "timeline-activity";
+
+  const detailsHtml = Array.isArray(entry.details)
+    ? entry.details
+        .map(function (item) {
+          return `
+            <div class="timeline-detail">
+              <strong>${escapeHtml(item.label)}</strong>
+              <span>${escapeHtml(item.value)}</span>
+            </div>
+          `;
+        })
+        .join("")
+    : "";
+
+  return `
+    <article class="timeline-entry ${typeClass}">
+      <div class="timeline-marker"></div>
+
+      <div class="timeline-card">
+        <div class="timeline-header">
+          <div>
+            <span class="timeline-kicker">${escapeHtml(entry.kind === "snapshot" ? "Current record" : "Activity event")}</span>
+            <h4 class="timeline-title">${escapeHtml(entry.title)}</h4>
+          </div>
+          <span class="timeline-badge">${escapeHtml(entry.badge)}</span>
+        </div>
+
+        <div class="timeline-meta">${escapeHtml(entry.meta || "")}${entry.submeta ? ` • ${escapeHtml(entry.submeta)}` : ""}</div>
+
+        <div class="timeline-details">
+          ${detailsHtml}
+        </div>
+
+        ${entry.notes ? `<div class="timeline-notes">${escapeHtml(entry.notes)}</div>` : ""}
+      </div>
+    </article>
+  `;
 }
 
 async function handleActivitySubmit(event) {
