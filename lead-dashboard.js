@@ -1169,6 +1169,19 @@ function buildMerchantOverviewHtml(lead) {
   `;
 }
 
+function buildActivityContextHtml(lead) {
+  return `
+    <div class="overview-grid">
+      <div><strong>Business Name:</strong> ${escapeHtml(getField(lead, ["Business Name"]))}</div>
+      <div><strong>Store ID:</strong> ${escapeHtml(getField(lead, ["Store Id", "Store ID"]))}</div>
+      <div><strong>Business ID:</strong> ${escapeHtml(getField(lead, ["Business Id", "Business ID"]))}</div>
+      <div><strong>Rx Name:</strong> ${escapeHtml(getField(lead, ["Rx Name"]))}</div>
+      <div><strong>Lead Status:</strong> ${escapeHtml(getField(lead, ["Lead Status"]))}</div>
+      <div><strong>Priority Score:</strong> ${escapeHtml(String(getMerchantPriorityScore(lead)))}</div>
+    </div>
+  `;
+}
+
 function closeMerchantDrawer() {
   const drawer = document.getElementById("merchantDrawer");
   if (drawer) {
