@@ -227,6 +227,10 @@ function loadMerchantOpenCases(storeId) {
               buildOpenCasesHtml(currentLead, [], false);
           }
 
+          if (currentLead && String(getStoreId(currentLead)) === requestedStoreId) {
+            renderMerchantTimeline(currentLead);
+          }
+
           resolve([]);
           return;
         }
@@ -244,6 +248,10 @@ function loadMerchantOpenCases(storeId) {
           merchantOverview.innerHTML =
             buildMerchantOverviewHtml(currentLead) +
             buildOpenCasesHtml(currentLead, currentOpenCases, false);
+        }
+
+        if (currentLead && String(getStoreId(currentLead)) === requestedStoreId) {
+          renderMerchantTimeline(currentLead);
         }
 
         resolve(cases);
@@ -798,7 +806,7 @@ function renderOpenCaseCard(caseItem) {
   `;
 }
 
-function renderMerchantTimeline(lead, activitiesOverride) {
+function renderMerchantTimeline(lead, activitiesOverride, openCasesOverride) {
   const container = document.getElementById("merchantTimeline");
   if (!container) return;
 
@@ -815,19 +823,41 @@ function renderMerchantTimeline(lead, activitiesOverride) {
         return String(getField(activity, ["Store ID", "Store Id"])) === String(storeId);
       });
 
+  const merchantCases = Array.isArray(openCasesOverride)
+    ? openCasesOverride.slice()
+    : (String(currentOpenCasesStoreId) === String(storeId) ? currentOpenCases.slice() : []);
+
   merchantActivities.sort(function (a, b) {
     const aDate = parseFlexibleDateTime(getField(a, ["Timestamp"])) || new Date(0);
     const bDate = parseFlexibleDateTime(getField(b, ["Timestamp"])) || new Date(0);
     return bDate.getTime() - aDate.getTime();
   });
 
-  const entries = [
-    buildMerchantSnapshotTimelineEntry(lead, merchantActivities.length)
-  ];
-
-  merchantActivities.forEach(function (activity) {
-    entries.push(buildMerchantActivityTimelineEntry(activity));
+  merchantCases.sort(function (a, b) {
+    const aDate = parseFlexibleDateTime(getField(a, ["Last Updated"])) ||
+      parseFlexibleDateTime(getField(a, ["Created Date"])) || new Date(0);
+    const bDate = parseFlexibleDateTime(getField(b, ["Last Updated"])) ||
+      parseFlexibleDateTime(getField(b, ["Created Date"])) || new Date(0);
+    return bDate.getTime() - aDate.getTime();
   });
+
+  const eventEntries = [];
+  merchantActivities.forEach(function (activity) {
+    eventEntries.push(buildMerchantActivityTimelineEntry(activity));
+  });
+  merchantCases.forEach(function (caseItem) {
+    eventEntries.push(buildMerchantCaseTimelineEntry(caseItem));
+  });
+
+  eventEntries.sort(function (a, b) {
+    const aTime = a.sortDate ? a.sortDate.getTime() : 0;
+    const bTime = b.sortDate ? b.sortDate.getTime() : 0;
+    return bTime - aTime;
+  });
+
+  const entries = [
+    buildMerchantSnapshotTimelineEntry(lead, merchantActivities.length + merchantCases.length)
+  ].concat(eventEntries);
 
   container.innerHTML = `
     <div class="merchant-timeline">
@@ -838,7 +868,7 @@ function renderMerchantTimeline(lead, activitiesOverride) {
   `;
 }
 
-function buildMerchantSnapshotTimelineEntry(lead, activityCount) {
+function buildMerchantSnapshotTimelineEntry(lead, eventCount) {
   const storeId = getStoreId(lead);
   const lastActivity = getLatestActivityForStoreId(storeId);
   const leadStatus = getField(lead, ["Lead Status"]);
@@ -846,7 +876,7 @@ function buildMerchantSnapshotTimelineEntry(lead, activityCount) {
   const owner = getMerchantOwnerName(lead);
   const nextFollowUp = formatDisplayDate(getField(lead, ["Next Follow-Up"]));
   const priorityScore = getMerchantPriorityScore(lead);
-  const openCaseCount = getField(lead, ["Open Case Count"]);
+  const openCaseCount = getField(lead, ["Open Case Count"]) || String(currentOpenCases.length || 0);
   const photoCoverage = formatCoverage(getField(lead, ["Photo Coverage"]));
   const descCoverage = formatCoverage(getField(lead, ["Description Coverage"]));
   const uptime = formatCoverage(getField(lead, ["Uptime"]));
@@ -859,7 +889,7 @@ function buildMerchantSnapshotTimelineEntry(lead, activityCount) {
     kind: "snapshot",
     title: "Merchant Snapshot",
     badge: "LIVE RECORD",
-    meta: `${activityCount} logged activity${activityCount === 1 ? "" : "ies"}`,
+    meta: `${eventCount} timeline event${eventCount === 1 ? "" : "s"}`,
     submeta: `Last activity: ${lastActivity}`,
     details: [
       { label: "Business Name", value: getField(lead, ["Business Name"]) },
@@ -890,6 +920,7 @@ function buildMerchantActivityTimelineEntry(activity) {
   const nextFollowUp = formatDisplayDate(getField(activity, ["Next Follow-Up"]));
   const businessName = getField(activity, ["Business Name"]);
   const storeId = getField(activity, ["Store ID", "Store Id"]);
+  const sortDate = parseFlexibleDateTime(getField(activity, ["Timestamp"])) || new Date(0);
 
   return {
     kind: "activity",
@@ -903,12 +934,53 @@ function buildMerchantActivityTimelineEntry(activity) {
       { label: "Outcome", value: outcome },
       { label: "Next Follow-Up", value: nextFollowUp }
     ],
-    notes: notes
+    notes: notes,
+    sortDate: sortDate
+  };
+}
+
+function buildMerchantCaseTimelineEntry(caseItem) {
+  const caseId = getField(caseItem, ["Case ID", "Case Id"]);
+  const caseType = getField(caseItem, ["Case Type"]) || "Open Case";
+  const status = getField(caseItem, ["Status"]) || "Open";
+  const priority = getField(caseItem, ["Priority"]);
+  const createdDateValue = getField(caseItem, ["Created Date"]);
+  const lastUpdatedValue = getField(caseItem, ["Last Updated"]);
+  const owner = getField(caseItem, ["Owner"]);
+  const notes = getField(caseItem, ["Notes"]);
+  const businessName = getField(caseItem, ["Business Name"]);
+  const storeId = getField(caseItem, ["Store ID", "Store Id"]);
+  const displayDate = formatDisplayDate(lastUpdatedValue || createdDateValue);
+  const sortDate =
+    parseFlexibleDateTime(lastUpdatedValue) ||
+    parseFlexibleDateTime(createdDateValue) ||
+    new Date(0);
+
+  return {
+    kind: "case",
+    title: caseType,
+    badge: status,
+    meta: displayDate ? `Updated: ${displayDate}` : "Open case",
+    submeta: `Case ID: ${caseId} • Priority: ${priority} • Store ID: ${storeId}`,
+    details: [
+      { label: "Business Name", value: businessName },
+      { label: "Owner", value: owner },
+      { label: "Created Date", value: formatDisplayDate(createdDateValue) },
+      { label: "Last Updated", value: formatDisplayDate(lastUpdatedValue) },
+      { label: "Priority", value: priority }
+    ],
+    notes: notes,
+    sortDate: sortDate
   };
 }
 
 function renderMerchantTimelineEntry(entry) {
-  const typeClass = entry.kind === "snapshot" ? "timeline-snapshot" : "timeline-activity";
+  const typeClass =
+    entry.kind === "snapshot"
+      ? "timeline-snapshot"
+      : entry.kind === "case"
+        ? "timeline-case"
+        : "timeline-activity";
 
   const detailsHtml = Array.isArray(entry.details)
     ? entry.details
@@ -930,7 +1002,15 @@ function renderMerchantTimelineEntry(entry) {
       <div class="timeline-card">
         <div class="timeline-header">
           <div>
-            <span class="timeline-kicker">${escapeHtml(entry.kind === "snapshot" ? "Current record" : "Activity event")}</span>
+            <span class="timeline-kicker">${
+              escapeHtml(
+                entry.kind === "snapshot"
+                  ? "Current record"
+                  : entry.kind === "case"
+                    ? "Open case"
+                    : "Activity event"
+              )
+            }</span>
             <h4 class="timeline-title">${escapeHtml(entry.title)}</h4>
           </div>
           <span class="timeline-badge">${escapeHtml(entry.badge)}</span>
