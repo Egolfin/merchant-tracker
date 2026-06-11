@@ -221,7 +221,11 @@ function loadMerchantOpenCases(storeId) {
           currentOpenCases = [];
           currentOpenCasesStoreId = requestedStoreId;
 
-          if (merchantOverview && currentLead && String(getStoreId(currentLead)) === requestedStoreId) {
+          if (
+            merchantOverview &&
+            currentLead &&
+            String(getStoreId(currentLead)) === requestedStoreId
+          ) {
             merchantOverview.innerHTML =
               buildMerchantOverviewHtml(currentLead) +
               buildOpenCasesHtml(currentLead, [], false);
@@ -834,10 +838,16 @@ function renderMerchantTimeline(lead, activitiesOverride, openCasesOverride) {
   });
 
   merchantCases.sort(function (a, b) {
-    const aDate = parseFlexibleDateTime(getField(a, ["Last Updated"])) ||
-      parseFlexibleDateTime(getField(a, ["Created Date"])) || new Date(0);
-    const bDate = parseFlexibleDateTime(getField(b, ["Last Updated"])) ||
-      parseFlexibleDateTime(getField(b, ["Created Date"])) || new Date(0);
+    const aDate =
+      parseFlexibleDateTime(getField(a, ["Last Updated"])) ||
+      parseFlexibleDateTime(getField(a, ["Created Date"])) ||
+      new Date(0);
+
+    const bDate =
+      parseFlexibleDateTime(getField(b, ["Last Updated"])) ||
+      parseFlexibleDateTime(getField(b, ["Created Date"])) ||
+      new Date(0);
+
     return bDate.getTime() - aDate.getTime();
   });
 
@@ -1164,7 +1174,7 @@ async function refreshAfterActivitySave(storeId) {
         buildOpenCasesHtml(currentLead, currentOpenCases, false);
     }
 
-    renderMerchantTimeline(currentLead);
+    renderMerchantTimeline(currentLead, undefined, currentOpenCases);
   }
 
   updateMetrics();
