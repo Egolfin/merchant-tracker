@@ -178,6 +178,11 @@ function loadActivities() {
         allActivities = Array.isArray(response.data) ? response.data : [];
         console.log("Activities loaded:", allActivities);
         renderActivities(allActivities);
+
+        if (currentLead) {
+          renderMerchantTimeline(currentLead);
+        }
+
         updateMetrics();
         resolve(allActivities);
       } finally {
@@ -509,6 +514,7 @@ function renderCurrentMerchantView(lead) {
     activityMerchantContext.innerHTML = buildActivityContextHtml(lead);
   }
 
+  renderMerchantTimeline(lead);
   syncLeadManagementFormWithLead(lead);
 }
 
@@ -649,16 +655,153 @@ function applyQuickTemplate(template) {
   }
 }
 
-function buildActivityContextHtml(lead) {
-  return `
-    <div class="overview-grid">
-      <div><strong>Business Name:</strong> ${escapeHtml(getField(lead, ["Business Name"]))}</div>
-      <div><strong>Store ID:</strong> ${escapeHtml(getField(lead, ["Store Id", "Store ID"]))}</div>
-      <div><strong>Business ID:</strong> ${escapeHtml(getField(lead, ["Business Id", "Business ID"]))}</div>
-      <div><strong>Rx Name:</strong> ${escapeHtml(getField(lead, ["Rx Name"]))}</div>
-      <div><strong>Lead Status:</strong> ${escapeHtml(getField(lead, ["Lead Status"]))}</div>
-      <div><strong>Priority Score:</strong> ${escapeHtml(String(getMerchantPriorityScore(lead)))}</div>
+function renderMerchantTimeline(lead, activitiesOverride) {
+  const container = document.getElementById("merchantTimeline");
+  if (!container) return;
+
+  if (!lead) {
+    container.innerHTML = `<div class="timeline-empty">Select a merchant to view the timeline.</div>`;
+    return;
+  }
+
+  const storeId = getStoreId(lead);
+
+  const merchantActivities = Array.isArray(activitiesOverride)
+    ? activitiesOverride.slice()
+    : allActivities.filter(function (activity) {
+        return String(getField(activity, ["Store ID", "Store Id"])) === String(storeId);
+      });
+
+  merchantActivities.sort(function (a, b) {
+    const aDate = parseFlexibleDateTime(getField(a, ["Timestamp"])) || new Date(0);
+    const bDate = parseFlexibleDateTime(getField(b, ["Timestamp"])) || new Date(0);
+    return bDate.getTime() - aDate.getTime();
+  });
+
+  const entries = [
+    buildMerchantSnapshotTimelineEntry(lead, merchantActivities.length)
+  ];
+
+  merchantActivities.forEach(function (activity) {
+    entries.push(buildMerchantActivityTimelineEntry(activity));
+  });
+
+  container.innerHTML = `
+    <div class="merchant-timeline">
+      ${entries.map(function (entry) {
+        return renderMerchantTimelineEntry(entry);
+      }).join("")}
     </div>
+  `;
+}
+
+function buildMerchantSnapshotTimelineEntry(lead, activityCount) {
+  const storeId = getStoreId(lead);
+  const lastActivity = getLatestActivityForStoreId(storeId);
+  const leadStatus = getField(lead, ["Lead Status"]);
+  const pipelineStage = getField(lead, ["Pipeline Stage"]);
+  const owner = getField(lead, ["Owner"]);
+  const nextFollowUp = formatDisplayDate(getField(lead, ["Next Follow-Up"]));
+  const priorityScore = getMerchantPriorityScore(lead);
+  const openCaseCount = getField(lead, ["Open Case Count"]);
+  const photoCoverage = formatCoverage(getField(lead, ["Photo Coverage"]));
+  const descCoverage = formatCoverage(getField(lead, ["Description Coverage"]));
+  const uptime = formatCoverage(getField(lead, ["Uptime"]));
+  const gmv = getField(lead, ["GMV"]);
+  const businessId = getField(lead, ["Business Id", "Business ID"]);
+  const rxName = getField(lead, ["Rx Name"]);
+  const lastContacted = getField(lead, ["Last Contacted"]);
+
+  return {
+    kind: "snapshot",
+    title: "Merchant Snapshot",
+    badge: "LIVE RECORD",
+    meta: `${activityCount} logged activity${activityCount === 1 ? "" : "ies"}`,
+    submeta: `Last activity: ${lastActivity}`,
+    details: [
+      { label: "Business Name", value: getField(lead, ["Business Name"]) },
+      { label: "Store ID", value: storeId },
+      { label: "Business ID", value: businessId },
+      { label: "Rx Name", value: rxName },
+      { label: "Lead Status", value: leadStatus },
+      { label: "Pipeline Stage", value: pipelineStage },
+      { label: "Owner", value: owner },
+      { label: "Next Follow-Up", value: nextFollowUp },
+      { label: "Priority Score", value: String(priorityScore) },
+      { label: "Open Case Count", value: openCaseCount },
+      { label: "GMV", value: gmv },
+      { label: "Last Contacted", value: lastContacted },
+      { label: "Photo Coverage", value: photoCoverage },
+      { label: "Description Coverage", value: descCoverage },
+      { label: "Uptime", value: uptime }
+    ]
+  };
+}
+
+function buildMerchantActivityTimelineEntry(activity) {
+  const activityType = getField(activity, ["Activity Type"]) || "Activity";
+  const outcome = getField(activity, ["Outcome"]);
+  const owner = getField(activity, ["Owner"]);
+  const timestamp = formatDateTimeDisplay(getField(activity, ["Timestamp"]));
+  const notes = getField(activity, ["Notes"]);
+  const nextFollowUp = formatDisplayDate(getField(activity, ["Next Follow-Up"]));
+  const businessName = getField(activity, ["Business Name"]);
+  const storeId = getField(activity, ["Store ID", "Store Id"]);
+
+  return {
+    kind: "activity",
+    title: activityType,
+    badge: outcome || "Logged",
+    meta: timestamp,
+    submeta: `Owner: ${owner} • Store ID: ${storeId}`,
+    details: [
+      { label: "Business Name", value: businessName },
+      { label: "Owner", value: owner },
+      { label: "Outcome", value: outcome },
+      { label: "Next Follow-Up", value: nextFollowUp }
+    ],
+    notes: notes
+  };
+}
+
+function renderMerchantTimelineEntry(entry) {
+  const typeClass = entry.kind === "snapshot" ? "timeline-snapshot" : "timeline-activity";
+
+  const detailsHtml = Array.isArray(entry.details)
+    ? entry.details
+        .map(function (item) {
+          return `
+            <div class="timeline-detail">
+              <strong>${escapeHtml(item.label)}</strong>
+              <span>${escapeHtml(item.value)}</span>
+            </div>
+          `;
+        })
+        .join("")
+    : "";
+
+  return `
+    <article class="timeline-entry ${typeClass}">
+      <div class="timeline-marker"></div>
+
+      <div class="timeline-card">
+        <div class="timeline-header">
+          <div>
+            <span class="timeline-kicker">${escapeHtml(entry.kind === "snapshot" ? "Current record" : "Activity event")}</span>
+            <h4 class="timeline-title">${escapeHtml(entry.title)}</h4>
+          </div>
+          <span class="timeline-badge">${escapeHtml(entry.badge)}</span>
+        </div>
+
+        <div class="timeline-meta">${escapeHtml(entry.meta || "")}${entry.submeta ? ` • ${escapeHtml(entry.submeta)}` : ""}</div>
+
+        <div class="timeline-details">
+          ${detailsHtml}
+        </div>
+
+        ${entry.notes ? `<div class="timeline-notes">${escapeHtml(entry.notes)}</div>` : ""}
+      </div>
+    </article>
   `;
 }
 
@@ -794,6 +937,8 @@ async function refreshAfterActivitySave(storeId) {
     if (merchantOverview) {
       merchantOverview.innerHTML = buildMerchantOverviewHtml(currentLead);
     }
+
+    renderMerchantTimeline(currentLead);
   }
 
   updateMetrics();
@@ -931,12 +1076,18 @@ function loadMerchantActivities(storeId) {
         const activities = Array.isArray(response.data) ? response.data : [];
 
         if (!merchantActivity) {
+          if (currentLead) {
+            renderMerchantTimeline(currentLead, activities);
+          }
           resolve(activities);
           return;
         }
 
         if (activities.length === 0) {
           merchantActivity.innerHTML = `<div class="empty-state">No merchant-specific activities found.</div>`;
+          if (currentLead) {
+            renderMerchantTimeline(currentLead, activities);
+          }
           resolve(activities);
           return;
         }
@@ -959,6 +1110,11 @@ function loadMerchantActivities(storeId) {
           .join("");
 
         merchantActivity.innerHTML = html;
+
+        if (currentLead) {
+          renderMerchantTimeline(currentLead, activities);
+        }
+
         resolve(activities);
       } finally {
         delete window[callbackName];
@@ -1220,6 +1376,19 @@ function formatDisplayDate(value) {
   });
 }
 
+function formatDateTimeDisplay(value) {
+  if (!value) return "";
+  const date = parseFlexibleDateTime(value);
+  if (!date) return String(value);
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
 function getDateComparableValue(value) {
   const date = parseFlexibleDate(value);
   if (!date) return "";
@@ -1264,6 +1433,29 @@ function parseFlexibleDate(value) {
     const year = Number(parts[3]);
     const parsed = new Date(year, month, day);
     return isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  return null;
+}
+
+function parseFlexibleDateTime(value) {
+  if (!value) return null;
+
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return new Date(value.getTime());
+  }
+
+  const str = String(value).trim();
+  if (!str) return null;
+
+  const date = new Date(str);
+  if (!isNaN(date.getTime())) {
+    return date;
+  }
+
+  const dateOnly = parseFlexibleDate(str);
+  if (dateOnly) {
+    return dateOnly;
   }
 
   return null;
