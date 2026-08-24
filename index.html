@@ -829,6 +829,10 @@
                 <button class="filter-action-btn" onclick="applyActiveModalFilters()" style="background-color: var(--accent-color);">🔍 Apply Filter Execution</button>
                 <button class="filter-action-btn" onclick="resetModalFilters()" style="background-color: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main);">Reset Parameters</button>
             </div>
+            <div id="quickFilterBar" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+                <button type="button" class="filter-action-btn" onclick="applyLastWeekFilter()" style="width:auto; background-color:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.35); color:#60a5fa;">Last Week</button>
+            </div>
+            <div id="photosAddedSummary" style="display:none; margin-top:12px;"></div>
         </div>
         <div class="modal-body" id="modalBody"></div>
     </div>
@@ -1117,6 +1121,63 @@
         document.getElementById('dataModal').style.display = 'none';
     }
 
+    /* ------------------------------------------------------------
+       5D.1 — QUICK DATE FILTERS & PHOTOS ADDED SUMMARY
+       Last Week = previous calendar week, Monday through Sunday.
+       Photos Added totals are calculated from the filtered records.
+       ------------------------------------------------------------ */
+    function formatDateForInput(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function getLastWeekRange() {
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+        const thisMonday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysSinceMonday);
+        const lastMonday = new Date(thisMonday.getFullYear(), thisMonday.getMonth(), thisMonday.getDate() - 7);
+        const lastSunday = new Date(thisMonday.getFullYear(), thisMonday.getMonth(), thisMonday.getDate() - 1);
+
+        return { start: formatDateForInput(lastMonday), end: formatDateForInput(lastSunday) };
+    }
+
+    function applyLastWeekFilter() {
+        const range = getLastWeekRange();
+        const startEl = document.getElementById('filterStartDate');
+        const endEl = document.getElementById('filterEndDate');
+        if (startEl) startEl.value = range.start;
+        if (endEl) endEl.value = range.end;
+        applyActiveModalFilters();
+    }
+
+    function calculatePhotosAdded(item) {
+        const prev = Number(String(item?.['Previous Missing Photos'] ?? item?.['Prev Missing'] ?? item?.['previousMissing'] ?? '').replace(/[^0-9.-]/g, ''));
+        const curr = Number(String(item?.['Current Missing Photos'] ?? item?.['Curr Missing'] ?? item?.['currentMissing'] ?? '').replace(/[^0-9.-]/g, ''));
+        if (!Number.isFinite(prev) || !Number.isFinite(curr)) return 0;
+        return prev - curr;
+    }
+
+    function calculatePhotosAddedFromUpdatedFields(updatedFields) {
+        const prev = Number(String(updatedFields?.['Previous Missing Photos'] ?? updatedFields?.['Prev Missing'] ?? '').replace(/[^0-9.-]/g, ''));
+        const curr = Number(String(updatedFields?.['Current Missing Photos'] ?? updatedFields?.['Curr Missing'] ?? '').replace(/[^0-9.-]/g, ''));
+        if (!Number.isFinite(prev) || !Number.isFinite(curr)) return 0;
+        return prev - curr;
+    }
+
+    function updatePhotoAddedPreview(recordId) {
+        const formBox = document.getElementById(`edit-formbox-${recordId}`);
+        if (!formBox || currentModalCategory !== 'photosAdded') return;
+        const inputs = formBox.querySelectorAll('input[data-field-key]');
+        const values = {};
+        inputs.forEach(input => { values[input.getAttribute('data-field-key')] = input.value; });
+        const calculated = document.getElementById(`calculated-photos-added-${recordId}`);
+        if (calculated) calculated.value = String(calculatePhotosAddedFromUpdatedFields(values));
+    }
+
     function resetModalFilters() {
         document.getElementById('filterStoreSearch').value = "";
         document.getElementById('filterStartDate').value = "";
@@ -1131,6 +1192,12 @@
         const searchTerm = document.getElementById('filterStoreSearch').value.toLowerCase();
         const startVal = document.getElementById('filterStartDate').value;
         const endVal = document.getElementById('filterEndDate').value;
+
+        const quickFilterBar = document.getElementById('quickFilterBar');
+        const photosAddedSummary = document.getElementById('photosAddedSummary');
+        const isPhotosAddedModal = currentModalCategory === 'photosAdded';
+        if (quickFilterBar) quickFilterBar.style.display = isPhotosAddedModal ? 'flex' : 'none';
+        if (photosAddedSummary) photosAddedSummary.style.display = isPhotosAddedModal ? 'block' : 'none';
 
         let records = [];
         let isHistorical = true;
@@ -1172,6 +1239,21 @@
             return bTime - aTime;
         });
 
+        if (isPhotosAddedModal && photosAddedSummary) {
+            const totalPhotosAdded = filtered.reduce((sum, item) => sum + calculatePhotosAdded(item), 0);
+            const periodLabel = startVal || endVal
+                ? `${startVal ? new Date(startVal + 'T00:00:00').toLocaleDateString() : 'All time'} → ${endVal ? new Date(endVal + 'T00:00:00').toLocaleDateString() : 'All time'}`
+                : 'All available records';
+            photosAddedSummary.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; padding:12px 14px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.24); border-radius:10px;">
+                    <div>
+                        <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#34d399;">Photos Added During Period</div>
+                        <div style="font-size:28px; font-weight:700; margin-top:4px;">${totalPhotosAdded}</div>
+                    </div>
+                    <div style="text-align:right; color:var(--text-muted); font-size:12px;">${filtered.length} record${filtered.length === 1 ? '' : 's'}<br>${periodLabel}</div>
+                </div>`;
+        }
+
         if (filtered.length === 0) {
             body.innerHTML = `<div class="empty-state" style="border:none;"><h3>No records match criteria</h3><p>Verify parameters or ensure your sheet contains logged data lines.</p></div>`;
             return;
@@ -1190,7 +1272,10 @@
             let gridHtml = `<div class="metric-item-pill-grid" id="view-pillbox-${item["ID"]}">`;
             Object.keys(item).forEach(key => {
                 if(!["ID", "Timestamp", "loggedAt", "formSource", "__sourceCategory"].includes(key)) {
-                    gridHtml += `<div class="metric-pill"><strong>${key}</strong><span>${item[key]}</span></div>`;
+                    const displayValue = currentModalCategory === 'photosAdded' && (key === 'Photos Added' || key === 'PhotosAdded')
+                        ? calculatePhotosAdded(item)
+                        : item[key];
+                    gridHtml += `<div class="metric-pill"><strong>${key}</strong><span>${displayValue}</span></div>`;
                 }
             });
             gridHtml += `</div>`;
@@ -1198,13 +1283,27 @@
             let editFormHtml = `<div class="inline-editing-form" id="edit-formbox-${item["ID"]}" style="display:none; margin-top:10px;">`;
             Object.keys(item).forEach(key => {
                 if(!["ID", "Timestamp", "loggedAt", "formSource", "__sourceCategory"].includes(key)) {
+                    if (currentModalCategory === 'photosAdded' && (key === 'Photos Added' || key === 'PhotosAdded')) {
+                        return;
+                    }
+                    const onInput = currentModalCategory === 'photosAdded' && (key === 'Previous Missing Photos' || key === 'Prev Missing' || key === 'Current Missing Photos' || key === 'Curr Missing')
+                        ? ` oninput="updatePhotoAddedPreview('${item["ID"]}')"`
+                        : '';
                     editFormHtml += `
                         <div style="margin-bottom:10px;">
                             <label style="font-size:10px; color:var(--accent-color);">${key}</label>
-                            <input type="text" data-field-key="${key}" value="${item[key]}" style="padding:8px; background:var(--bg-color);">
+                            <input type="text" data-field-key="${key}" value="${item[key] ?? ''}" style="padding:8px; background:var(--bg-color);"${onInput}>
                         </div>`;
                 }
             });
+            if (currentModalCategory === 'photosAdded') {
+                editFormHtml += `
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:10px; color:var(--success-color);">Calculated Photos Added</label>
+                        <input id="calculated-photos-added-${item["ID"]}" type="text" value="${calculatePhotosAdded(item)}" readonly style="padding:8px; background:rgba(16,185,129,0.08); border-color:rgba(16,185,129,0.24); color:#34d399; font-weight:700;">
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:5px;">Automatically calculated as Previous Missing Photos − Current Missing Photos.</div>
+                    </div>`;
+            }
             editFormHtml += `
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px;">
                     <button onclick="submitInlineEditMutation('${item["ID"]}')" style="padding:8px; font-size:12px; margin-top:0; background:var(--success-color);">💾 Save Revision</button>
@@ -1242,6 +1341,11 @@
         inputs.forEach(input => {
             updatedFields[input.getAttribute('data-field-key')] = input.value;
         });
+
+        if (currentModalCategory === 'photosAdded') {
+            const calculatedPhotosAdded = calculatePhotosAddedFromUpdatedFields(updatedFields);
+            updatedFields['Photos Added'] = calculatedPhotosAdded;
+        }
 
         const targetTab = sheetTabMapping[currentModalCategory];
         const payload = { operationType: "edit", targetTab, recordId, updatedFields };
