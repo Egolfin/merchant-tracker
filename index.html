@@ -6,6 +6,10 @@
     <title>Merchant Portal v3.0 - Live Sync Edition</title>
     <link rel="icon" type="image/png" href="https://i.imgur.com/VcJTtbD.png">
     <style>
+        /* ============================================================
+           SECTION 1 — VISUAL DESIGN / STYLES
+           Controls colors, spacing, cards, forms, dashboard and modals.
+           ============================================================ */
         :root {
             --bg-color: #0f1115;
             --card-bg: #161920;
@@ -444,6 +448,10 @@
     </style>
 </head>
 <body>
+<!-- ============================================================
+     SECTION 2 — MAIN NAVIGATION
+     Each tab opens one tracker/form section below.
+     ============================================================ -->
 <nav class="tab-navigation">
     <div class="tab active" onclick="switchTab(event, 'homeSection')">🏠 Home Dashboard</div>
     <div class="tab" onclick="switchTab(event, 'callsSection')">Call Follow Up</div>
@@ -455,6 +463,11 @@
     <div class="tab" onclick="switchTab(event, 'opportunitiesSection')">Opportunities</div>
 </nav>
 
+<!-- ============================================================
+     SECTION 3 — TRACKER FORMS AND HOME DASHBOARD
+     Contains Home, Calls, Photos, Videos, Approvals, Photoshoots,
+     Cases and Opportunities.
+     ============================================================ -->
 <div class="container">
     <div class="form-card">
         <div id="homeSection" class="form-section active">
@@ -646,6 +659,9 @@
             <div class="status-msg"></div>
         </div>
 
+        <!-- ==================== PHOTOSHOOT TRACKER ====================
+     Uses Business Name (not Store Name) as requested.
+     ============================================================ -->
         <div id="photoshootSection" class="form-section">
             <header>
                 <img src="https://i.imgur.com/VcJTtbD.png" class="app-logo">
@@ -653,8 +669,8 @@
             </header>
             <form onsubmit="handleFormSubmit(event, 'photoshootTracker')">
                 <div class="form-group">
-                    <label>Store Name</label>
-                    <input type="text" name="storeName" required>
+                    <label>Business Name</label>
+                    <input type="text" name="businessName" required>
                 </div>
                 <div class="grid-2">
                     <div class="form-group">
@@ -775,6 +791,10 @@
     </div>
 </div>
 
+<!-- ============================================================
+     SECTION 4 — DATABASE RECORD MODAL
+     Used to view, filter, edit and delete historical records.
+     ============================================================ -->
 <div id="dataModal" class="modal-overlay" onclick="closeDataModal(event)">
     <div class="modal-window" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -806,6 +826,11 @@
 </div>
 
 <script>
+    /* ============================================================
+       SECTION 5 — APPLICATION LOGIC
+       Apps Script connection, synchronization, dashboard counters,
+       form submissions, record editing/deletion and local cache.
+       ============================================================ */
     const WEB_APP_URL = "https://script.google.com/a/macros/ext.doordash.com/s/AKfycbwh7GddixjGsa8F1WHE45UZ7JmR4wZBAHrEcks8XUan-2PnwI0G-pnbQ5vX62OKtggAJQ/exec";
 
     let currentModalCategory = "";
@@ -829,6 +854,9 @@
         opportunities: "Opportunities"
     };
 
+    /* ------------------------------------------------------------
+       5A — NAVIGATION & CONDITIONAL FORM CONTROLS
+       ------------------------------------------------------------ */
     function switchTab(event, sectionId) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
@@ -848,6 +876,9 @@
         }
     }
 
+    /* ------------------------------------------------------------
+       5B — APPS SCRIPT CONNECTION & DATABASE SYNC
+       ------------------------------------------------------------ */
     function normalizeDatabasePayload(response) {
         if (!response) throw new Error("No response returned from Apps Script.");
         if (response.status === "error" || response.error) throw new Error(response.message || response.error);
@@ -987,6 +1018,9 @@
         return syncPromise;
     }
 
+    /* ------------------------------------------------------------
+       5C — HOME DASHBOARD COUNTERS & ACTIVITY STREAM
+       ------------------------------------------------------------ */
     function recalculateDashboardCounters() {
         if (!globalHistoricalDatabase) return;
 
@@ -1053,6 +1087,9 @@
         });
     }
 
+    /* ------------------------------------------------------------
+       5D — HISTORICAL DATA MODAL / FILTERING
+       ------------------------------------------------------------ */
     function openDataModal(category) {
         currentModalCategory = category;
         document.getElementById('modalTitle').textContent = 'Database Engine Log Query';
@@ -1186,6 +1223,9 @@
         document.getElementById(`btn-group-${id}`).style.display = showForm ? "none" : "flex";
     }
 
+    /* ------------------------------------------------------------
+       5E — EDIT & DELETE EXISTING SHEET RECORDS
+       ------------------------------------------------------------ */
     async function submitInlineEditMutation(recordId) {
         const formBox = document.getElementById(`edit-formbox-${recordId}`);
         const inputs = formBox.querySelectorAll('input[data-field-key]');
@@ -1238,6 +1278,10 @@
         }
     }
 
+    /* ------------------------------------------------------------
+       5F — FORM SUBMISSIONS / NEW LOG ENTRIES
+       Writes the form entry and refreshes dashboard data.
+       ------------------------------------------------------------ */
     async function handleFormSubmit(e, actionType) {
         e.preventDefault();
 
