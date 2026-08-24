@@ -813,6 +813,11 @@
         calls: [], photosAdded: [], videosUploaded: [], contentApprovals: [], photoshootTracker: [], caseTracker: [], opportunities: []
     };
     let globalHistoricalDatabase = {};
+    let globalSyncInFlight = null;
+    let globalSyncQueued = false;
+    let globalSyncSequence = 0;
+    const GLOBAL_DB_CACHE_KEY = "merchantTrackerGlobalDatabaseCache_v3";
+    const GLOBAL_DB_CACHE_META_KEY = "merchantTrackerGlobalDatabaseCacheMeta_v3";
 
     const sheetTabMapping = {
         calls: "Calls Master",
@@ -864,24 +869,71 @@
         });
     }
 
+    function saveGlobalDatabaseCache(db) {
+        try {
+            localStorage.setItem(GLOBAL_DB_CACHE_KEY, JSON.stringify(db || {}));
+            localStorage.setItem(GLOBAL_DB_CACHE_META_KEY, JSON.stringify({ savedAt: Date.now(), sequence: ++globalSyncSequence }));
+        } catch (err) {
+            console.warn("Could not cache merchant tracker database:", err);
+        }
+    }
+
+    function loadGlobalDatabaseCache() {
+        try {
+            const raw = localStorage.getItem(GLOBAL_DB_CACHE_KEY);
+            if (!raw) return false;
+            const cached = JSON.parse(raw);
+            if (!cached || typeof cached !== "object") return false;
+            globalHistoricalDatabase = cached;
+            recalculateDashboardCounters();
+            buildActivityStreamFromHistory();
+            return true;
+        } catch (err) {
+            console.warn("Could not load merchant tracker database cache:", err);
+            return false;
+        }
+    }
+
+    function setSyncButtonState(text, color, disabled) {
+        const syncBtn = document.getElementById('syncDatabaseBtn');
+        if (!syncBtn) return;
+        syncBtn.textContent = text;
+        syncBtn.style.color = color || "";
+        syncBtn.disabled = Boolean(disabled);
+    }
+
     function syncGlobalHistory() {
-        return syncGlobalHistoryAsync().catch(err => {
+        return syncGlobalHistoryAsync({ foreground: true }).catch(err => {
             console.error(err);
-            const syncBtn = document.getElementById('syncDatabaseBtn');
-            if (syncBtn) {
-                syncBtn.textContent = "✕ Sync Error: " + err.message;
-                syncBtn.style.color = "var(--danger-color)";
-                syncBtn.disabled = false;
-            }
+            setSyncButtonState("✕ Sync Error: " + err.message, "var(--danger-color)", false);
+            return globalHistoricalDatabase;
         });
     }
 
-    function syncGlobalHistoryAsync() {
-        return new Promise((resolve, reject) => {
+    function syncGlobalHistoryInBackground() {
+        return syncGlobalHistoryAsync({ foreground: false }).catch(err => {
+            console.warn("Background database sync failed:", err);
+            return globalHistoricalDatabase;
+        });
+    }
+
+    function syncGlobalHistoryAsync(options = {}) {
+        const foreground = options.foreground !== false;
+
+        if (globalSyncInFlight) {
+            if (!foreground) return globalSyncInFlight;
+            return globalSyncInFlight;
+        }
+
+        if (globalSyncQueued) return Promise.resolve(globalHistoricalDatabase);
+
+        globalSyncQueued = true;
+        const syncPromise = new Promise((resolve, reject) => {
             const syncBtn = document.getElementById('syncDatabaseBtn');
-            if (syncBtn) {
+            if (foreground && syncBtn) {
                 syncBtn.textContent = "Connecting to Sheets Engine Data Stream...";
                 syncBtn.disabled = true;
+                syncBtn.style.color = "";
             }
 
             const callbackName = 'doorDashCallback_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
@@ -889,25 +941,29 @@
             const timeout = setTimeout(() => {
                 cleanup();
                 reject(new Error("Database sync timed out."));
-            }, 15000);
+            }, foreground ? 15000 : 20000);
+
+            let settled = false;
 
             function cleanup() {
                 clearTimeout(timeout);
                 delete window[callbackName];
                 if (script.parentNode) script.parentNode.removeChild(script);
-                if (syncBtn) syncBtn.disabled = false;
+                globalSyncQueued = false;
+                globalSyncInFlight = null;
+                if (foreground && syncBtn) syncBtn.disabled = false;
             }
 
             window[callbackName] = function(response) {
+                if (settled) return;
+                settled = true;
                 try {
                     const db = normalizeDatabasePayload(response);
                     globalHistoricalDatabase = db || {};
+                    saveGlobalDatabaseCache(globalHistoricalDatabase);
                     recalculateDashboardCounters();
                     buildActivityStreamFromHistory();
-                    if (syncBtn) {
-                        syncBtn.textContent = "✓ Master Sheets Linked Real-Time";
-                        syncBtn.style.color = "var(--success-color)";
-                    }
+                    if (foreground) setSyncButtonState("✓ Master Sheets Linked Real-Time", "var(--success-color)", false);
                     cleanup();
                     resolve(globalHistoricalDatabase);
                 } catch (err) {
@@ -917,6 +973,8 @@
             };
 
             script.onerror = function() {
+                if (settled) return;
+                settled = true;
                 cleanup();
                 reject(new Error("Could not load Apps Script JSONP endpoint."));
             };
@@ -924,6 +982,9 @@
             script.src = WEB_APP_URL + (WEB_APP_URL.includes('?') ? '&' : '?') + 'callback=' + encodeURIComponent(callbackName) + '&t=' + Date.now();
             document.body.appendChild(script);
         });
+
+        globalSyncInFlight = syncPromise;
+        return syncPromise;
     }
 
     function recalculateDashboardCounters() {
@@ -1188,55 +1249,46 @@
 
         try {
             btn.disabled = true;
-            btn.textContent = "Checking Sheet state...";
+            btn.textContent = "Writing Row to Live Sheets...";
             status.style.display = "none";
-
-            const beforeDb = await syncGlobalHistoryAsync();
-            const beforeCount = ((beforeDb && beforeDb[targetTab]) || []).length;
 
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             data.formSource = actionType;
 
-            const submittedMerchantName = (data.storeName || data.businessName || "").toString().trim().toLowerCase();
-
-            btn.textContent = "Writing Row to Live Sheets...";
-            await postToAppsScript(data);
-
-            btn.textContent = "Confirming Sheet Write...";
-            await delay(1500);
-
-            const afterDb = await syncGlobalHistoryAsync();
-            const afterRows = (afterDb && afterDb[targetTab]) || [];
-            const afterCount = afterRows.length;
-
-            const confirmedByCount = afterCount > beforeCount;
-            const confirmedByMerchant = afterRows.some(row => {
-                const rowMerchant = (
-                    row["Store Name"] || row["Business Name"] || row["storeName"] || row["businessName"] || ""
-                ).toString().trim().toLowerCase();
-                return submittedMerchantName && rowMerchant === submittedMerchantName;
+            const localRecord = Object.assign({}, data, {
+                ID: "LOCAL-" + Date.now(),
+                Timestamp: new Date().toISOString(),
+                loggedAt: new Date().toISOString()
             });
 
-            if (!confirmedByCount && !confirmedByMerchant) {
-                throw new Error("Submission was sent, but Google Sheets did not confirm a new row.");
-            }
+            if (!Array.isArray(localSessionHistory[actionType])) localSessionHistory[actionType] = [];
+            localSessionHistory[actionType].unshift(localRecord);
+
+            btn.textContent = "Saved — Syncing...";
+
+            await postToAppsScript(data);
 
             status.style.display = "block";
             status.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
             status.style.color = "#10b981";
             status.style.border = "1px solid rgba(16, 185, 129, 0.2)";
-            status.textContent = "✓ Confirmed. Row was written to Google Sheets and dashboard was refreshed.";
+            status.textContent = "✓ Logged successfully. Google Sheets is updating in the background.";
 
             form.reset();
             if (actionType === "opportunities") toggleCoFundedFields("No");
+
+            recalculateDashboardCounters();
+            buildActivityStreamFromHistory();
+
+            syncGlobalHistoryInBackground().catch(err => console.warn("Post-log background sync failed:", err));
         } catch (err) {
             console.error(err);
             status.style.display = "block";
             status.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
             status.style.color = "#ef4444";
             status.style.border = "1px solid rgba(239, 68, 68, 0.2)";
-            status.textContent = "✕ Not confirmed: " + err.message;
+            status.textContent = "✕ Not sent: " + err.message;
         } finally {
             btn.disabled = false;
             btn.textContent = originalBtnText;
@@ -1244,7 +1296,8 @@
     }
 
     window.addEventListener('load', () => {
-        syncGlobalHistory();
+        loadGlobalDatabaseCache();
+        syncGlobalHistoryInBackground();
     });
 </script>
 </body>
